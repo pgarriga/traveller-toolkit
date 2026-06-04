@@ -29,3 +29,6 @@ yarn-error.log*
 
 # Cache
 .cache/
+
+# Claude local settings
+.claude/settings.local.json
