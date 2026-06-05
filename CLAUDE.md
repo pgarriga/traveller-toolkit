@@ -11,7 +11,7 @@ Traveller Toolkit - A multi-tool web app for the Mongoose Traveller 2nd Edition 
 
 - **React 19** - UI framework
 - **TypeScript 5** - Type-safe JavaScript (strict mode enabled)
-- **Vite 7** - Build tool and dev server
+- **Vite 8** - Build tool and dev server
 - **Tesseract.js 7** - OCR engine for scanning UWP codes from images
 - **No external UI libraries** - Custom components with inline styles
 - **No router library** - Custom URL routing with History API

@@ -3,7 +3,7 @@
 [![Version](https://img.shields.io/badge/Version-2.0.1-blue?style=flat-square)](https://github.com/pgarriga/traveller-toolkit)
 [![React](https://img.shields.io/badge/React-19.2-61DAFB?style=flat-square&logo=react&logoColor=white)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Vite-7.3-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Vite](https://img.shields.io/badge/Vite-8.0-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Tesseract.js](https://img.shields.io/badge/Tesseract.js-7.0-4285F4?style=flat-square&logo=google&logoColor=white)](https://tesseract.projectnaptha.com/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
@@ -140,7 +140,7 @@ A UWP code consists of 8 characters in the format `XNNNNNN-N`:
 |------------|---------|
 | [React 19](https://react.dev/) | UI Framework |
 | [TypeScript 5](https://www.typescriptlang.org/) | Type Safety (strict mode) |
-| [Vite 7](https://vitejs.dev/) | Build Tool & Dev Server |
+| [Vite 8](https://vitejs.dev/) | Build Tool & Dev Server |
 | [Tesseract.js 7](https://tesseract.projectnaptha.com/) | OCR Engine for the UWP scanner |
 
 No external UI library, no router library — custom components with inline styles, and a hand-rolled router built on top of the History API (`utils/routing.ts`).
