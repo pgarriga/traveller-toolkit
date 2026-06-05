@@ -1,4 +1,5 @@
-# Robots.txt for Traveller Toolkit
+# Robots.txt for Traveller Toolkit — a collection of free tools
+# for the Mongoose Traveller 2nd Edition tabletop RPG.
 # https://pgarriga.github.io/traveller-toolkit/
 
 User-agent: *

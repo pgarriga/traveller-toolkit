@@ -1,7 +1,7 @@
 {
   "name": "Traveller Toolkit",
   "short_name": "Traveller Toolkit",
-  "description": "Tools for the Mongoose Traveller 2e tabletop RPG (UWP Decoder, Freight Calculator)",
+  "description": "A growing collection of free, browser-based tools for the Mongoose Traveller 2nd Edition tabletop RPG.",
   "start_url": "/traveller-toolkit/",
   "display": "standalone",
   "background_color": "#0f172a",
