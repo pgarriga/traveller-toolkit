@@ -22,7 +22,7 @@ const NONE_VALUES: ReadonlySet<string> = new Set([
  * @param t - Optional translation function to also check t("none")
  * @returns True if the value means "none"
  */
-export const isNoneValue = (value: string | null | undefined, t: TranslationFunction | null = null): boolean => {
+const isNoneValue = (value: string | null | undefined, t: TranslationFunction | null = null): boolean => {
   if (!value) return true;
 
   const normalized = value.toString().toLowerCase().trim();

@@ -13,8 +13,6 @@ export const translations: Record<Language, Record<string, string>> = {
   es: {
 
     // Form labels
-    worldName: "Nombre del mundo",
-    zone: "Zona",
     zoneGreen: "Verde",
     zoneAmber: "Ámbar",
     zoneRed: "Rojo",
@@ -25,7 +23,6 @@ export const translations: Record<Language, Record<string, string>> = {
     viewRecent: "Planetas recientes",
     decode: "Decodificar",
     decodeUWP: "Decodificador de UWP",
-    newScan: "Nuevo escaneo",
 
     // Recent planets
     recentPlanets: "Planetas recientes",
@@ -35,7 +32,6 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Planet display
     unnamed: "Sin nombre",
-    zoneLabel: "Zona",
 
     // Invalid UWP
     invalidUwp: "Introduce un código UWP válido (formato: Xnnnnnn-n)",
@@ -129,12 +125,10 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // None/varies
     none: "Ninguno",
-    varies: "Varía",
     na: "N/A",
     free: "Gratis",
 
     // Scanner
-    home: "Inicio",
     scan: "Escanear",
     scanning: "Escaneando...",
     scanError: "Error al procesar la imagen",
@@ -145,13 +139,15 @@ export const translations: Record<Language, Record<string, string>> = {
     nameDetected: "Nombre detectado",
     loadingOcr: "Cargando OCR...",
 
+    // Navigation a11y labels
+    goHome: "Ir a inicio",
+    openMenu: "Abrir menú",
+    closeMenu: "Cerrar menú",
+    mainNavigation: "Navegación principal",
+    mobileNavigation: "Navegación móvil",
+
     // Saved planets page
-    back: "Volver",
-    viewInfo: "Ver información",
-    confirmDelete: "¿Eliminar este planeta?",
     planetCount: "planetas",
-    edit: "Editar",
-    newPlanet: "Nuevo planeta",
 
     // Settings
     settings: "Ajustes",
@@ -245,8 +241,6 @@ export const translations: Record<Language, Record<string, string>> = {
   en: {
 
     // Form labels
-    worldName: "World name",
-    zone: "Zone",
     zoneGreen: "Green",
     zoneAmber: "Amber",
     zoneRed: "Red",
@@ -257,7 +251,6 @@ export const translations: Record<Language, Record<string, string>> = {
     viewRecent: "Recent planets",
     decode: "Decode",
     decodeUWP: "UWP Decoder",
-    newScan: "New scan",
 
     // Recent planets
     recentPlanets: "Recent planets",
@@ -267,7 +260,6 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Planet display
     unnamed: "Unnamed",
-    zoneLabel: "Zone",
 
     // Invalid UWP
     invalidUwp: "Enter a valid UWP code (format: Xnnnnnn-n)",
@@ -361,12 +353,10 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // None/varies
     none: "None",
-    varies: "Varies",
     na: "N/A",
     free: "Free",
 
     // Scanner
-    home: "Home",
     scan: "Scan",
     scanning: "Scanning...",
     scanError: "Error processing image",
@@ -377,13 +367,15 @@ export const translations: Record<Language, Record<string, string>> = {
     nameDetected: "Name detected",
     loadingOcr: "Loading OCR...",
 
+    // Navigation a11y labels
+    goHome: "Go to home",
+    openMenu: "Open menu",
+    closeMenu: "Close menu",
+    mainNavigation: "Main navigation",
+    mobileNavigation: "Mobile navigation",
+
     // Saved planets page
-    back: "Back",
-    viewInfo: "View info",
-    confirmDelete: "Delete this planet?",
     planetCount: "planets",
-    edit: "Edit",
-    newPlanet: "New planet",
 
     // Settings
     settings: "Settings",

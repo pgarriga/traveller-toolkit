@@ -5,7 +5,7 @@ export const MAX_RECENT_PLANETS = 20;
 
 // Common words to filter out when detecting planet names from OCR
 // These are typically headers, labels, or game terminology
-export const OCR_COMMON_WORDS: ReadonlySet<string> = new Set([
+const OCR_COMMON_WORDS: ReadonlySet<string> = new Set([
   // Articles and prepositions
   "THE", "AND", "FOR", "WITH", "FROM", "OF", "TO", "IN", "ON", "AT",
 

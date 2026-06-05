@@ -4,8 +4,6 @@ export type StarportClass = "A" | "B" | "C" | "D" | "E" | "X";
 
 export type ZoneCode = "V" | "A" | "R"; // Verde/Amber/Red
 
-export type ViewType = "scan" | "recent" | "planet" | "settings";
-
 export interface ParsedUWP {
   st: StarportClass;  // Starport
   sz: number;         // Size (0-10+)

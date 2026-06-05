@@ -10,8 +10,6 @@ export type TranslationFunction = (key: string) => string;
 // All available translation keys
 export type TranslationKey =
   // Form labels
-  | "worldName"
-  | "zone"
   | "zoneGreen"
   | "zoneAmber"
   | "zoneRed"
@@ -20,7 +18,6 @@ export type TranslationKey =
   // Buttons
   | "viewRecent"
   | "decode"
-  | "newScan"
   // Recent planets
   | "recentPlanets"
   | "noRecentPlanets"
@@ -28,7 +25,6 @@ export type TranslationKey =
   | "clearAll"
   // Planet display
   | "unnamed"
-  | "zoneLabel"
   // Invalid UWP
   | "invalidUwp"
   // Section titles
@@ -109,11 +105,9 @@ export type TranslationKey =
   | "manualNote"
   // None/varies
   | "none"
-  | "varies"
   | "na"
   | "free"
   // Scanner
-  | "home"
   | "scan"
   | "scanning"
   | "scanError"
@@ -123,13 +117,14 @@ export type TranslationKey =
   | "uwpDetected"
   | "nameDetected"
   | "loadingOcr"
+  // Navigation a11y labels
+  | "goHome"
+  | "openMenu"
+  | "closeMenu"
+  | "mainNavigation"
+  | "mobileNavigation"
   // Saved planets page
-  | "back"
-  | "viewInfo"
-  | "confirmDelete"
   | "planetCount"
-  | "edit"
-  | "newPlanet"
   // Settings
   | "settings"
   | "theme"
