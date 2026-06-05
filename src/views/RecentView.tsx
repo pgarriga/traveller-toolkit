@@ -5,10 +5,11 @@ import type { RecentPlanet } from "../types/uwp";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { Button } from "../components/ui/Button";
-import { IconTrash } from "../components/icons";
+import { PageHeader } from "../components/ui/PageHeader";
+import { IconClock, IconTrash } from "../components/icons";
 import { getZoneColor } from "../constants/zones";
 
-type ViewType = "decoder" | "saved" | "settings" | "planet";
+type ViewType = "home" | "decoder" | "saved" | "settings" | "planet" | "freight";
 
 interface RecentViewProps {
   theme: Theme;
@@ -18,6 +19,7 @@ interface RecentViewProps {
   clearAllPlanets: () => void;
   view: ViewType;
   resetDecoder: () => void;
+  goHome: () => void;
   navigateTo: (view: ViewType) => void;
   menuOpen: boolean;
   setMenuOpen: (open: boolean) => void;
@@ -32,6 +34,7 @@ export const RecentView: FC<RecentViewProps> = ({
   clearAllPlanets,
   view,
   resetDecoder,
+  goHome,
   navigateTo,
   menuOpen,
   setMenuOpen,
@@ -42,26 +45,23 @@ export const RecentView: FC<RecentViewProps> = ({
       theme={theme}
       view={view}
       resetDecoder={resetDecoder}
+      goHome={goHome}
       navigateTo={navigateTo}
       menuOpen={menuOpen}
       setMenuOpen={setMenuOpen}
       t={t}
     />
     <main style={{ maxWidth: 720, margin: "0 auto", padding: "20px 16px" }}>
-      <div style={{ marginBottom: 16 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: theme.text }}>
-            {t("recentPlanets")}
-          </h1>
-          {recentPlanets.length > 0 && (
-            <Button variant="ghost" size="sm" theme={theme} onClick={clearAllPlanets}>
-              {t("clearAll")}
-            </Button>
-          )}
-        </div>
+      <PageHeader title={t("recentPlanets")} icon={<IconClock />} />
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <div style={{ color: theme.textDimmed, fontSize: 13 }}>
           {recentPlanets.length} {t("planetCount")}
         </div>
+        {recentPlanets.length > 0 && (
+          <Button variant="ghost" size="sm" theme={theme} onClick={clearAllPlanets}>
+            {t("clearAll")}
+          </Button>
+        )}
       </div>
 
       {recentPlanets.length === 0 ? (

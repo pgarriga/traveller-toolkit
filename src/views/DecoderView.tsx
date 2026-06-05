@@ -4,10 +4,11 @@ import type { TranslationFunction } from "../types/i18n";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { Button } from "../components/ui/Button";
-import { IconCamera } from "../components/icons";
+import { PageHeader } from "../components/ui/PageHeader";
+import { IconCamera, IconGlobe } from "../components/icons";
 import { COLORS } from "../constants/colors";
 
-type ViewType = "decoder" | "saved" | "settings" | "planet";
+type ViewType = "home" | "decoder" | "saved" | "settings" | "planet" | "freight";
 
 interface DecoderViewProps {
   theme: Theme;
@@ -20,6 +21,7 @@ interface DecoderViewProps {
   handleScan: (e: ChangeEvent<HTMLInputElement>) => void;
   view: ViewType;
   resetDecoder: () => void;
+  goHome: () => void;
   navigateTo: (view: ViewType, uwp?: string) => void;
   menuOpen: boolean;
   setMenuOpen: (open: boolean) => void;
@@ -37,6 +39,7 @@ export const DecoderView: FC<DecoderViewProps> = ({
   handleScan,
   view,
   resetDecoder,
+  goHome,
   navigateTo,
   menuOpen,
   setMenuOpen,
@@ -47,18 +50,14 @@ export const DecoderView: FC<DecoderViewProps> = ({
       theme={theme}
       view={view}
       resetDecoder={resetDecoder}
+      goHome={goHome}
       navigateTo={navigateTo}
       menuOpen={menuOpen}
       setMenuOpen={setMenuOpen}
       t={t}
     />
     <main style={{ maxWidth: 720, margin: "0 auto", padding: "20px 16px" }}>
-      <div style={{ textAlign: "center", marginBottom: 32 }}>
-        <div style={{ fontSize: 11, color: COLORS.warning, letterSpacing: 3, textTransform: "uppercase", marginBottom: 4 }}>{t("subtitle")}</div>
-        <h1 className="app-title">
-          {t("title")}
-        </h1>
-      </div>
+      <PageHeader title={t("decodeUWP")} icon={<IconGlobe />} />
 
       {/* Main scan button */}
       <div style={{ background: theme.bgCard, borderRadius: 12, padding: 24, marginBottom: 16, border: `1px solid ${theme.border}` }}>

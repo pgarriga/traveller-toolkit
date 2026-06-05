@@ -21,11 +21,13 @@ import { SettingsView } from "./views/SettingsView";
 import { PlanetView } from "./views/PlanetView";
 import { RecentView } from "./views/RecentView";
 import { DecoderView } from "./views/DecoderView";
+import { FreightView } from "./views/FreightView";
+import { HomeView } from "./views/HomeView";
 
 // OCR
 import { createWorker } from "tesseract.js";
 
-type ViewType = "decoder" | "saved" | "settings" | "planet";
+type ViewType = "home" | "decoder" | "saved" | "settings" | "planet" | "freight";
 
 interface RecentPlanet {
   uwp: string;
@@ -116,12 +118,20 @@ export default function App() {
         setView("saved");
       } else if (urlView === "settings") {
         setView("settings");
-      } else {
+      } else if (urlView === "freight") {
+        setView("freight");
+      } else if (urlView === "decoder") {
         setName("");
         setUwp("");
         setZoneInput(ZONES.GREEN as ZoneCode);
         setScanStatus("");
         setView("decoder");
+      } else {
+        setName("");
+        setUwp("");
+        setZoneInput(ZONES.GREEN as ZoneCode);
+        setScanStatus("");
+        setView("home");
       }
     };
 
@@ -131,7 +141,7 @@ export default function App() {
 
   // Navigation functions
   const navigateTo = (newView: ViewType, newUwp: string | null = null) => {
-    const url = buildUrl(newView === "saved" ? "saved" : newView === "settings" ? "settings" : newView === "planet" ? "planet" : "decoder", newUwp);
+    const url = buildUrl(newView, newUwp);
     window.history.pushState({ view: newView, uwp: newUwp }, "", url);
     setView(newView);
     setMenuOpen(false);
@@ -143,6 +153,14 @@ export default function App() {
     setZoneInput(ZONES.GREEN as ZoneCode);
     setScanStatus("");
     navigateTo("decoder");
+  };
+
+  const goHome = () => {
+    setName("");
+    setUwp("");
+    setZoneInput(ZONES.GREEN as ZoneCode);
+    setScanStatus("");
+    navigateTo("home");
   };
 
   const loadPlanet = (planet: RecentPlanet) => {
@@ -253,10 +271,10 @@ export default function App() {
     }
   }, [view, uwp, parsed, name, zoneInput, savePlanet]);
 
-  // Redirect to decoder if planet view has no valid UWP
+  // Redirect to home if planet view has no valid UWP
   useEffect(() => {
     if (view === "planet" && !parsed && !isInitialLoad.current) {
-      navigateTo("decoder");
+      navigateTo("home");
     }
   }, [view, parsed]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -265,6 +283,7 @@ export default function App() {
     theme,
     view,
     resetDecoder,
+    goHome,
     navigateTo,
     menuOpen,
     setMenuOpen,
@@ -319,17 +338,25 @@ export default function App() {
     );
   }
 
-  // Default: Decoder view
-  return (
-    <DecoderView
-      {...commonProps}
-      uwp={uwp}
-      setUwp={setUwp}
-      parsed={!!parsed}
-      scanning={scanning}
-      scanStatus={scanStatus}
-      fileInputRef={fileInputRef}
-      handleScan={handleScan}
-    />
-  );
+  if (view === "freight") {
+    return <FreightView {...commonProps} lang={lang} />;
+  }
+
+  if (view === "decoder") {
+    return (
+      <DecoderView
+        {...commonProps}
+        uwp={uwp}
+        setUwp={setUwp}
+        parsed={!!parsed}
+        scanning={scanning}
+        scanStatus={scanStatus}
+        fileInputRef={fileInputRef}
+        handleScan={handleScan}
+      />
+    );
+  }
+
+  // Default: Home view (tool list)
+  return <HomeView {...commonProps} />;
 }

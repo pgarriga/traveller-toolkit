@@ -2,23 +2,24 @@ import type { FC } from "react";
 import { useEffect, useRef } from "react";
 import type { Theme } from "../types/theme";
 import type { TranslationFunction } from "../types/i18n";
-import { IconCamera, IconClock, IconSettings, IconMenu, IconClose } from "./icons";
+import { IconClock, IconSettings, IconBox, IconGlobe, IconMenu, IconClose } from "./icons";
 import { Button } from "./ui/Button";
 import { COLORS } from "../constants/colors";
 
-type ViewType = "decoder" | "saved" | "settings" | "planet";
+type ViewType = "home" | "decoder" | "saved" | "settings" | "planet" | "freight";
 
 interface NavbarProps {
   theme: Theme;
   view: ViewType;
   resetDecoder: () => void;
+  goHome: () => void;
   navigateTo: (view: ViewType) => void;
   menuOpen: boolean;
   setMenuOpen: (open: boolean) => void;
   t: TranslationFunction;
 }
 
-export const Navbar: FC<NavbarProps> = ({ theme, view, resetDecoder, navigateTo, menuOpen, setMenuOpen, t }) => {
+export const Navbar: FC<NavbarProps> = ({ theme, view, resetDecoder, goHome, navigateTo, menuOpen, setMenuOpen, t }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
 
@@ -88,10 +89,10 @@ export const Navbar: FC<NavbarProps> = ({ theme, view, resetDecoder, navigateTo,
       >
         {/* Logo */}
         <div
-          onClick={resetDecoder}
+          onClick={goHome}
           role="button"
           tabIndex={0}
-          onKeyDown={(e) => e.key === "Enter" && resetDecoder()}
+          onKeyDown={(e) => e.key === "Enter" && goHome()}
           aria-label={t("goHome") || "Go to home"}
           style={{
             fontSize: 18,
@@ -107,13 +108,16 @@ export const Navbar: FC<NavbarProps> = ({ theme, view, resetDecoder, navigateTo,
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
             backgroundClip: "text"
-          }}>UWP Decoder</span>
+          }}>Toolkit</span>
         </div>
 
         {/* Desktop nav links */}
         <div className="nav-desktop" style={{ display: "flex", gap: 8 }} role="menubar">
           <Button variant="nav" active={view === "decoder"} theme={theme} onClick={resetDecoder} role="menuitem">
-            <IconCamera />{t("scan")}
+            <IconGlobe />{t("decodeUWP")}
+          </Button>
+          <Button variant="nav" active={view === "freight"} theme={theme} onClick={() => navigateTo("freight")} role="menuitem">
+            <IconBox />{t("freightTitle")}
           </Button>
           <Button variant="nav" active={view === "saved"} theme={theme} onClick={() => navigateTo("saved")} role="menuitem">
             <IconClock />{t("viewRecent")}
@@ -176,7 +180,19 @@ export const Navbar: FC<NavbarProps> = ({ theme, view, resetDecoder, navigateTo,
             style={{ justifyContent: "flex-start" }}
             role="menuitem"
           >
-            <IconCamera />{t("scan")}
+            <IconGlobe />{t("decodeUWP")}
+          </Button>
+          <Button
+            variant="nav-mobile"
+            size="lg"
+            active={view === "freight"}
+            theme={theme}
+            onClick={() => navigateTo("freight")}
+            fullWidth
+            style={{ justifyContent: "flex-start" }}
+            role="menuitem"
+          >
+            <IconBox />{t("freightTitle")}
           </Button>
           <Button
             variant="nav-mobile"

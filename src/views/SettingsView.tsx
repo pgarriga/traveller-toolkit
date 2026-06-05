@@ -4,8 +4,10 @@ import type { TranslationFunction, LangMode } from "../types/i18n";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { Button } from "../components/ui/Button";
+import { PageHeader } from "../components/ui/PageHeader";
+import { IconSettings } from "../components/icons";
 
-type ViewType = "decoder" | "saved" | "settings" | "planet";
+type ViewType = "home" | "decoder" | "saved" | "settings" | "planet" | "freight";
 
 interface SettingsViewProps {
   theme: Theme;
@@ -15,6 +17,7 @@ interface SettingsViewProps {
   setLangMode: (mode: LangMode) => void;
   view: ViewType;
   resetDecoder: () => void;
+  goHome: () => void;
   navigateTo: (view: ViewType) => void;
   menuOpen: boolean;
   setMenuOpen: (open: boolean) => void;
@@ -29,6 +32,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
   setLangMode,
   view,
   resetDecoder,
+  goHome,
   navigateTo,
   menuOpen,
   setMenuOpen,
@@ -39,13 +43,14 @@ export const SettingsView: FC<SettingsViewProps> = ({
       theme={theme}
       view={view}
       resetDecoder={resetDecoder}
+      goHome={goHome}
       navigateTo={navigateTo}
       menuOpen={menuOpen}
       setMenuOpen={setMenuOpen}
       t={t}
     />
     <main style={{ maxWidth: 720, margin: "0 auto", padding: "20px 16px" }}>
-      <h1 style={{ margin: "0 0 24px", fontSize: 24, fontWeight: 800 }}>{t("settings")}</h1>
+      <PageHeader title={t("settings")} icon={<IconSettings />} />
 
       <div style={{ background: theme.bgCard, borderRadius: 12, padding: 20, marginBottom: 16, border: `1px solid ${theme.border}` }}>
         <div style={{ fontSize: 14, fontWeight: 700, color: theme.text, marginBottom: 12 }}>{t("theme")}</div>

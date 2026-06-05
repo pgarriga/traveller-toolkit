@@ -2,7 +2,10 @@
 
 ## Project Overview
 
-Mongoose Traveller UWP Decoder - A web app for decoding Universal World Profile (UWP) codes from the Mongoose Traveller 2nd Edition tabletop RPG. Supports OCR scanning of UWP codes from images.
+Traveller Toolkit - A multi-tool web app for the Mongoose Traveller 2nd Edition tabletop RPG. The home page lists the available tools and the user navigates between them. Current tools:
+- **UWP Decoder** — decodes Universal World Profile codes (manual entry or OCR from images).
+- **Freight Calculator** — computes traffic DMs, rolls lots, and lets the player pick which lots to buy up to their cargo bay capacity.
+- **Recent Planets** — history of previously decoded planets, persisted in `localStorage`.
 
 ## Tech Stack
 
@@ -38,44 +41,50 @@ src/
 ├── types/                    # Type definitions
 │   ├── theme.ts              # Theme, ThemeMode, ThemeConfig
 │   ├── uwp.ts                # ParsedUWP, StarportClass, ZoneCode, RecentPlanet
-│   ├── i18n.ts               # Language, LangMode, TranslationFunction
+│   ├── i18n.ts               # Language, LangMode, TranslationFunction, TranslationKey
 │   ├── game-data.ts          # StarportData, SizeData, AtmosphereData, etc.
+│   ├── freight.ts            # FreightInputs, FreightResult, LotResult, LotType, etc.
 │   ├── components.ts         # Component props interfaces
 │   └── index.ts              # Re-exports all types
 ├── components/
 │   ├── icons/
-│   │   └── index.tsx         # SVG icon components (IconCamera, IconClock, etc.)
+│   │   └── index.tsx         # SVG icon components (IconCamera, IconGlobe, IconBox, IconClock, IconSettings, etc.)
 │   ├── ui/
 │   │   ├── Button.tsx        # Reusable button with variants
 │   │   ├── Section.tsx       # Card section with colored border
 │   │   ├── Row.tsx           # Label-value row for data display
-│   │   └── Badge.tsx         # Colored badge/tag
+│   │   ├── Badge.tsx         # Colored badge/tag
+│   │   └── PageHeader.tsx    # Shared centered gradient h1 + optional icon
 │   ├── Navbar.tsx            # Navigation bar (desktop + mobile, with a11y)
 │   ├── Footer.tsx            # Disclaimer footer
 │   └── ErrorBoundary.tsx     # Error boundary with fallback UI
 ├── views/
-│   ├── DecoderView.tsx       # Home/scan page
-│   ├── PlanetView.tsx        # Planet detail view
-│   ├── RecentView.tsx        # Recent planets list
-│   └── SettingsView.tsx      # Settings page
+│   ├── HomeView.tsx          # Tools list (cards) — landing page at "/"
+│   ├── DecoderView.tsx       # UWP decoder (scan + manual input) — "/decoder"
+│   ├── PlanetView.tsx        # Planet detail view — "/planet/{UWP}"
+│   ├── RecentView.tsx        # Recent planets list — "/recent"
+│   ├── FreightView.tsx       # Freight calculator — "/freight"
+│   └── SettingsView.tsx      # Settings page — "/settings"
 ├── constants/
 │   ├── colors.ts             # COLORS, SECTION_COLORS, THEMES (with `as const`)
 │   ├── zones.ts              # ZONES, ZONE_COLORS (with `as const`)
 │   ├── gameRules.ts          # SIZE_RULES, ATMO_RULES, LAW_RULES, etc.
+│   ├── freight.ts            # POPULATION_DM, STARPORT_DM, TONS_PER_LOT_DIE, lotsFromTraffic, etc.
 │   └── ocr.ts                # OCR_SETTINGS, MAX_RECENT_PLANETS
 ├── hooks/
 │   ├── useThemeMode.ts       # Theme management with localStorage
 │   └── useRecentPlanets.ts   # CRUD for recent planets
 ├── utils/
-│   ├── routing.ts            # URL parsing and building
+│   ├── routing.ts            # URL parsing and building (home, decoder, freight, saved, settings, planet)
 │   ├── uwp.ts                # UWP parsing and validation
+│   ├── freight.ts            # calculateFreight (DM breakdown + lot rolling)
 │   └── i18n-helpers.ts       # isNoneValue, requiresWarning
 ├── i18n/
 │   ├── translations.ts       # UI translations (ES/EN)
 │   ├── game-data.ts          # Game data functions (getSTARPORT, getSIZE, etc.)
 │   ├── useTranslation.ts     # Translation hook
 │   └── index.ts              # Re-exports
-├── App.tsx                   # Main orchestration (~320 lines)
+├── App.tsx                   # Main orchestration: view state + popstate + routing
 ├── main.tsx                  # React entry point
 ├── vite-env.d.ts             # Vite type declarations
 └── index.css                 # Global styles and responsive breakpoints
@@ -99,9 +108,31 @@ A UWP code is 8 characters: `A123456-7`
 - Position 7 (after dash): Tech Level
 
 ### URL Routing
-- `/` - Home/scan page
-- `/recent` - Recent planets list
-- `/planet/{UWP}` - Planet detail view (e.g., `/planet/A123456-7`)
+- `/` — Home (tools list, `HomeView`)
+- `/decoder` — UWP Decoder (scan + manual input, `DecoderView`)
+- `/freight` — Freight Calculator (`FreightView`)
+- `/recent` — Recent planets list (`RecentView`)
+- `/settings` — Settings (`SettingsView`)
+- `/planet/{UWP}` — Planet detail (`PlanetView`, e.g. `/planet/A123456-7`)
+
+The router is hand-rolled (no library) in `utils/routing.ts` and `App.tsx` manages the `ViewType` state plus `popstate` for browser back/forward. The Navbar logo calls `goHome` (resets decoder state + navigates to `/`). The Decoder nav entry calls `resetDecoder` (resets + navigates to `/decoder`).
+
+### Freight Calculator (Mongoose 2e rules)
+
+Lives in `src/views/FreightView.tsx`, `src/utils/freight.ts`, `src/constants/freight.ts`, `src/types/freight.ts`.
+
+Flow:
+1. User picks origin/destination world properties (population, starport, TL, zone), parsec distance, cargo bay, broker skill effect, on-time delivery.
+2. **Modificadores (DM)** section updates live — sums per-attribute DMs and shows the base DM.
+3. **Cantidad de lotes** section: one 2D traffic roll per lot type (Major / Minor / Incidental). As the user types the 2D, an `(NDg)` badge next to the label shows how many d6 the program will roll.
+4. **Calculate lots** button triggers `handleCalculate`:
+   - Rolls N d6 internally with `rollD6Array` for each lot type (N from the traffic table).
+   - Each die maps to one lot: tons = die × `TONS_PER_LOT_DIE[type]` (Major × 10, Minor × 5, Incidental × 1).
+   - Resets `selectedLots` selection state.
+5. **Precio por tonelada**, **Lotes disponibles** and **Resumen** sections only render after the button is pressed (gated on `calculatedResult`).
+6. Each lot chip in **Lotes disponibles** is clickable → toggles in `selectedLots: Set<string>` (keyed `${type}-${idx}`). The Resumen recomputes tons/income live from the selection (no recalculation of the lots themselves).
+
+`calculateFreight(inputs, t)` returns a `FreightResult` (DM breakdown, lots, per-lot tons, rate per ton). It is called twice: once via `useMemo` for the live preview, once on button click with the rolled dice.
 
 ### i18n System
 - Auto-detects language from `navigator.language`
@@ -236,6 +267,17 @@ import { SECTION_COLORS } from "../constants/colors";
 </Section>
 ```
 
+### PageHeader (`components/ui/PageHeader.tsx`)
+```tsx
+import { PageHeader } from "../components/ui/PageHeader";
+import { IconGlobe } from "../components/icons";
+
+// Centered gradient h1 (uses `.app-title` class) + optional icon.
+// Used by Home, Decoder, Freight, Recent, Settings views to keep page titles consistent.
+// PlanetView keeps its own header because it includes an editable planet name.
+<PageHeader title={t("decodeUWP")} icon={<IconGlobe />} />
+```
+
 ### Colors (`constants/colors.ts`)
 ```tsx
 import { COLORS, SECTION_COLORS, THEMES } from "../constants/colors";
@@ -270,10 +312,18 @@ const color: string = getZoneColor(planet.zone);
 
 ### Icons (`components/icons/index.tsx`)
 ```tsx
-import { IconCamera, IconClock, IconTrash, IconSettings } from "../components/icons";
+import {
+  IconCamera, IconGlobe, IconBox, IconClock, IconSettings,
+  IconSearch, IconTrash, IconMenu, IconClose,
+} from "../components/icons";
 
-// All icons have aria-hidden="true" and consistent sizing
-<IconCamera />  // 16x16, marginRight: 6
+// All icons have aria-hidden="true" and consistent sizing (16x16, marginRight: 6).
+// Semantic mapping currently used:
+//   IconGlobe   → UWP Decoder (home card, decoder header, navbar entry)
+//   IconBox     → Freight Calculator (home card, freight header, navbar entry, calculate button)
+//   IconClock   → Recent Planets (home card, navbar entry, recent view header)
+//   IconCamera  → Scan action inside the decoder
+//   IconSettings→ Settings (navbar entry, settings view header)
 ```
 
 ### Game Rules (`constants/gameRules.ts`)
@@ -360,11 +410,33 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 // Import types from the centralized types directory
 import type { Theme, ThemeMode } from "../types/theme";
 import type { ParsedUWP, ZoneCode, RecentPlanet, StarportClass } from "../types/uwp";
-import type { Language, TranslationFunction } from "../types/i18n";
+import type { Language, TranslationFunction, TranslationKey } from "../types/i18n";
 import type { StarportData, SizeData, AtmosphereData } from "../types/game-data";
+import type {
+  FreightInputs, FreightResult, FreightWorldInputs,
+  LotResult, LotType, ParsecDistance, PopulationTier,
+  TechLevelTier, FreightStarport, FreightZoneTier,
+} from "../types/freight";
 
 // Or import everything from index
 import type { Theme, ParsedUWP, Language } from "../types";
+```
+
+### Freight Constants & Utils
+```tsx
+import {
+  POPULATION_DM, STARPORT_DM, TECH_LEVEL_DM, ZONE_DM, LOT_TYPE_DM,
+  TONS_PER_LOT_DIE, MEAN_TONS_PER_LOT, FREIGHT_RATES_PER_TON,
+  lotsFromTraffic, LATE_PAYMENT_MULTIPLIER,
+  PARSEC_OPTIONS, POPULATION_OPTIONS, STARPORT_OPTIONS, TECH_LEVEL_OPTIONS, ZONE_OPTIONS,
+} from "../constants/freight";
+import { calculateFreight } from "../utils/freight";
+
+// NEVER hardcode Mongoose Traveller 2e freight tables — use these constants.
+// TONS_PER_LOT_DIE.major = 10 (each Major lot = 1D6 × 10 t)
+// TONS_PER_LOT_DIE.minor = 5  (each Minor lot = 1D6 × 5 t)
+// TONS_PER_LOT_DIE.incidental = 1
+// lotsFromTraffic(2D+DM) → number of d6 lots available (Traffic table)
 ```
 
 ## Anti-patterns to Avoid
@@ -374,12 +446,15 @@ import type { Theme, ParsedUWP, Language } from "../types";
 2. **NO repeated footer/disclaimer** - Use `<Footer>` component
 3. **NO hardcoded colors** - Use `COLORS.*` constants
 4. **NO zone string literals** - Use `ZONES.*` constants
-5. **NO duplicate Navbar props** - Pass via `commonProps` spread in App.tsx
+5. **NO duplicate Navbar props** - Pass via `commonProps` spread in App.tsx (must include `goHome` alongside `resetDecoder`)
 6. **NO hardcoded game thresholds** - Use `SIZE_RULES`, `LAW_RULES`, etc.
 7. **NO multi-language string comparisons** - Use `requiresWarning(value, t)`
 8. **NO hardcoded OCR settings** - Use `OCR_SETTINGS.*` and `MAX_RECENT_PLANETS`
 9. **NO duplicating theme/localStorage logic** - Use `useThemeMode` and `useRecentPlanets` hooks
 10. **NO missing ErrorBoundary** - App must be wrapped in ErrorBoundary in main.tsx
+11. **NO ad-hoc page titles** - Use `<PageHeader title=... icon=... />` so every page shares the same gradient h1 (PlanetView is the only exception — it has an editable name input header)
+12. **NO hardcoded freight tables** - Use `TONS_PER_LOT_DIE`, `POPULATION_DM`, `lotsFromTraffic`, etc. from `constants/freight.ts`
+13. **NO live re-rolling of dice during render** - The freight lot d6 are rolled once inside `handleCalculate` on button click; do not call `Math.random` inside `useMemo` or render
 
 ### TypeScript-Specific
 11. **NO `.js` or `.jsx` files** - ALL code must be TypeScript (`.ts` or `.tsx`)
@@ -415,7 +490,8 @@ These checks ensure the app works well on mobile devices, is accessible to all u
 ## Important Notes
 
 - This is an unofficial fan project, not affiliated with Mongoose Publishing
-- Game data (starports, atmospheres, etc.) is from Mongoose Traveller 2e SRD
+- Game data (starports, atmospheres, freight tables) is from Mongoose Traveller 2e SRD / Core Rulebook
 - OCR scanning works best with clear, high-contrast images
 - The app works offline after initial load (no backend required)
 - **TypeScript strict mode is mandatory** - Code must compile without errors
+- The app is deployed to GitHub Pages; `public/404.html` is the SPA fallback that rewrites unknown paths to `/` so the History-API router can pick them up

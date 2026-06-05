@@ -19,7 +19,7 @@ import {
 } from "../constants/gameRules";
 import { requiresWarning } from "../utils/i18n-helpers";
 
-type ViewType = "decoder" | "saved" | "settings" | "planet";
+type ViewType = "home" | "decoder" | "saved" | "settings" | "planet" | "freight";
 
 interface ParsedUWP {
   sp: StarportClass;
@@ -42,6 +42,7 @@ interface PlanetViewProps {
   setZoneInput: (zone: ZoneCode) => void;
   view: ViewType;
   resetDecoder: () => void;
+  goHome: () => void;
   navigateTo: (view: ViewType) => void;
   menuOpen: boolean;
   setMenuOpen: (open: boolean) => void;
@@ -67,6 +68,7 @@ export const PlanetView: FC<PlanetViewProps> = ({
   setZoneInput,
   view,
   resetDecoder,
+  goHome,
   navigateTo,
   menuOpen,
   setMenuOpen,
@@ -98,6 +100,7 @@ export const PlanetView: FC<PlanetViewProps> = ({
         theme={theme}
         view={view}
         resetDecoder={resetDecoder}
+        goHome={goHome}
         navigateTo={navigateTo}
         menuOpen={menuOpen}
         setMenuOpen={setMenuOpen}
