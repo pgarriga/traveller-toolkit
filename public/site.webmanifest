@@ -1,19 +1,19 @@
 {
-  "name": "Traveller UWP Decoder",
-  "short_name": "UWP Decoder",
-  "description": "Decode Universal World Profile codes from Mongoose Traveller RPG",
-  "start_url": "/traveller-uwp-decoder/",
+  "name": "Traveller Toolkit",
+  "short_name": "Traveller Toolkit",
+  "description": "Tools for the Mongoose Traveller 2e tabletop RPG (UWP Decoder, Freight Calculator)",
+  "start_url": "/traveller-toolkit/",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
   "icons": [
     {
-      "src": "/traveller-uwp-decoder/android-chrome-192x192.png",
+      "src": "/traveller-toolkit/android-chrome-192x192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/traveller-uwp-decoder/android-chrome-512x512.png",
+      "src": "/traveller-toolkit/android-chrome-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
     }

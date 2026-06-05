@@ -6,7 +6,7 @@ const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'))
 
 export default defineConfig(({ mode }) => ({
   plugins: [react()],
-  base: mode === 'production' ? '/traveller-uwp-decoder/' : '/',
+  base: mode === 'production' ? '/traveller-toolkit/' : '/',
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },

@@ -1,11 +1,11 @@
-# Robots.txt for Traveller UWP Decoder
-# https://pgarriga.github.io/traveller-uwp-decoder/
+# Robots.txt for Traveller Toolkit
+# https://pgarriga.github.io/traveller-toolkit/
 
 User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://pgarriga.github.io/traveller-uwp-decoder/sitemap.xml
+Sitemap: https://pgarriga.github.io/traveller-toolkit/sitemap.xml
 
 # Crawl-delay for respectful crawling
 Crawl-delay: 1
