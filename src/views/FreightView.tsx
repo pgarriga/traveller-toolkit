@@ -256,7 +256,7 @@ export const FreightView: FC<FreightViewProps> = ({
     fontSize: 12,
     color: theme.textDimmed,
     marginBottom: 4,
-    fontWeight: 600,
+    fontWeight: 500,
   } as const;
 
   const fieldGridStyle = {
@@ -345,7 +345,7 @@ export const FreightView: FC<FreightViewProps> = ({
     ];
     return (
       <div key={type} style={{ padding: "12px 0", borderTop: `1px solid ${theme.border}` }}>
-        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 10 }}>{t(lotKey(type))}</div>
+        <div style={{ fontWeight: 500, fontSize: 14, marginBottom: 10 }}>{t(lotKey(type))}</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(90px, 1fr))", gap: 10 }}>
           {stats.map(stat => (
             <div key={stat.label} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -353,7 +353,7 @@ export const FreightView: FC<FreightViewProps> = ({
                 {stat.label}
               </span>
               <span style={{
-                fontWeight: 700,
+                fontWeight: 500,
                 fontSize: 13,
                 fontFamily: stat.mono ? "monospace" : "inherit",
                 color: stat.color || theme.text,
@@ -390,7 +390,7 @@ export const FreightView: FC<FreightViewProps> = ({
                       border: `1px solid ${isSelected ? COLORS.primary : "transparent"}`,
                       padding: "3px 8px",
                       borderRadius: 6,
-                      fontWeight: 600,
+                      fontWeight: 500,
                       cursor: "pointer",
                     }}
                   >
@@ -406,7 +406,7 @@ export const FreightView: FC<FreightViewProps> = ({
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: theme.bg, color: theme.text, fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: theme.bg, color: theme.text, fontFamily: "inherit" }}>
       <Navbar
         theme={theme}
         view={view}
@@ -477,14 +477,14 @@ export const FreightView: FC<FreightViewProps> = ({
               {liveResult.breakdown.map((item, idx) => (
                 <div key={idx} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "4px 0", borderBottom: `1px dashed ${theme.border}` }}>
                   <span style={{ color: theme.text }}>{item.label}</span>
-                  <span style={{ fontFamily: "monospace", fontWeight: 700, color: item.value < 0 ? COLORS.warning : COLORS.success }}>
+                  <span style={{ fontFamily: "monospace", fontWeight: 500, color: item.value < 0 ? COLORS.warning : COLORS.success }}>
                     {formatSigned(item.value)}
                   </span>
                 </div>
               ))}
             </div>
           )}
-          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12, paddingTop: 12, borderTop: `2px solid ${theme.border}`, fontWeight: 700 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12, paddingTop: 12, borderTop: `2px solid ${theme.border}`, fontWeight: 500 }}>
             <span>{t("freightBaseDM")}</span>
             <span style={{ fontFamily: "monospace", color: liveResult.baseDM < 0 ? COLORS.warning : COLORS.success }}>
               {formatSigned(liveResult.baseDM)}
@@ -507,7 +507,7 @@ export const FreightView: FC<FreightViewProps> = ({
                 <label style={labelStyle}>
                   {field.label}
                   {field.expected !== null && (
-                    <span style={{ color: COLORS.primary, marginLeft: 6, fontWeight: 700 }}>
+                    <span style={{ color: COLORS.primary, marginLeft: 6, fontWeight: 500 }}>
                       ({field.expected}D6)
                     </span>
                   )}
@@ -534,7 +534,7 @@ export const FreightView: FC<FreightViewProps> = ({
               onChange={e => setOnTime(e.target.checked)}
               style={{ accentColor: COLORS.primary, width: 16, height: 16 }}
             />
-            <span style={{ fontSize: 14, fontWeight: 600 }}>{t("freightOnTime")}</span>
+            <span style={{ fontSize: 14, fontWeight: 500 }}>{t("freightOnTime")}</span>
           </label>
           {!onTime && (
             <div style={{ fontSize: 11, color: COLORS.warning, marginTop: 6, marginLeft: 24 }}>
@@ -585,7 +585,7 @@ export const FreightView: FC<FreightViewProps> = ({
                 onChange={e => setMailExtras({ ...mailExtras, armed: e.target.checked })}
                 style={{ accentColor: COLORS.primary, width: 16, height: 16 }}
               />
-              <span style={{ fontSize: 14, fontWeight: 600 }}>{t("mailArmed")}</span>
+              <span style={{ fontSize: 14, fontWeight: 500 }}>{t("mailArmed")}</span>
             </label>
           </div>
           {lowTL && (
@@ -614,14 +614,14 @@ export const FreightView: FC<FreightViewProps> = ({
                 {liveMail.breakdown.map((item, idx) => (
                   <div key={idx} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, padding: "2px 0" }}>
                     <span style={{ color: theme.textDimmed }}>{item.label}</span>
-                    <span style={{ fontFamily: "monospace", fontWeight: 700, color: item.value < 0 ? COLORS.warning : COLORS.success }}>
+                    <span style={{ fontFamily: "monospace", fontWeight: 500, color: item.value < 0 ? COLORS.warning : COLORS.success }}>
                       {formatSigned(item.value)}
                     </span>
                   </div>
                 ))}
               </div>
             )}
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, paddingTop: 8, borderTop: `1px solid ${theme.border}`, fontWeight: 700, fontSize: 13 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, paddingTop: 8, borderTop: `1px solid ${theme.border}`, fontWeight: 500, fontSize: 13 }}>
               <span>{t("mailTotalDM")}</span>
               <span style={{ fontFamily: "monospace", color: liveMail.totalDM < 0 ? COLORS.warning : COLORS.success }}>
                 {formatSigned(liveMail.totalDM)}
@@ -648,19 +648,19 @@ export const FreightView: FC<FreightViewProps> = ({
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
                 <div style={{ display: "flex", flexDirection: "column" }}>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: theme.text }}>{t("summaryCargo")}</span>
+                  <span style={{ fontSize: 14, fontWeight: 500, color: theme.text }}>{t("summaryCargo")}</span>
                   <span style={{ fontSize: 11, color: theme.textDimmed }}>{t("freightRateNote")}</span>
                 </div>
-                <span style={{ fontSize: 20, fontWeight: 800, fontFamily: "monospace", color: COLORS.success }}>
+                <span style={{ fontSize: 20, fontWeight: 500, fontFamily: "monospace", color: COLORS.success }}>
                   {formatCredits(calculatedResult.ratePerTon, lang)} /t
                 </span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap", paddingTop: 10, borderTop: `1px dashed ${theme.border}` }}>
                 <div style={{ display: "flex", flexDirection: "column" }}>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: theme.text }}>{t("summaryMail")}</span>
+                  <span style={{ fontSize: 14, fontWeight: 500, color: theme.text }}>{t("summaryMail")}</span>
                   <span style={{ fontSize: 11, color: theme.textDimmed }}>{t("mailRateNote")}</span>
                 </div>
-                <span style={{ fontSize: 20, fontWeight: 800, fontFamily: "monospace", color: COLORS.success }}>
+                <span style={{ fontSize: 20, fontWeight: 500, fontFamily: "monospace", color: COLORS.success }}>
                   {formatCredits(MAIL_PAYMENT_PER_CONTAINER / MAIL_TONS_PER_CONTAINER, lang)} /t
                 </span>
               </div>
@@ -691,17 +691,17 @@ export const FreightView: FC<FreightViewProps> = ({
           >
             <div style={{ fontSize: 12, color: theme.textDimmed, marginBottom: 12, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "baseline" }}>
               <span>{t("mailRoll2D")}:</span>
-              <span style={{ fontFamily: "monospace", fontWeight: 700, color: theme.text }}>{mailResult.rolled2D}</span>
+              <span style={{ fontFamily: "monospace", fontWeight: 500, color: theme.text }}>{mailResult.rolled2D}</span>
               <span>+</span>
               <span>{t("mailTotalDM")}:</span>
-              <span style={{ fontFamily: "monospace", fontWeight: 700, color: theme.text }}>{formatSigned(mailResult.totalDM)}</span>
+              <span style={{ fontFamily: "monospace", fontWeight: 500, color: theme.text }}>{formatSigned(mailResult.totalDM)}</span>
               <span>=</span>
-              <span style={{ fontFamily: "monospace", fontWeight: 800, color: theme.text, fontSize: 15 }}>{mailResult.finalRoll}</span>
+              <span style={{ fontFamily: "monospace", fontWeight: 500, color: theme.text, fontSize: 15 }}>{mailResult.finalRoll}</span>
               <span style={{ color: theme.textDimmed }}>({t("mailTarget")} 12+)</span>
             </div>
             {mailResult.available ? (
               <>
-                <div style={{ fontSize: 16, fontWeight: 800, color: COLORS.success, marginBottom: 12 }}>
+                <div style={{ fontSize: 16, fontWeight: 500, color: COLORS.success, marginBottom: 12 }}>
                   {t("mailAvailable")}
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 10 }}>
@@ -739,7 +739,7 @@ export const FreightView: FC<FreightViewProps> = ({
                           border: `1px solid ${mailSelected ? COLORS.success : "transparent"}`,
                           padding: "3px 8px",
                           borderRadius: 6,
-                          fontWeight: 600,
+                          fontWeight: 500,
                           cursor: "pointer",
                         }}
                       >
@@ -753,7 +753,7 @@ export const FreightView: FC<FreightViewProps> = ({
                 </div>
               </>
             ) : (
-              <div style={{ fontSize: 16, fontWeight: 800, color: COLORS.warning }}>
+              <div style={{ fontSize: 16, fontWeight: 500, color: COLORS.warning }}>
                 {t("mailUnavailable")}
               </div>
             )}
@@ -925,7 +925,7 @@ const BreakdownRow: FC<BreakdownRowProps> = ({ theme, label, rate, amount, detai
       <span style={{ fontFamily: "monospace", color: theme.textDimmed, fontSize: 12 }}>
         {detail} × {rate}
       </span>
-      <span style={{ fontFamily: "monospace", color: theme.text, fontWeight: 700 }}>
+      <span style={{ fontFamily: "monospace", color: theme.text, fontWeight: 500 }}>
         = {amount}
       </span>
     </span>

@@ -154,6 +154,37 @@ Flow:
 - **Spanish comments** acceptable (bilingual project)
 - **Mobile-first responsive** with breakpoint at 640px for navbar, 480px for other elements
 
+## Visual Design System (Traveller 2026 manual aesthetic)
+
+The whole app must look like an extension of the Mongoose Traveller 2026 Core Rulebook. Always follow these rules when adding or refactoring UI:
+
+### Palette (`src/constants/colors.ts`)
+- **Traveller orange `#D4521C`** is the dominant accent. Use `COLORS.primary` for: section header lines, separators, primary buttons, focused/active state, key indicators, the app title color, and any single highlighted element. Avoid combining it with other strong saturated colors — it should stand on its own.
+- **Space black `#1A1A18`** and **cream `#F1EFE8`** are the canonical dark/light surfaces (`THEMES.dark.bg` / `THEMES.light.bg`). Never reintroduce blue/slate (`#0f172a`, `#1e293b`, etc.) — those were pre-redesign.
+- Semantic colors are muted industrial tones (rust, amber, olive, steel) — already in `COLORS.{secondary, warning, danger, success, info, pink, indigo, rose}`. Never reintroduce vivid web colors (`#3b82f6`, `#10b981`, etc.).
+- For raw access to the Traveller swatches use the `TRAVELLER` const (`TRAVELLER.orange`, `TRAVELLER.spaceBlack`, `TRAVELLER.cream`). Mirror swatches are also available as CSS variables: `--traveller-orange`, `--traveller-space-black`, `--traveller-cream`.
+
+### Typography
+- **Font family is Inter**, loaded once in `index.html` (weights 400 + 500 only). The body sets it as the default — components should use `fontFamily: "inherit"` rather than redeclaring `'Segoe UI', system-ui, sans-serif`.
+- **Only two font weights are allowed:** `400` (regular body) and `500` (medium emphasis: titles, labels, button text, totals). Never use `600`, `700`, `800`, `900` or `"bold"`. Visual hierarchy comes from size + color + uppercase + tracking, not weight.
+- **Section / capital labels** follow the manual style: `textTransform: "uppercase"`, `letterSpacing: 1–2px`, `fontWeight: 500`, colored in `COLORS.primary` when prominent.
+- The page header (`.app-title`) is solid `--traveller-orange`, uppercase, letter-spacing 2px — do not reintroduce gradients.
+
+### Distinctive layout patterns
+- **Orange left-border info block** — already the contract of `Section` (`borderLeft: 4px solid color`). Use `Section` for any grouped block; pass `color={COLORS.primary}` (or another industrial section color) for the accent.
+- **Dark headers with orange top accent** — when you need a "section header" feeling without using `Section`, add a top border `borderTop: 3px solid ${COLORS.primary}` on a dark/cream surface. Reserve for prominent blocks.
+- **Tables**: use the `.traveller-table` CSS class in `src/index.css` (solid orange header + zebra rows tinted with orange). Do not roll a new table style — extend `.traveller-table` if you need variants.
+
+### Iconography
+- Current inline SVG icons (`src/components/icons/index.tsx`) follow a flat, single-stroke industrial look — keep that style. New icons must be flat, monochrome, 16×16 default with `aria-hidden="true"` and `marginRight: 6`.
+- If you need an icon that doesn't exist yet, follow the same outline style (Tabler Icons set is the reference family — replicate that visual language; do not import a heavy icon library).
+
+### When in doubt
+- Reach for `COLORS.primary` (orange) first.
+- Reach for `fontWeight: 500` (never higher) for emphasis.
+- Reach for uppercase + tracking for labels, never bold.
+- If a UI element does not match the manual's printed-page aesthetic (vivid web colors, gradients, heavy bold, drop shadows, glow effects, neon hovers), it is wrong — refactor it before shipping.
+
 ## TypeScript Patterns (IMPORTANT)
 
 ### Typing Components

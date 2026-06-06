@@ -76,7 +76,7 @@ export const HomeView: FC<HomeViewProps> = ({
   ];
 
   return (
-    <div style={{ minHeight: "100vh", background: theme.bg, color: theme.text, fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: theme.bg, color: theme.text, fontFamily: "inherit" }}>
       <Navbar
         theme={theme}
         view={view}
@@ -92,9 +92,9 @@ export const HomeView: FC<HomeViewProps> = ({
 
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-            gap: 16,
+            display: "flex",
+            flexDirection: "column",
+            gap: 12,
             marginBottom: 24,
           }}
         >
@@ -132,7 +132,7 @@ export const HomeView: FC<HomeViewProps> = ({
                 e.currentTarget.style.borderColor = theme.border;
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 8, color: tool.accent, fontSize: 18, fontWeight: 700 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, color: tool.accent, fontSize: 18, fontWeight: 500 }}>
                 {tool.icon}
                 <span>{tool.title}</span>
                 {tool.comingSoon && (
@@ -140,7 +140,7 @@ export const HomeView: FC<HomeViewProps> = ({
                     style={{
                       marginLeft: "auto",
                       fontSize: 11,
-                      fontWeight: 600,
+                      fontWeight: 500,
                       letterSpacing: 0.3,
                       textTransform: "uppercase",
                       padding: "2px 8px",

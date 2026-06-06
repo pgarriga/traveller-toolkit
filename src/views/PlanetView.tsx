@@ -95,7 +95,7 @@ export const PlanetView: FC<PlanetViewProps> = ({
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: theme.bg, color: theme.text, fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: theme.bg, color: theme.text, fontFamily: "inherit" }}>
       <Navbar
         theme={theme}
         view={view}
@@ -121,7 +121,7 @@ export const PlanetView: FC<PlanetViewProps> = ({
               background: "transparent",
               border: "none",
               borderBottom: `2px solid ${COLORS.primary}44`,
-              fontWeight: 800,
+              fontWeight: 500,
               color: theme.text,
               textAlign: "center",
               width: "100%",
@@ -142,7 +142,7 @@ export const PlanetView: FC<PlanetViewProps> = ({
                 color: getZoneColor(zoneInput),
                 padding: "4px 8px",
                 fontSize: 12,
-                fontWeight: 600,
+                fontWeight: 500,
                 cursor: "pointer"
               }}>
               <option value={ZONES.GREEN}>{t("zoneGreen")}</option>
@@ -265,7 +265,7 @@ export const PlanetView: FC<PlanetViewProps> = ({
 
         <div style={{ background: theme.bgCard, borderRadius: 12, padding: 16, textAlign: "center", marginTop: 8 }}>
           <div style={{ fontSize: 11, color: theme.textDimmed, textTransform: "uppercase", marginBottom: 6 }}>{t("worldLine")}</div>
-          <code style={{ fontSize: 15, color: COLORS.warning, fontWeight: 700, letterSpacing: 1 }}>
+          <code style={{ fontSize: 15, color: COLORS.warning, fontWeight: 500, letterSpacing: 1 }}>
             {name} {uwp.toUpperCase()} {zoneInput}
           </code>
         </div>

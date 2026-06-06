@@ -27,6 +27,15 @@
   --font-size-2xl: 24px;
   --font-size-3xl: 32px;
 
+  /* Font weights — Traveller manual uses only regular (400) and medium (500) */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+
+  /* Traveller palette (mirror of src/constants/colors.ts TRAVELLER) */
+  --traveller-orange: #D4521C;
+  --traveller-space-black: #1A1A18;
+  --traveller-cream: #F1EFE8;
+
   /* Navbar height */
   --navbar-height: 56px;
 
@@ -42,7 +51,12 @@
 
 body {
   min-height: 100vh;
-  background: #0f172a;
+  background: var(--traveller-space-black);
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  font-weight: var(--font-weight-regular);
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Prevent iOS zoom on input focus */
@@ -129,54 +143,53 @@ input::placeholder {
 
 .data-row-value {
   font-size: var(--font-size-md);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   text-align: right;
   word-break: break-word;
 }
 
-/* Title */
+/* Traveller-style data table: solid orange header + zebra body rows.
+   Apply to any <table class="traveller-table"> for the manual look. */
+.traveller-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-md);
+}
+
+.traveller-table thead th {
+  background: var(--traveller-orange);
+  color: var(--traveller-cream);
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: var(--font-weight-medium);
+  padding: 8px 12px;
+}
+
+.traveller-table tbody td {
+  padding: 8px 12px;
+  border-bottom: 1px solid currentColor;
+  border-bottom-color: rgba(212, 82, 28, 0.15);
+}
+
+.traveller-table tbody tr:nth-child(odd) td {
+  background: rgba(212, 82, 28, 0.06);
+}
+
+/* Title — solid Traveller orange (manual section-header style) */
 .app-title {
   margin: 0;
   font-size: var(--font-size-3xl);
-  font-weight: 800;
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-weight: var(--font-weight-medium);
+  color: var(--traveller-orange);
+  text-transform: uppercase;
+  letter-spacing: 2px;
 }
 
 /* Manual input row */
 .manual-input-row {
   display: flex;
   gap: var(--spacing-sm);
-}
-
-/* Navbar - desktop shows links, mobile shows hamburger */
-.nav-desktop {
-  display: flex;
-}
-
-.nav-mobile-toggle {
-  display: none !important;
-}
-
-.nav-mobile-menu {
-  display: none;
-}
-
-/* Mobile styles - 640px breakpoint */
-@media (max-width: 640px) {
-  .nav-desktop {
-    display: none !important;
-  }
-
-  .nav-mobile-toggle {
-    display: flex !important;
-  }
-
-  .nav-mobile-menu {
-    display: flex !important;
-  }
 }
 
 /* Mobile styles - 480px breakpoint */

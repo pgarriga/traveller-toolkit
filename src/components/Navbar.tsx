@@ -96,77 +96,46 @@ export const Navbar: FC<NavbarProps> = ({ theme, view, resetDecoder, goHome, nav
           aria-label={t("goHome") || "Go to home"}
           style={{
             fontSize: 18,
-            fontWeight: 800,
+            fontWeight: 500,
             cursor: "pointer",
             display: "flex",
-            gap: 6
+            gap: 6,
+            textTransform: "uppercase",
+            letterSpacing: 2,
           }}
         >
-          <span style={{ color: COLORS.warning }}>Traveller</span>
-          <span style={{
-            background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.secondary})`,
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text"
-          }}>Toolkit</span>
+          <span style={{ color: theme.text }}>Traveller</span>
+          <span style={{ color: COLORS.primary }}>Toolkit</span>
         </div>
 
-        {/* Desktop nav links */}
-        <div className="nav-desktop" style={{ display: "flex", gap: 8 }} role="menubar">
-          <Button variant="nav" active={view === "decoder"} theme={theme} onClick={resetDecoder} role="menuitem">
-            <IconGlobe />{t("decodeUWP")}
-          </Button>
-          <Button
-            variant="nav"
-            theme={theme}
-            disabled
-            aria-disabled="true"
-            title={t("comingSoon")}
-            role="menuitem"
-            style={{ opacity: 0.55 }}
-          >
-            <IconUsers />{t("passengerTitle")}
-          </Button>
-          <Button variant="nav" active={view === "freight"} theme={theme} onClick={() => navigateTo("freight")} role="menuitem">
-            <IconBox />{t("freightTitle")}
-          </Button>
-          <Button variant="nav" active={view === "saved"} theme={theme} onClick={() => navigateTo("saved")} role="menuitem">
-            <IconClock />{t("viewRecent")}
-          </Button>
-          <Button variant="nav" active={view === "settings"} theme={theme} onClick={() => navigateTo("settings")} role="menuitem">
-            <IconSettings />{t("settings")}
-          </Button>
-        </div>
-
-        {/* Mobile hamburger */}
+        {/* Menu toggle (hamburger on all sizes) */}
         <button
           ref={toggleRef}
-          className="nav-mobile-toggle"
           onClick={() => setMenuOpen(!menuOpen)}
           aria-expanded={menuOpen}
           aria-controls="mobile-menu"
           aria-label={menuOpen ? (t("closeMenu") || "Close menu") : (t("openMenu") || "Open menu")}
           style={{
-            display: "none",
             background: "transparent",
             border: "none",
             color: theme.text,
             padding: 8,
-            cursor: "pointer"
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
           }}
         >
           {menuOpen ? <IconClose /> : <IconMenu />}
         </button>
       </nav>
 
-      {/* Mobile menu overlay */}
+      {/* Menu overlay */}
       {menuOpen && (
         <div
           id="mobile-menu"
           ref={menuRef}
           role="menu"
           aria-label={t("mobileNavigation") || "Mobile navigation"}
-          className="nav-mobile-menu"
           style={{
             position: "fixed",
             top: 56,
@@ -205,7 +174,7 @@ export const Navbar: FC<NavbarProps> = ({ theme, view, resetDecoder, goHome, nav
           >
             <IconUsers />
             <span style={{ flex: 1, textAlign: "left" }}>{t("passengerTitle")}</span>
-            <span style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.3 }}>
+            <span style={{ fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: 0.3 }}>
               {t("comingSoon")}
             </span>
           </Button>

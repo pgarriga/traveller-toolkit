@@ -101,7 +101,7 @@ export const Button: FC<ButtonProps> = ({
       disabled={disabled}
       style={{
         borderRadius: 8,
-        fontWeight: 600,
+        fontWeight: 500,
         cursor: disabled ? "not-allowed" : "pointer",
         display: "flex",
         alignItems: "center",

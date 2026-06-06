@@ -40,7 +40,7 @@ export const RecentView: FC<RecentViewProps> = ({
   setMenuOpen,
   t
 }) => (
-  <div style={{ minHeight: "100vh", background: theme.bg, color: theme.text, fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+  <div style={{ minHeight: "100vh", background: theme.bg, color: theme.text, fontFamily: "inherit" }}>
     <Navbar
       theme={theme}
       view={view}
@@ -86,7 +86,7 @@ export const RecentView: FC<RecentViewProps> = ({
                 borderLeft: `3px solid ${getZoneColor(planet.zone)}`
               }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 15, fontWeight: 600, color: theme.text, marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{planet.name}</div>
+                <div style={{ fontSize: 15, fontWeight: 500, color: theme.text, marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{planet.name}</div>
                 <div style={{ fontFamily: "monospace", fontSize: 12, color: theme.textDimmed, letterSpacing: 0.5 }}>{planet.uwp}</div>
               </div>
               <Button

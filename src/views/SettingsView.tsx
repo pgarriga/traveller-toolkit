@@ -38,7 +38,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
   setMenuOpen,
   t
 }) => (
-  <div style={{ minHeight: "100vh", background: theme.bg, color: theme.text, fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+  <div style={{ minHeight: "100vh", background: theme.bg, color: theme.text, fontFamily: "inherit" }}>
     <Navbar
       theme={theme}
       view={view}
@@ -53,7 +53,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
       <PageHeader title={t("settings")} icon={<IconSettings />} />
 
       <div style={{ background: theme.bgCard, borderRadius: 12, padding: 20, marginBottom: 16, border: `1px solid ${theme.border}` }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: theme.text, marginBottom: 12 }}>{t("theme")}</div>
+        <div style={{ fontSize: 14, fontWeight: 500, color: theme.text, marginBottom: 12 }}>{t("theme")}</div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {(["auto", "light", "dark"] as ThemeMode[]).map(mode => (
             <Button
@@ -74,7 +74,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
       </div>
 
       <div style={{ background: theme.bgCard, borderRadius: 12, padding: 20, marginBottom: 16, border: `1px solid ${theme.border}` }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: theme.text, marginBottom: 12 }}>{t("language")}</div>
+        <div style={{ fontSize: 14, fontWeight: 500, color: theme.text, marginBottom: 12 }}>{t("language")}</div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {(["auto", "es", "en"] as LangMode[]).map(mode => (
             <Button

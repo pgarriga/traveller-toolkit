@@ -45,7 +45,7 @@ export const DecoderView: FC<DecoderViewProps> = ({
   setMenuOpen,
   t
 }) => (
-  <div style={{ minHeight: "100vh", background: theme.bg, color: theme.text, fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+  <div style={{ minHeight: "100vh", background: theme.bg, color: theme.text, fontFamily: "inherit" }}>
     <Navbar
       theme={theme}
       view={view}
@@ -113,7 +113,7 @@ export const DecoderView: FC<DecoderViewProps> = ({
               color: theme.text,
               fontSize: 14,
               fontFamily: "monospace",
-              fontWeight: 600,
+              fontWeight: 500,
               letterSpacing: 1,
               textAlign: "center"
             }}

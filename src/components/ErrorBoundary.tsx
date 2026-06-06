@@ -44,7 +44,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           alignItems: "center",
           justifyContent: "center",
           padding: 20,
-          fontFamily: "'Segoe UI', system-ui, sans-serif"
+          fontFamily: "inherit"
         }}>
           <div style={{
             background: "#1e293b",
@@ -68,7 +68,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               ⚠
             </div>
 
-            <h1 style={{ margin: "0 0 12px", fontSize: 20, fontWeight: 700 }}>
+            <h1 style={{ margin: "0 0 12px", fontSize: 20, fontWeight: 500 }}>
               Algo salió mal
             </h1>
 
@@ -86,7 +86,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                   color: "#fff",
                   padding: "12px 24px",
                   fontSize: 14,
-                  fontWeight: 600,
+                  fontWeight: 500,
                   cursor: "pointer"
                 }}
               >
@@ -101,7 +101,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                   color: "#e2e8f0",
                   padding: "12px 24px",
                   fontSize: 14,
-                  fontWeight: 600,
+                  fontWeight: 500,
                   cursor: "pointer"
                 }}
               >
