@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useEffect, useRef } from "react";
 import type { Theme } from "../types/theme";
 import type { TranslationFunction } from "../types/i18n";
-import { IconClock, IconSettings, IconBox, IconGlobe, IconMenu, IconClose } from "./icons";
+import { IconClock, IconSettings, IconBox, IconGlobe, IconMenu, IconClose, IconUsers } from "./icons";
 import { Button } from "./ui/Button";
 import { COLORS } from "../constants/colors";
 
@@ -116,6 +116,17 @@ export const Navbar: FC<NavbarProps> = ({ theme, view, resetDecoder, goHome, nav
           <Button variant="nav" active={view === "decoder"} theme={theme} onClick={resetDecoder} role="menuitem">
             <IconGlobe />{t("decodeUWP")}
           </Button>
+          <Button
+            variant="nav"
+            theme={theme}
+            disabled
+            aria-disabled="true"
+            title={t("comingSoon")}
+            role="menuitem"
+            style={{ opacity: 0.55 }}
+          >
+            <IconUsers />{t("passengerTitle")}
+          </Button>
           <Button variant="nav" active={view === "freight"} theme={theme} onClick={() => navigateTo("freight")} role="menuitem">
             <IconBox />{t("freightTitle")}
           </Button>
@@ -181,6 +192,22 @@ export const Navbar: FC<NavbarProps> = ({ theme, view, resetDecoder, goHome, nav
             role="menuitem"
           >
             <IconGlobe />{t("decodeUWP")}
+          </Button>
+          <Button
+            variant="nav-mobile"
+            size="lg"
+            theme={theme}
+            disabled
+            aria-disabled="true"
+            fullWidth
+            style={{ justifyContent: "flex-start", opacity: 0.55 }}
+            role="menuitem"
+          >
+            <IconUsers />
+            <span style={{ flex: 1, textAlign: "left" }}>{t("passengerTitle")}</span>
+            <span style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.3 }}>
+              {t("comingSoon")}
+            </span>
           </Button>
           <Button
             variant="nav-mobile"

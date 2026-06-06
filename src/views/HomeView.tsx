@@ -4,7 +4,7 @@ import type { TranslationFunction } from "../types/i18n";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { PageHeader } from "../components/ui/PageHeader";
-import { IconGlobe, IconBox, IconClock } from "../components/icons";
+import { IconGlobe, IconBox, IconClock, IconUsers } from "../components/icons";
 import { COLORS } from "../constants/colors";
 
 type ViewType = "home" | "decoder" | "saved" | "settings" | "planet" | "freight";
@@ -26,7 +26,8 @@ interface ToolCard {
   title: string;
   description: string;
   accent: string;
-  onClick: () => void;
+  onClick?: () => void;
+  comingSoon?: boolean;
 }
 
 export const HomeView: FC<HomeViewProps> = ({
@@ -47,6 +48,14 @@ export const HomeView: FC<HomeViewProps> = ({
       description: t("homeDecoderDesc"),
       accent: COLORS.primary,
       onClick: resetDecoder,
+    },
+    {
+      key: "passenger",
+      icon: <IconUsers />,
+      title: t("passengerTitle"),
+      description: t("homePassengerDesc"),
+      accent: COLORS.success,
+      comingSoon: true,
     },
     {
       key: "freight",
@@ -93,7 +102,9 @@ export const HomeView: FC<HomeViewProps> = ({
             <button
               key={tool.key}
               type="button"
-              onClick={tool.onClick}
+              onClick={tool.comingSoon ? undefined : tool.onClick}
+              disabled={tool.comingSoon}
+              aria-disabled={tool.comingSoon || undefined}
               style={{
                 textAlign: "left",
                 background: theme.bgCard,
@@ -103,17 +114,20 @@ export const HomeView: FC<HomeViewProps> = ({
                 padding: 20,
                 color: theme.text,
                 fontFamily: "inherit",
-                cursor: "pointer",
+                cursor: tool.comingSoon ? "not-allowed" : "pointer",
+                opacity: tool.comingSoon ? 0.6 : 1,
                 display: "flex",
                 flexDirection: "column",
                 gap: 8,
                 transition: "transform 0.12s ease, border-color 0.12s ease",
               }}
               onMouseEnter={e => {
+                if (tool.comingSoon) return;
                 e.currentTarget.style.transform = "translateY(-2px)";
                 e.currentTarget.style.borderColor = tool.accent;
               }}
               onMouseLeave={e => {
+                if (tool.comingSoon) return;
                 e.currentTarget.style.transform = "translateY(0)";
                 e.currentTarget.style.borderColor = theme.border;
               }}
@@ -121,6 +135,24 @@ export const HomeView: FC<HomeViewProps> = ({
               <div style={{ display: "flex", alignItems: "center", gap: 8, color: tool.accent, fontSize: 18, fontWeight: 700 }}>
                 {tool.icon}
                 <span>{tool.title}</span>
+                {tool.comingSoon && (
+                  <span
+                    style={{
+                      marginLeft: "auto",
+                      fontSize: 11,
+                      fontWeight: 600,
+                      letterSpacing: 0.3,
+                      textTransform: "uppercase",
+                      padding: "2px 8px",
+                      borderRadius: 999,
+                      background: `${tool.accent}22`,
+                      color: tool.accent,
+                      border: `1px solid ${tool.accent}55`,
+                    }}
+                  >
+                    {t("comingSoon")}
+                  </span>
+                )}
               </div>
               <div style={{ fontSize: 13, color: theme.textDimmed, lineHeight: 1.4 }}>
                 {tool.description}
