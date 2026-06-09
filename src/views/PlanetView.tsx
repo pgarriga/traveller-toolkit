@@ -19,7 +19,7 @@ import {
 } from "../constants/gameRules";
 import { requiresWarning } from "../utils/i18n-helpers";
 
-type ViewType = "home" | "decoder" | "saved" | "settings" | "planet" | "freight";
+type ViewType = "home" | "decoder" | "saved" | "settings" | "planet" | "freight" | "passenger";
 
 interface ParsedUWP {
   sp: StarportClass;

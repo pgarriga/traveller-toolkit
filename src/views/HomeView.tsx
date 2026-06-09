@@ -7,7 +7,7 @@ import { PageHeader } from "../components/ui/PageHeader";
 import { IconGlobe, IconBox, IconClock, IconUsers } from "../components/icons";
 import { COLORS } from "../constants/colors";
 
-type ViewType = "home" | "decoder" | "saved" | "settings" | "planet" | "freight";
+type ViewType = "home" | "decoder" | "saved" | "settings" | "planet" | "freight" | "passenger";
 
 interface HomeViewProps {
   theme: Theme;
@@ -55,7 +55,7 @@ export const HomeView: FC<HomeViewProps> = ({
       title: t("passengerTitle"),
       description: t("homePassengerDesc"),
       accent: COLORS.success,
-      comingSoon: true,
+      onClick: () => navigateTo("passenger"),
     },
     {
       key: "freight",

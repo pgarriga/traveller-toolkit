@@ -195,7 +195,7 @@ input::placeholder {
 /* Mobile styles - 480px breakpoint */
 @media (max-width: 480px) {
   .app-title {
-    font-size: 28px;
+    font-size: 26px;
   }
 
   .form-grid {
@@ -284,6 +284,20 @@ a, button {
 :focus-visible {
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
+}
+
+/* Dice rolling animation — used by the passenger calculator while it rolls. */
+@keyframes dice-roll {
+  0%   { transform: rotate(0deg) scale(1); }
+  25%  { transform: rotate(-15deg) scale(1.05); }
+  50%  { transform: rotate(15deg) scale(0.95); }
+  75%  { transform: rotate(-10deg) scale(1.05); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+.dice-rolling {
+  animation: dice-roll 0.45s ease-in-out;
+  display: inline-block;
 }
 
 /* Skip link for keyboard users */

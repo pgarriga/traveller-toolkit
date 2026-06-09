@@ -8,7 +8,7 @@ import { PageHeader } from "../components/ui/PageHeader";
 import { IconCamera, IconGlobe } from "../components/icons";
 import { COLORS } from "../constants/colors";
 
-type ViewType = "home" | "decoder" | "saved" | "settings" | "planet" | "freight";
+type ViewType = "home" | "decoder" | "saved" | "settings" | "planet" | "freight" | "passenger";
 
 interface DecoderViewProps {
   theme: Theme;

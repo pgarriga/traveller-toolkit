@@ -6,7 +6,7 @@ import { IconClock, IconSettings, IconBox, IconGlobe, IconMenu, IconClose, IconU
 import { Button } from "./ui/Button";
 import { COLORS } from "../constants/colors";
 
-type ViewType = "home" | "decoder" | "saved" | "settings" | "planet" | "freight";
+type ViewType = "home" | "decoder" | "saved" | "settings" | "planet" | "freight" | "passenger";
 
 interface NavbarProps {
   theme: Theme;
@@ -165,18 +165,14 @@ export const Navbar: FC<NavbarProps> = ({ theme, view, resetDecoder, goHome, nav
           <Button
             variant="nav-mobile"
             size="lg"
+            active={view === "passenger"}
             theme={theme}
-            disabled
-            aria-disabled="true"
+            onClick={() => navigateTo("passenger")}
             fullWidth
-            style={{ justifyContent: "flex-start", opacity: 0.55 }}
+            style={{ justifyContent: "flex-start" }}
             role="menuitem"
           >
-            <IconUsers />
-            <span style={{ flex: 1, textAlign: "left" }}>{t("passengerTitle")}</span>
-            <span style={{ fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: 0.3 }}>
-              {t("comingSoon")}
-            </span>
+            <IconUsers />{t("passengerTitle")}
           </Button>
           <Button
             variant="nav-mobile"

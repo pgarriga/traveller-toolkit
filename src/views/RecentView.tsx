@@ -9,7 +9,7 @@ import { PageHeader } from "../components/ui/PageHeader";
 import { IconClock, IconTrash } from "../components/icons";
 import { getZoneColor } from "../constants/zones";
 
-type ViewType = "home" | "decoder" | "saved" | "settings" | "planet" | "freight";
+type ViewType = "home" | "decoder" | "saved" | "settings" | "planet" | "freight" | "passenger";
 
 interface RecentViewProps {
   theme: Theme;

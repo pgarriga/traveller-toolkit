@@ -22,12 +22,13 @@ import { PlanetView } from "./views/PlanetView";
 import { RecentView } from "./views/RecentView";
 import { DecoderView } from "./views/DecoderView";
 import { FreightView } from "./views/FreightView";
+import { PassengerView } from "./views/PassengerView";
 import { HomeView } from "./views/HomeView";
 
 // OCR
 import { createWorker } from "tesseract.js";
 
-type ViewType = "home" | "decoder" | "saved" | "settings" | "planet" | "freight";
+type ViewType = "home" | "decoder" | "saved" | "settings" | "planet" | "freight" | "passenger";
 
 interface RecentPlanet {
   uwp: string;
@@ -120,6 +121,8 @@ export default function App() {
         setView("settings");
       } else if (urlView === "freight") {
         setView("freight");
+      } else if (urlView === "passenger") {
+        setView("passenger");
       } else if (urlView === "decoder") {
         setName("");
         setUwp("");
@@ -340,6 +343,10 @@ export default function App() {
 
   if (view === "freight") {
     return <FreightView {...commonProps} lang={lang} />;
+  }
+
+  if (view === "passenger") {
+    return <PassengerView {...commonProps} lang={lang} />;
   }
 
   if (view === "decoder") {

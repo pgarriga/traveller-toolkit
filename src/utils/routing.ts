@@ -1,6 +1,6 @@
 // URL routing helpers
 
-type RoutingView = "home" | "decoder" | "saved" | "planet" | "settings" | "freight";
+type RoutingView = "home" | "decoder" | "saved" | "planet" | "settings" | "freight" | "passenger";
 
 interface ParsedUrl {
   view: RoutingView;
@@ -32,6 +32,9 @@ export const parseUrl = (): ParsedUrl => {
   if (path === "/freight") {
     return { view: "freight", uwp: null };
   }
+  if (path === "/passengers") {
+    return { view: "passenger", uwp: null };
+  }
   const planetMatch = path.match(/^\/planet\/([A-Za-z0-9-]+)$/);
   if (planetMatch) {
     return { view: "planet", uwp: planetMatch[1].toUpperCase() };
@@ -45,6 +48,7 @@ export const buildUrl = (view: RoutingView, uwp: string | null = null): string =
   if (view === "saved") return `${basePath}/recent`;
   if (view === "settings") return `${basePath}/settings`;
   if (view === "freight") return `${basePath}/freight`;
+  if (view === "passenger") return `${basePath}/passengers`;
   if (view === "planet" && uwp) return `${basePath}/planet/${uwp.toUpperCase()}`;
   return basePath || "/";
 };
