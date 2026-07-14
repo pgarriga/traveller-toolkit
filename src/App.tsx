@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef, ChangeEvent } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import type { ZoneCode, StarportClass } from "./types/uwp";
 import type { Language } from "./types/i18n";
 import type { StarportData, SizeData, AtmosphereData, GovernmentData } from "./types/game-data";
@@ -10,25 +10,20 @@ import { useRecentPlanets } from "./hooks/useRecentPlanets";
 
 // Constants
 import { ZONES } from "./constants/zones";
-import { isCommonWord, OCR_SETTINGS } from "./constants/ocr";
 
 // Utils
 import { parseUrl, buildUrl } from "./utils/routing";
-import { UWP_PATTERN, parseUwp, formatUwp } from "./utils/uwp";
+import { parseUwp } from "./utils/uwp";
 
 // Views
 import { SettingsView } from "./views/SettingsView";
 import { PlanetView } from "./views/PlanetView";
-import { RecentView } from "./views/RecentView";
-import { DecoderView } from "./views/DecoderView";
 import { FreightView } from "./views/FreightView";
 import { PassengerView } from "./views/PassengerView";
+import { SearchView } from "./views/SearchView";
 import { HomeView } from "./views/HomeView";
 
-// OCR
-import { createWorker } from "tesseract.js";
-
-type ViewType = "home" | "decoder" | "saved" | "settings" | "planet" | "freight" | "passenger";
+type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search";
 
 interface RecentPlanet {
   uwp: string;
@@ -54,10 +49,7 @@ export default function App() {
   const [name, setName] = useState("");
   const [zoneInput, setZoneInput] = useState<ZoneCode>(ZONES.GREEN as ZoneCode);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [view, setView] = useState<ViewType>("decoder");
-  const [scanning, setScanning] = useState(false);
-  const [scanStatus, setScanStatus] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [view, setView] = useState<ViewType>("home");
   const isInitialLoad = useRef(true);
 
   // Get translated game data
@@ -115,25 +107,18 @@ export default function App() {
           setZoneInput(ZONES.GREEN as ZoneCode);
         }
         setView("planet");
-      } else if (urlView === "saved") {
-        setView("saved");
       } else if (urlView === "settings") {
         setView("settings");
       } else if (urlView === "freight") {
         setView("freight");
       } else if (urlView === "passenger") {
         setView("passenger");
-      } else if (urlView === "decoder") {
-        setName("");
-        setUwp("");
-        setZoneInput(ZONES.GREEN as ZoneCode);
-        setScanStatus("");
-        setView("decoder");
+      } else if (urlView === "search") {
+        setView("search");
       } else {
         setName("");
         setUwp("");
         setZoneInput(ZONES.GREEN as ZoneCode);
-        setScanStatus("");
         setView("home");
       }
     };
@@ -150,19 +135,10 @@ export default function App() {
     setMenuOpen(false);
   };
 
-  const resetDecoder = () => {
-    setName("");
-    setUwp("");
-    setZoneInput(ZONES.GREEN as ZoneCode);
-    setScanStatus("");
-    navigateTo("decoder");
-  };
-
   const goHome = () => {
     setName("");
     setUwp("");
     setZoneInput(ZONES.GREEN as ZoneCode);
-    setScanStatus("");
     navigateTo("home");
   };
 
@@ -174,94 +150,13 @@ export default function App() {
     navigateTo("planet", planet.uwp);
   };
 
-  // OCR Scanner function
-  const handleScan = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUwp("");
-    setName("");
-    setScanStatus("");
-    setScanning(true);
-    setScanStatus(t("loadingOcr"));
-
-    try {
-      const worker = await createWorker("eng");
-      setScanStatus(t("scanning"));
-
-      const { data: { text } } = await worker.recognize(file);
-      await worker.terminate();
-
-      const matches = text.match(UWP_PATTERN);
-
-      if (matches && matches.length > 0) {
-        const formattedUwp = formatUwp(matches[0]);
-        setUwp(formattedUwp);
-        setScanStatus(`${t("uwpDetected")}: ${formattedUwp}`);
-
-        // Try to find planet name
-        const uwpIndex = text.indexOf(matches[0]);
-        const textAfter = text.slice(
-          uwpIndex + matches[0].length,
-          uwpIndex + matches[0].length + OCR_SETTINGS.NAME_SEARCH_LENGTH
-        );
-
-        const lines = text.split(/[\n\r]+/);
-        const uwpLineIndex = lines.findIndex(line => line.includes(matches[0]));
-
-        let detectedName: string | null = null;
-
-        if (uwpLineIndex >= 0) {
-          const maxLine = Math.min(uwpLineIndex + OCR_SETTINGS.NAME_SEARCH_LINES, lines.length);
-          for (let i = uwpLineIndex + 1; i < maxLine; i++) {
-            const line = lines[i].trim();
-            if (!line) continue;
-
-            const cleaned = line.replace(/[^a-zA-Z\s'-]/g, "").trim();
-
-            if (cleaned.length < OCR_SETTINGS.NAME_MIN_LENGTH) continue;
-            if (cleaned.length > OCR_SETTINGS.NAME_MAX_LENGTH) continue;
-            if (isCommonWord(cleaned)) continue;
-            if (/^[ABCDEX][0-9A-F]/i.test(cleaned)) continue;
-
-            detectedName = cleaned.split(/\s+/).map(w =>
-              w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
-            ).join(" ");
-            break;
-          }
-        }
-
-        if (!detectedName) {
-          const capsPattern = /\b([A-Z][A-Za-z'-]{2,}(?:\s+[A-Z][A-Za-z'-]+)*)\b/g;
-          const capsMatches: string[] = textAfter.match(capsPattern) || [];
-          const filtered = capsMatches.filter((w: string) =>
-            w.length >= OCR_SETTINGS.NAME_MIN_LENGTH &&
-            w.length <= OCR_SETTINGS.NAME_MAX_LENGTH &&
-            !isCommonWord(w)
-          );
-          if (filtered.length > 0) {
-            detectedName = filtered[0];
-          }
-        }
-
-        if (detectedName) {
-          setName(detectedName);
-          setScanStatus(prev => `${prev} | ${t("nameDetected")}: ${detectedName}`);
-        }
-
-        navigateTo("planet", formattedUwp);
-      } else {
-        setScanStatus(t("noUwpFound"));
-      }
-    } catch (error) {
-      console.error("OCR Error:", error);
-      setScanStatus(t("scanError"));
-    } finally {
-      setScanning(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    }
+  const loadWorldFromSearch = (worldUwp: string, worldName: string) => {
+    const existing = findPlanet(worldUwp);
+    const zone = existing?.zone || (ZONES.GREEN as ZoneCode);
+    setName(existing?.name || worldName);
+    setUwp(worldUwp);
+    setZoneInput(zone);
+    navigateTo("planet", worldUwp);
   };
 
   // Parse UWP
@@ -285,7 +180,6 @@ export default function App() {
   const commonProps = {
     theme,
     view,
-    resetDecoder,
     goHome,
     navigateTo,
     menuOpen,
@@ -329,18 +223,6 @@ export default function App() {
     );
   }
 
-  if (view === "saved") {
-    return (
-      <RecentView
-        {...commonProps}
-        recentPlanets={recentPlanets}
-        loadPlanet={loadPlanet}
-        deletePlanet={deletePlanet}
-        clearAllPlanets={clearAllPlanets}
-      />
-    );
-  }
-
   if (view === "freight") {
     return <FreightView {...commonProps} lang={lang} />;
   }
@@ -349,17 +231,15 @@ export default function App() {
     return <PassengerView {...commonProps} lang={lang} />;
   }
 
-  if (view === "decoder") {
+  if (view === "search") {
     return (
-      <DecoderView
+      <SearchView
         {...commonProps}
-        uwp={uwp}
-        setUwp={setUwp}
-        parsed={!!parsed}
-        scanning={scanning}
-        scanStatus={scanStatus}
-        fileInputRef={fileInputRef}
-        handleScan={handleScan}
+        onSelectWorld={loadWorldFromSearch}
+        recentPlanets={recentPlanets}
+        loadPlanet={loadPlanet}
+        deletePlanet={deletePlanet}
+        clearAllPlanets={clearAllPlanets}
       />
     );
   }

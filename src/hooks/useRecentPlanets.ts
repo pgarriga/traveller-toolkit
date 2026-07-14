@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import type { RecentPlanet, ZoneCode } from "../types/uwp";
-import { MAX_RECENT_PLANETS } from "../constants/ocr";
 import { ZONES } from "../constants/zones";
 
 const STORAGE_KEY = "traveller-recent";
+const MAX_RECENT_PLANETS = 20;
 
 interface UseRecentPlanetsReturn {
   recentPlanets: RecentPlanet[];

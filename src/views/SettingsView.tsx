@@ -7,7 +7,7 @@ import { Button } from "../components/ui/Button";
 import { PageHeader } from "../components/ui/PageHeader";
 import { IconSettings } from "../components/icons";
 
-type ViewType = "home" | "decoder" | "saved" | "settings" | "planet" | "freight" | "passenger";
+type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search";
 
 interface SettingsViewProps {
   theme: Theme;
@@ -16,7 +16,6 @@ interface SettingsViewProps {
   langMode: LangMode;
   setLangMode: (mode: LangMode) => void;
   view: ViewType;
-  resetDecoder: () => void;
   goHome: () => void;
   navigateTo: (view: ViewType) => void;
   menuOpen: boolean;
@@ -31,7 +30,6 @@ export const SettingsView: FC<SettingsViewProps> = ({
   langMode,
   setLangMode,
   view,
-  resetDecoder,
   goHome,
   navigateTo,
   menuOpen,
@@ -42,7 +40,6 @@ export const SettingsView: FC<SettingsViewProps> = ({
     <Navbar
       theme={theme}
       view={view}
-      resetDecoder={resetDecoder}
       goHome={goHome}
       navigateTo={navigateTo}
       menuOpen={menuOpen}

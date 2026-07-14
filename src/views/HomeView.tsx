@@ -4,15 +4,14 @@ import type { TranslationFunction } from "../types/i18n";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { PageHeader } from "../components/ui/PageHeader";
-import { IconGlobe, IconBox, IconClock, IconUsers } from "../components/icons";
+import { IconBox, IconUsers, IconSearch } from "../components/icons";
 import { COLORS } from "../constants/colors";
 
-type ViewType = "home" | "decoder" | "saved" | "settings" | "planet" | "freight" | "passenger";
+type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search";
 
 interface HomeViewProps {
   theme: Theme;
   view: ViewType;
-  resetDecoder: () => void;
   goHome: () => void;
   navigateTo: (view: ViewType, uwp?: string) => void;
   menuOpen: boolean;
@@ -33,7 +32,6 @@ interface ToolCard {
 export const HomeView: FC<HomeViewProps> = ({
   theme,
   view,
-  resetDecoder,
   goHome,
   navigateTo,
   menuOpen,
@@ -42,12 +40,12 @@ export const HomeView: FC<HomeViewProps> = ({
 }) => {
   const tools: ToolCard[] = [
     {
-      key: "decoder",
-      icon: <IconGlobe />,
-      title: t("decodeUWP"),
-      description: t("homeDecoderDesc"),
+      key: "search",
+      icon: <IconSearch />,
+      title: t("searchTitle"),
+      description: t("homeSearchDesc"),
       accent: COLORS.primary,
-      onClick: resetDecoder,
+      onClick: () => navigateTo("search"),
     },
     {
       key: "passenger",
@@ -65,14 +63,6 @@ export const HomeView: FC<HomeViewProps> = ({
       accent: COLORS.secondary,
       onClick: () => navigateTo("freight"),
     },
-    {
-      key: "recent",
-      icon: <IconClock />,
-      title: t("recentPlanets"),
-      description: t("homeRecentDesc"),
-      accent: COLORS.warning,
-      onClick: () => navigateTo("saved"),
-    },
   ];
 
   return (
@@ -80,7 +70,6 @@ export const HomeView: FC<HomeViewProps> = ({
       <Navbar
         theme={theme}
         view={view}
-        resetDecoder={resetDecoder}
         goHome={goHome}
         navigateTo={navigateTo}
         menuOpen={menuOpen}

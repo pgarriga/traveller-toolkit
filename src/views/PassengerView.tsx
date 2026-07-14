@@ -33,13 +33,12 @@ import {
 } from "../constants/passenger";
 import { calculatePassengers } from "../utils/passenger";
 
-type ViewType = "home" | "decoder" | "saved" | "settings" | "planet" | "freight" | "passenger";
+type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search";
 
 interface PassengerViewProps {
   theme: Theme;
   lang: Language;
   view: ViewType;
-  resetDecoder: () => void;
   goHome: () => void;
   navigateTo: (view: ViewType, uwp?: string) => void;
   menuOpen: boolean;
@@ -144,7 +143,6 @@ export const PassengerView: FC<PassengerViewProps> = ({
   theme,
   lang,
   view,
-  resetDecoder,
   goHome,
   navigateTo,
   menuOpen,
@@ -372,7 +370,6 @@ export const PassengerView: FC<PassengerViewProps> = ({
       <Navbar
         theme={theme}
         view={view}
-        resetDecoder={resetDecoder}
         goHome={goHome}
         navigateTo={navigateTo}
         menuOpen={menuOpen}

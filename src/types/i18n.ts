@@ -13,20 +13,22 @@ export type TranslationKey =
   | "zoneGreen"
   | "zoneAmber"
   | "zoneRed"
-  | "uwpCode"
-  | "uwpPlaceholder"
-  // Buttons
-  | "viewRecent"
-  | "decode"
-  // Recent planets
+  // Search planet + Recent planets (inside search view)
+  | "searchTitle"
+  | "searchPlaceholder"
+  | "searchButton"
+  | "searchMinChars"
+  | "searchLoading"
+  | "searchError"
+  | "searchNoResults"
+  | "searchResultsCount"
   | "recentPlanets"
   | "noRecentPlanets"
   | "delete"
   | "clearAll"
   // Planet display
   | "unnamed"
-  // Invalid UWP
-  | "invalidUwp"
+  | "planetName"
   // Section titles
   | "starport"
   | "class"
@@ -107,24 +109,12 @@ export type TranslationKey =
   | "none"
   | "na"
   | "free"
-  // Scanner
-  | "scan"
-  | "scanning"
-  | "scanError"
-  | "or"
-  | "enterManually"
-  | "noUwpFound"
-  | "uwpDetected"
-  | "nameDetected"
-  | "loadingOcr"
   // Navigation a11y labels
   | "goHome"
   | "openMenu"
   | "closeMenu"
   | "mainNavigation"
   | "mobileNavigation"
-  // Saved planets page
-  | "planetCount"
   // Settings
   | "settings"
   | "theme"
@@ -205,13 +195,13 @@ export type TranslationKey =
   | "freightRollsMissing"
   | "freightTrafficNote"
   | "freightDash"
-  // Decode UWP (menu entry)
-  | "decodeUWP"
   // Home (tools list)
   | "homeTitle"
-  | "homeDecoderDesc"
+  | "homeSearchDesc"
+  | "homePassengerDesc"
   | "homeFreightDesc"
-  | "homeRecentDesc"
+  | "comingSoon"
+  | "passengerTitle"
   // Passenger calculator
   | "passengerOriginSection"
   | "passengerDestinationSection"

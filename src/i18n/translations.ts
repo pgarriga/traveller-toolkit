@@ -16,15 +16,8 @@ export const translations: Record<Language, Record<string, string>> = {
     zoneGreen: "Verde",
     zoneAmber: "Ámbar",
     zoneRed: "Rojo",
-    uwpCode: "Código UWP (ej: A788899-C)",
-    uwpPlaceholder: "A788899-C",
 
-    // Buttons
-    viewRecent: "Planetas recientes",
-    decode: "Decodificar",
-    decodeUWP: "Perfil del Mundo",
-
-    // Recent planets
+    // Recent planets (embedded inside the search view)
     recentPlanets: "Planetas recientes",
     noRecentPlanets: "No hay planetas recientes",
     delete: "Eliminar",
@@ -32,10 +25,9 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Planet display
     unnamed: "Sin nombre",
+    planetName: "Nombre del planeta",
 
     // Invalid UWP
-    invalidUwp: "Introduce un código UWP válido (formato: Xnnnnnn-n)",
-
     // Section titles
     starport: "Astropuerto",
     class: "Clase",
@@ -128,26 +120,12 @@ export const translations: Record<Language, Record<string, string>> = {
     na: "N/A",
     free: "Gratis",
 
-    // Scanner
-    scan: "Escanear",
-    scanning: "Escaneando...",
-    scanError: "Error al procesar la imagen",
-    or: "o",
-    enterManually: "Introducir código manualmente",
-    noUwpFound: "No se encontró código UWP en la imagen",
-    uwpDetected: "UWP detectado",
-    nameDetected: "Nombre detectado",
-    loadingOcr: "Cargando OCR...",
-
     // Navigation a11y labels
     goHome: "Ir a inicio",
     openMenu: "Abrir menú",
     closeMenu: "Cerrar menú",
     mainNavigation: "Navegación principal",
     mobileNavigation: "Navegación móvil",
-
-    // Saved planets page
-    planetCount: "planetas",
 
     // Settings
     settings: "Ajustes",
@@ -235,10 +213,19 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Home (tools list)
     homeTitle: "Herramientas",
-    homeDecoderDesc: "Decodifica códigos UWP (Universal World Profile) del Traveller 2e con OCR o entrada manual",
     homePassengerDesc: "Calcula pasajeros disponibles (High/Middle/Basic/Low) aplicando DMs de población, starport, zona y parsecs",
     homeFreightDesc: "Calcula lotes de carga (Major/Minor/Incidental) y Mail Run con sus DMs e ingresos",
-    homeRecentDesc: "Consulta los planetas que has guardado anteriormente",
+    homeSearchDesc: "Busca planetas oficiales del universo Traveller por nombre usando Traveller Map (https://travellermap.com). Incluye acceso a los planetas visitados recientemente.",
+
+    // Planet search (Traveller Map)
+    searchTitle: "Buscar planeta",
+    searchPlaceholder: "Nombre del planeta (mín. 3 caracteres)",
+    searchButton: "Buscar",
+    searchMinChars: "Introduce al menos 3 caracteres",
+    searchLoading: "Buscando...",
+    searchError: "Error al consultar Traveller Map",
+    searchNoResults: "Sin resultados",
+    searchResultsCount: "resultados",
 
     // Mail Run (integrated in the Freight Traffic tool)
     mailSection: "Mail Run",
@@ -342,15 +329,8 @@ export const translations: Record<Language, Record<string, string>> = {
     zoneGreen: "Green",
     zoneAmber: "Amber",
     zoneRed: "Red",
-    uwpCode: "UWP Code (e.g.: A788899-C)",
-    uwpPlaceholder: "A788899-C",
 
-    // Buttons
-    viewRecent: "Recent planets",
-    decode: "Decode",
-    decodeUWP: "World Profile",
-
-    // Recent planets
+    // Recent planets (embedded inside the search view)
     recentPlanets: "Recent planets",
     noRecentPlanets: "No recent planets",
     delete: "Delete",
@@ -358,10 +338,9 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Planet display
     unnamed: "Unnamed",
+    planetName: "Planet name",
 
     // Invalid UWP
-    invalidUwp: "Enter a valid UWP code (format: Xnnnnnn-n)",
-
     // Section titles
     starport: "Starport",
     class: "Class",
@@ -454,26 +433,12 @@ export const translations: Record<Language, Record<string, string>> = {
     na: "N/A",
     free: "Free",
 
-    // Scanner
-    scan: "Scan",
-    scanning: "Scanning...",
-    scanError: "Error processing image",
-    or: "or",
-    enterManually: "Enter code manually",
-    noUwpFound: "No UWP code found in image",
-    uwpDetected: "UWP detected",
-    nameDetected: "Name detected",
-    loadingOcr: "Loading OCR...",
-
     // Navigation a11y labels
     goHome: "Go to home",
     openMenu: "Open menu",
     closeMenu: "Close menu",
     mainNavigation: "Main navigation",
     mobileNavigation: "Mobile navigation",
-
-    // Saved planets page
-    planetCount: "planets",
 
     // Settings
     settings: "Settings",
@@ -561,10 +526,19 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Home (tools list)
     homeTitle: "Tools",
-    homeDecoderDesc: "Decode Traveller 2e UWP (Universal World Profile) codes via OCR or manual entry",
     homePassengerDesc: "Calculate available passengers (High/Middle/Basic/Low) applying DMs from population, starport, zone and parsecs",
     homeFreightDesc: "Calculate cargo lots (Major/Minor/Incidental) and Mail Run with their DMs and income",
-    homeRecentDesc: "Browse the planets you've previously saved",
+    homeSearchDesc: "Look up official Traveller worlds by name via the Traveller Map API (https://travellermap.com). Includes quick access to recently visited planets.",
+
+    // Planet search (Traveller Map)
+    searchTitle: "Search planet",
+    searchPlaceholder: "Planet name (min. 3 characters)",
+    searchButton: "Search",
+    searchMinChars: "Enter at least 3 characters",
+    searchLoading: "Searching...",
+    searchError: "Traveller Map request failed",
+    searchNoResults: "No results",
+    searchResultsCount: "results",
 
     // Mail Run (integrated in the Freight Traffic tool)
     mailSection: "Mail Run",

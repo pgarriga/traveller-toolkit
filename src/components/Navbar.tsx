@@ -2,16 +2,15 @@ import type { FC } from "react";
 import { useEffect, useRef } from "react";
 import type { Theme } from "../types/theme";
 import type { TranslationFunction } from "../types/i18n";
-import { IconClock, IconSettings, IconBox, IconGlobe, IconMenu, IconClose, IconUsers } from "./icons";
+import { IconSettings, IconBox, IconMenu, IconClose, IconUsers, IconSearch } from "./icons";
 import { Button } from "./ui/Button";
 import { COLORS } from "../constants/colors";
 
-type ViewType = "home" | "decoder" | "saved" | "settings" | "planet" | "freight" | "passenger";
+type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search";
 
 interface NavbarProps {
   theme: Theme;
   view: ViewType;
-  resetDecoder: () => void;
   goHome: () => void;
   navigateTo: (view: ViewType) => void;
   menuOpen: boolean;
@@ -19,7 +18,7 @@ interface NavbarProps {
   t: TranslationFunction;
 }
 
-export const Navbar: FC<NavbarProps> = ({ theme, view, resetDecoder, goHome, navigateTo, menuOpen, setMenuOpen, t }) => {
+export const Navbar: FC<NavbarProps> = ({ theme, view, goHome, navigateTo, menuOpen, setMenuOpen, t }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
 
@@ -153,14 +152,14 @@ export const Navbar: FC<NavbarProps> = ({ theme, view, resetDecoder, goHome, nav
           <Button
             variant="nav-mobile"
             size="lg"
-            active={view === "decoder"}
+            active={view === "search"}
             theme={theme}
-            onClick={resetDecoder}
+            onClick={() => navigateTo("search")}
             fullWidth
             style={{ justifyContent: "flex-start" }}
             role="menuitem"
           >
-            <IconGlobe />{t("decodeUWP")}
+            <IconSearch />{t("searchTitle")}
           </Button>
           <Button
             variant="nav-mobile"
@@ -185,18 +184,6 @@ export const Navbar: FC<NavbarProps> = ({ theme, view, resetDecoder, goHome, nav
             role="menuitem"
           >
             <IconBox />{t("freightTitle")}
-          </Button>
-          <Button
-            variant="nav-mobile"
-            size="lg"
-            active={view === "saved"}
-            theme={theme}
-            onClick={() => navigateTo("saved")}
-            fullWidth
-            style={{ justifyContent: "flex-start" }}
-            role="menuitem"
-          >
-            <IconClock />{t("viewRecent")}
           </Button>
           <Button
             variant="nav-mobile"
