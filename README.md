@@ -4,7 +4,6 @@
 [![React](https://img.shields.io/badge/React-19.2-61DAFB?style=flat-square&logo=react&logoColor=white)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-8.0-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Tesseract.js](https://img.shields.io/badge/Tesseract.js-7.0-4285F4?style=flat-square&logo=google&logoColor=white)](https://tesseract.projectnaptha.com/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
 A modern, browser-based set of tools for the **Mongoose Traveller 2nd Edition** tabletop RPG. The home page lists the available tools and you jump into the one you need — no install, no backend, works offline once loaded.
@@ -16,18 +15,18 @@ A modern, browser-based set of tools for the **Mongoose Traveller 2nd Edition** 
 | Route | Tool | What it does |
 |-------|------|--------------|
 | `/` | **Home** | Lists the available tools as cards. |
-| `/decoder` | **UWP Decoder** | Decodes Universal World Profile codes — scan from an image (OCR) or type them manually. Full breakdown of starport, size, atmosphere, hydrographics, population, government, law, tech level, and travel zone. |
+| `/search` | **Search Planet** | Looks up official Traveller worlds by name via the [Traveller Map](https://travellermap.com) API and jumps into the planet detail with a full UWP breakdown. When no search is active, lists your recently visited planets (persisted in `localStorage`). |
+| `/passengers` | **Passenger Traffic** | Rolls High / Middle / Basic / Low passenger availability with the Mongoose 2e DMs and computes income. |
 | `/freight` | **Freight Calculator** | Computes traffic DMs between two worlds, rolls lots automatically, and lets you pick which lots to take up to your cargo bay's capacity. Shows income live as you toggle lots. |
-| `/recent` | **Recent Planets** | History of decoded planets persisted in `localStorage`. |
 | `/settings` | **Settings** | Theme (auto / light / dark) and language (auto / Spanish / English). |
 | `/planet/{UWP}` | **Planet Detail** | Editable planet name + UWP + zone, deep-linkable. |
 
 ## Features
 
-### UWP Decoder
-- **OCR Scanner** — Scan UWP codes directly from images using your camera or photo library.
-- **Auto-detection** — Automatically extracts planet names from scanned images.
-- **Comprehensive Decoding** — Full breakdown of all UWP components:
+### Search Planet
+- **Traveller Map lookup** — Type at least 3 characters and query the [Traveller Map](https://travellermap.com) `/api/search` endpoint.
+- **Live results** — Each match shows name, UWP, sector and hex, styled like the Recent Planets list.
+- **One-click detail** — Selecting a result jumps into the Planet Detail view with a full UWP breakdown:
   - Starport class, facilities, and services
   - Planet size, diameter, and gravity
   - Atmosphere type, pressure, and required equipment
@@ -49,10 +48,12 @@ A modern, browser-based set of tools for the **Mongoose Traveller 2nd Edition** 
 - **Late-delivery payment** — Optional toggle applies the reference −50% modifier to net income.
 - **Gated output** — The "Price per ton", "Available lots" and "Summary" sections only appear after you press "Calculate lots", so the workflow is configure → calculate → pick.
 
-### Recent Planets
-- Auto-saves planets when you decode/visit them.
+### Recent Planets (inside Search Planet)
+- Auto-saves planets when you visit them and lists them under the search box.
 - Stored in `localStorage` (key: `traveller-recent`).
-- Bulk-clear or per-planet delete.
+- Bulk-clear or per-planet delete from the search view.
+- The list is hidden while a search is running or when results are on screen; it reappears once results are dismissed.
+- URL alias: `/recent` redirects to `/search` for backwards compatibility.
 
 ### General
 - **Bilingual** — Spanish and English with auto-detection (`es`, `ca`, `gl`, `eu` → Spanish; everything else → English). Manual override in Settings.
@@ -94,13 +95,11 @@ npm run preview
 
 ## Usage
 
-### Decoding a UWP
+### Looking up a planet
 
-1. From the home page, open **UWP Decoder**.
-2. Either:
-   - Click **Scan** and pick an image containing a UWP code (OCR), or
-   - Type the code manually (e.g. `A788899-C`) and press **Decode**.
-3. The Planet Detail view shows the full breakdown. The planet is auto-saved to Recent Planets.
+1. From the home page, open **Search Planet**.
+2. Type at least 3 characters of the planet name (e.g. `Regi`) and press **Search**.
+3. Pick the planet from the results — it opens the Planet Detail view with the full UWP breakdown and is auto-saved to Recent Planets.
 
 ### Calculating freight
 
@@ -141,7 +140,7 @@ A UWP code consists of 8 characters in the format `XNNNNNN-N`:
 | [React 19](https://react.dev/) | UI Framework |
 | [TypeScript 5](https://www.typescriptlang.org/) | Type Safety (strict mode) |
 | [Vite 8](https://vitejs.dev/) | Build Tool & Dev Server |
-| [Tesseract.js 7](https://tesseract.projectnaptha.com/) | OCR Engine for the UWP scanner |
+| [Traveller Map API](https://travellermap.com/doc/api) | Planet search + canonical UWP lookup |
 
 No external UI library, no router library — custom components with inline styles, and a hand-rolled router built on top of the History API (`utils/routing.ts`).
 
@@ -159,15 +158,15 @@ All UI elements, labels, and game data are fully translated. You can also overri
 ```
 src/
 ├── components/
-│   ├── icons/          # SVG icon components (IconGlobe, IconBox, IconClock, ...)
+│   ├── icons/          # SVG icon components (IconSearch, IconBox, IconClock, ...)
 │   └── ui/             # Button, Section, Row, Badge, PageHeader
-├── constants/          # colors, zones, gameRules, freight, ocr
+├── constants/          # colors, zones, gameRules, freight, mail, passenger
 ├── hooks/              # useThemeMode, useRecentPlanets
 ├── i18n/               # translations (ES/EN) + game data
-├── types/              # theme, uwp, i18n, game-data, freight, components
-├── utils/              # routing, uwp, freight, i18n-helpers
-├── views/              # HomeView, DecoderView, FreightView, PlanetView,
-│                       # RecentView, SettingsView
+├── types/              # theme, uwp, i18n, game-data, freight, mail, passenger
+├── utils/              # routing, uwp, freight, mail, passenger, travellerMap, i18n-helpers
+├── views/              # HomeView, SearchView, FreightView, PassengerView,
+│                       # PlanetView, SettingsView
 ├── App.tsx             # Main orchestration: view state + routing + popstate
 ├── index.css           # Global styles + responsive breakpoints
 └── main.tsx            # Entry point (wraps App in ErrorBoundary)
@@ -192,7 +191,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgments
 
 - **Mongoose Publishing** for the Traveller RPG system and the freight rules used by the calculator
-- **Tesseract.js** team for the excellent OCR library
+- **Traveller Map** for the search + world data API
 - The Traveller community for inspiration
 
 ---

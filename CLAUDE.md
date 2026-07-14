@@ -3,16 +3,16 @@
 ## Project Overview
 
 Traveller Toolkit - A multi-tool web app for the Mongoose Traveller 2nd Edition tabletop RPG. The home page lists the available tools and the user navigates between them. Current tools:
-- **UWP Decoder** — decodes Universal World Profile codes (manual entry or OCR from images).
-- **Freight Calculator** — computes traffic DMs, rolls lots, and lets the player pick which lots to buy up to their cargo bay capacity.
-- **Recent Planets** — history of previously decoded planets, persisted in `localStorage`.
+- **Search Planet** — searches official Traveller worlds by name via the [Traveller Map](https://travellermap.com) API (`/api/search`), and also renders the "Recent Planets" list (previously visited planets persisted in `localStorage`) directly under the search input.
+- **Passenger Traffic** — rolls High / Middle / Basic / Low passenger availability with the Mongoose 2e DMs and computes income.
+- **Freight Calculator** — computes traffic DMs, rolls lots, and lets the player pick which lots to buy up to their cargo bay capacity. Includes an integrated Mail Run block.
 
 ## Tech Stack
 
 - **React 19** - UI framework
 - **TypeScript 5** - Type-safe JavaScript (strict mode enabled)
 - **Vite 8** - Build tool and dev server
-- **Tesseract.js 7** - OCR engine for scanning UWP codes from images
+- **Traveller Map API** - `https://travellermap.com/api/search` for planet lookup (returns Name, Sector, Hex, UWP in the `World` items)
 - **No external UI libraries** - Custom components with inline styles
 - **No router library** - Custom URL routing with History API
 
@@ -48,7 +48,7 @@ src/
 │   └── index.ts              # Re-exports all types
 ├── components/
 │   ├── icons/
-│   │   └── index.tsx         # SVG icon components (IconCamera, IconGlobe, IconBox, IconClock, IconSettings, etc.)
+│   │   └── index.tsx         # SVG icon components (IconSearch, IconBox, IconClock, IconUsers, IconMail, IconSettings, IconTrash, IconMenu, IconClose)
 │   ├── ui/
 │   │   ├── Button.tsx        # Reusable button with variants
 │   │   ├── Section.tsx       # Card section with colored border
@@ -60,24 +60,28 @@ src/
 │   └── ErrorBoundary.tsx     # Error boundary with fallback UI
 ├── views/
 │   ├── HomeView.tsx          # Tools list (cards) — landing page at "/"
-│   ├── DecoderView.tsx       # UWP decoder (scan + manual input) — "/decoder"
+│   ├── SearchView.tsx        # Planet search (Traveller Map) + recent planets — "/search" (also serves "/recent" as alias)
 │   ├── PlanetView.tsx        # Planet detail view — "/planet/{UWP}"
-│   ├── RecentView.tsx        # Recent planets list — "/recent"
-│   ├── FreightView.tsx       # Freight calculator — "/freight"
+│   ├── FreightView.tsx       # Freight calculator (+ Mail Run) — "/freight"
+│   ├── PassengerView.tsx     # Passenger traffic calculator — "/passengers"
 │   └── SettingsView.tsx      # Settings page — "/settings"
 ├── constants/
 │   ├── colors.ts             # COLORS, SECTION_COLORS, THEMES (with `as const`)
 │   ├── zones.ts              # ZONES, ZONE_COLORS (with `as const`)
 │   ├── gameRules.ts          # SIZE_RULES, ATMO_RULES, LAW_RULES, etc.
 │   ├── freight.ts            # POPULATION_DM, STARPORT_DM, TONS_PER_LOT_DIE, lotsFromTraffic, etc.
-│   └── ocr.ts                # OCR_SETTINGS, MAX_RECENT_PLANETS
+│   ├── mail.ts               # Mail Run constants (rank/soc DMs, container size, etc.)
+│   └── passenger.ts          # Passenger DMs, class prices, options
 ├── hooks/
 │   ├── useThemeMode.ts       # Theme management with localStorage
-│   └── useRecentPlanets.ts   # CRUD for recent planets
+│   └── useRecentPlanets.ts   # CRUD for recent planets (MAX_RECENT_PLANETS inlined)
 ├── utils/
-│   ├── routing.ts            # URL parsing and building (home, decoder, freight, saved, settings, planet)
-│   ├── uwp.ts                # UWP parsing and validation
+│   ├── routing.ts            # URL parsing and building (home, search, freight, passengers, settings, planet)
+│   ├── uwp.ts                # UWP parsing and validation (`parseUwp`)
 │   ├── freight.ts            # calculateFreight (DM breakdown + lot rolling)
+│   ├── mail.ts               # calculateMail (Mail Run)
+│   ├── passenger.ts          # calculatePassengers
+│   ├── travellerMap.ts       # searchWorlds() → calls https://travellermap.com/api/search and maps World items
 │   └── i18n-helpers.ts       # isNoneValue, requiresWarning
 ├── i18n/
 │   ├── translations.ts       # UI translations (ES/EN)
@@ -109,13 +113,14 @@ A UWP code is 8 characters: `A123456-7`
 
 ### URL Routing
 - `/` — Home (tools list, `HomeView`)
-- `/decoder` — UWP Decoder (scan + manual input, `DecoderView`)
-- `/freight` — Freight Calculator (`FreightView`)
-- `/recent` — Recent planets list (`RecentView`)
+- `/search` — Planet search + recent planets (`SearchView`)
+- `/recent` — alias, resolves to `/search` in `parseUrl` (kept for backwards-compatible bookmarks)
+- `/passengers` — Passenger Traffic (`PassengerView`)
+- `/freight` — Freight Calculator + Mail Run (`FreightView`)
 - `/settings` — Settings (`SettingsView`)
 - `/planet/{UWP}` — Planet detail (`PlanetView`, e.g. `/planet/A123456-7`)
 
-The router is hand-rolled (no library) in `utils/routing.ts` and `App.tsx` manages the `ViewType` state plus `popstate` for browser back/forward. The Navbar logo calls `goHome` (resets decoder state + navigates to `/`). The Decoder nav entry calls `resetDecoder` (resets + navigates to `/decoder`).
+The router is hand-rolled (no library) in `utils/routing.ts` and `App.tsx` manages the `ViewType` state plus `popstate` for browser back/forward. The Navbar logo calls `goHome` (clears the working UWP/name/zone state and navigates to `/`). There is no `resetDecoder` — the decoder view was removed; the equivalent flow is now Search Planet.
 
 ### Freight Calculator (Mongoose 2e rules)
 
@@ -261,7 +266,7 @@ import { Button } from "../components/ui/Button";
 
 // Navigation button (active state)
 <Button variant="nav" active={isActive} theme={theme}>
-  <IconCamera /> Scan
+  <IconSearch /> Search
 </Button>
 
 // Option/toggle button (settings)
@@ -301,12 +306,12 @@ import { SECTION_COLORS } from "../constants/colors";
 ### PageHeader (`components/ui/PageHeader.tsx`)
 ```tsx
 import { PageHeader } from "../components/ui/PageHeader";
-import { IconGlobe } from "../components/icons";
+import { IconSearch } from "../components/icons";
 
 // Centered gradient h1 (uses `.app-title` class) + optional icon.
-// Used by Home, Decoder, Freight, Recent, Settings views to keep page titles consistent.
+// Used by Home, Search, Freight, Passenger, Settings views to keep page titles consistent.
 // PlanetView keeps its own header because it includes an editable planet name.
-<PageHeader title={t("decodeUWP")} icon={<IconGlobe />} />
+<PageHeader title={t("searchTitle")} icon={<IconSearch />} />
 ```
 
 ### Colors (`constants/colors.ts`)
@@ -344,17 +349,19 @@ const color: string = getZoneColor(planet.zone);
 ### Icons (`components/icons/index.tsx`)
 ```tsx
 import {
-  IconCamera, IconGlobe, IconBox, IconClock, IconSettings,
-  IconSearch, IconTrash, IconMenu, IconClose,
+  IconSearch, IconBox, IconClock, IconUsers, IconMail,
+  IconSettings, IconTrash, IconMenu, IconClose,
 } from "../components/icons";
 
 // All icons have aria-hidden="true" and consistent sizing (16x16, marginRight: 6).
 // Semantic mapping currently used:
-//   IconGlobe   → UWP Decoder (home card, decoder header, navbar entry)
+//   IconSearch  → Search Planet (home card, search view header, navbar entry, search button)
+//   IconClock   → Recent Planets section header inside SearchView
 //   IconBox     → Freight Calculator (home card, freight header, navbar entry, calculate button)
-//   IconClock   → Recent Planets (home card, navbar entry, recent view header)
-//   IconCamera  → Scan action inside the decoder
+//   IconUsers   → Passenger Traffic (home card, passenger header, navbar entry)
+//   IconMail    → Mail Run section inside FreightView
 //   IconSettings→ Settings (navbar entry, settings view header)
+//   IconTrash   → Delete-planet action in the recent list
 ```
 
 ### Game Rules (`constants/gameRules.ts`)
@@ -385,19 +392,15 @@ import { isNoneValue, requiresWarning } from "../utils/i18n-helpers";
 <Row warn={requiresWarning(ATMO[parsed.at].equip, t)} />
 ```
 
-### OCR Constants (`constants/ocr.ts`)
+### Traveller Map API (`utils/travellerMap.ts`)
 ```tsx
-import { MAX_RECENT_PLANETS, isCommonWord, OCR_SETTINGS } from "../constants/ocr";
+import { searchWorlds, type WorldSearchResult } from "../utils/travellerMap";
 
-// NEVER hardcode these values:
-MAX_RECENT_PLANETS           // 20
-OCR_SETTINGS.NAME_SEARCH_LENGTH  // 150
-OCR_SETTINGS.NAME_SEARCH_LINES   // 4
-OCR_SETTINGS.NAME_MIN_LENGTH     // 2
-OCR_SETTINGS.NAME_MAX_LENGTH     // 35
-
-// Check if word should be filtered from OCR results
-if (isCommonWord(word)) { ... }
+// Calls https://travellermap.com/api/search?q=<query>
+// Filters to items with a `World` key (drops Sector/Subsector matches).
+// Returns [{ name, uwp, sector, hex }].
+// Hex is formatted as HexX+HexY zero-padded to 2 digits each ("1910").
+const results: WorldSearchResult[] = await searchWorlds("Regi", abortSignal);
 ```
 
 ### Custom Hooks (`hooks/`)
@@ -477,10 +480,10 @@ import { calculateFreight } from "../utils/freight";
 2. **NO repeated footer/disclaimer** - Use `<Footer>` component
 3. **NO hardcoded colors** - Use `COLORS.*` constants
 4. **NO zone string literals** - Use `ZONES.*` constants
-5. **NO duplicate Navbar props** - Pass via `commonProps` spread in App.tsx (must include `goHome` alongside `resetDecoder`)
+5. **NO duplicate Navbar props** - Pass via `commonProps` spread in App.tsx (must include `goHome`)
 6. **NO hardcoded game thresholds** - Use `SIZE_RULES`, `LAW_RULES`, etc.
 7. **NO multi-language string comparisons** - Use `requiresWarning(value, t)`
-8. **NO hardcoded OCR settings** - Use `OCR_SETTINGS.*` and `MAX_RECENT_PLANETS`
+8. **NO ad-hoc Traveller Map calls** - Use `searchWorlds()` from `utils/travellerMap.ts` (handles URL, `AbortController`, and Sector/Subsector filtering)
 9. **NO duplicating theme/localStorage logic** - Use `useThemeMode` and `useRecentPlanets` hooks
 10. **NO missing ErrorBoundary** - App must be wrapped in ErrorBoundary in main.tsx
 11. **NO ad-hoc page titles** - Use `<PageHeader title=... icon=... />` so every page shares the same gradient h1 (PlanetView is the only exception — it has an editable name input header)
@@ -522,7 +525,7 @@ These checks ensure the app works well on mobile devices, is accessible to all u
 
 - This is an unofficial fan project, not affiliated with Mongoose Publishing
 - Game data (starports, atmospheres, freight tables) is from Mongoose Traveller 2e SRD / Core Rulebook
-- OCR scanning works best with clear, high-contrast images
-- The app works offline after initial load (no backend required)
+- Planet lookup relies on the public [Traveller Map](https://travellermap.com/doc/api) `/api/search` endpoint (no auth, CORS-enabled) — needs network access, unlike the rest of the app
+- The app works offline after initial load (no backend required) except for the Traveller Map search call
 - **TypeScript strict mode is mandatory** - Code must compile without errors
 - The app is deployed to GitHub Pages; `public/404.html` is the SPA fallback that rewrites unknown paths to `/` so the History-API router can pick them up

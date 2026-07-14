@@ -7,8 +7,8 @@
     <!-- Primary Meta Tags -->
     <title>Traveller Toolkit — Tools for the Mongoose Traveller 2e RPG</title>
     <meta name="title" content="Traveller Toolkit — Tools for the Mongoose Traveller 2e RPG" />
-    <meta name="description" content="A growing collection of free, browser-based tools for the Mongoose Traveller 2nd Edition tabletop RPG. Pick a tool from the home page: UWP decoder (OCR + manual entry), freight calculator (traffic table, lot rolling, cargo bay tracking), recent-planets history. More tools coming." />
-    <meta name="keywords" content="Traveller RPG, Mongoose Traveller, Traveller 2e, Traveller Toolkit, Traveller tools, Traveller utilities, referee tools, GM tools, UWP decoder, Universal World Profile, freight calculator, cargo lots, trade rules, traffic table, OCR scanner, planet generator, starport, atmosphere, tech level, sci-fi RPG, tabletop RPG" />
+    <meta name="description" content="A growing collection of free, browser-based tools for the Mongoose Traveller 2nd Edition tabletop RPG. Pick a tool from the home page: planet search (Traveller Map lookup + recent-planets history), passenger traffic calculator, freight calculator (traffic table, lot rolling, cargo bay tracking). More tools coming." />
+    <meta name="keywords" content="Traveller RPG, Mongoose Traveller, Traveller 2e, Traveller Toolkit, Traveller tools, Traveller utilities, referee tools, GM tools, Traveller Map, planet search, world profile, UWP, Universal World Profile, freight calculator, passenger traffic, cargo lots, trade rules, traffic table, starport, atmosphere, tech level, sci-fi RPG, tabletop RPG" />
     <meta name="author" content="pgarriga" />
     <meta name="robots" content="index, follow" />
     <meta name="language" content="English" />
@@ -32,7 +32,7 @@
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://pgarriga.github.io/traveller-toolkit/" />
     <meta property="og:title" content="Traveller Toolkit — Tools for the Mongoose Traveller 2e RPG" />
-    <meta property="og:description" content="A growing collection of free, browser-based tools for Mongoose Traveller 2e: UWP decoder, freight calculator, recent planets history. Works offline, mobile-friendly." />
+    <meta property="og:description" content="A growing collection of free, browser-based tools for Mongoose Traveller 2e: planet search (Traveller Map), passenger traffic, freight calculator. Works offline, mobile-friendly." />
     <meta property="og:image" content="https://pgarriga.github.io/traveller-toolkit/android-chrome-512x512.png" />
     <meta property="og:image:width" content="512" />
     <meta property="og:image:height" content="512" />
@@ -45,7 +45,7 @@
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:url" content="https://pgarriga.github.io/traveller-toolkit/" />
     <meta name="twitter:title" content="Traveller Toolkit — Tools for the Mongoose Traveller 2e RPG" />
-    <meta name="twitter:description" content="A growing collection of free tools for Mongoose Traveller 2e: UWP decoder, freight calculator, recent planets. Works offline." />
+    <meta name="twitter:description" content="A growing collection of free tools for Mongoose Traveller 2e: planet search (Traveller Map), passenger traffic, freight calculator. Works offline." />
     <meta name="twitter:image" content="https://pgarriga.github.io/traveller-toolkit/android-chrome-512x512.png" />
     <meta name="twitter:image:alt" content="Traveller Toolkit logo" />
 
@@ -84,11 +84,19 @@
       "hasPart": [
         {
           "@type": "SoftwareApplication",
-          "name": "UWP Decoder",
-          "url": "https://pgarriga.github.io/traveller-toolkit/decoder",
+          "name": "Search Planet",
+          "url": "https://pgarriga.github.io/traveller-toolkit/search",
           "applicationCategory": "GameApplication",
           "operatingSystem": "Any",
-          "description": "Decodes Universal World Profile codes from Mongoose Traveller 2e. Scan a UWP straight from an image with OCR or type it manually, then get a full breakdown of starport, size, atmosphere, hydrographics, population, government, law level, tech level, and travel zone."
+          "description": "Search official Mongoose Traveller 2e worlds by name via the Traveller Map API and open the full Universal World Profile breakdown (starport, size, atmosphere, hydrographics, population, government, law level, tech level, travel zone). Also lists locally cached recent planets for quick access."
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "Passenger Traffic",
+          "url": "https://pgarriga.github.io/traveller-toolkit/passengers",
+          "applicationCategory": "GameApplication",
+          "operatingSystem": "Any",
+          "description": "Rolls High / Middle / Basic / Low passenger availability with the Mongoose 2e DMs (population, starport, zone, parsecs, broker, steward) and computes income per class."
         },
         {
           "@type": "SoftwareApplication",
@@ -97,14 +105,6 @@
           "applicationCategory": "GameApplication",
           "operatingSystem": "Any",
           "description": "Computes the freight DM between two worlds (Mongoose 2e traffic table), rolls the d6 lots automatically, lets you pick which lots to take up to your cargo bay capacity, and shows gross/net income live including the late-delivery payment penalty."
-        },
-        {
-          "@type": "SoftwareApplication",
-          "name": "Recent Planets",
-          "url": "https://pgarriga.github.io/traveller-toolkit/recent",
-          "applicationCategory": "GameApplication",
-          "operatingSystem": "Any",
-          "description": "Local history of previously decoded planets, persisted in the browser. Quick access, per-planet delete and bulk clear."
         }
       ],
       "screenshot": "https://pgarriga.github.io/traveller-toolkit/android-chrome-512x512.png",
