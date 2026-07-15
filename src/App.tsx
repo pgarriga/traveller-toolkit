@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import type { ZoneCode, StarportClass } from "./types/uwp";
+import type { TravellerMapWorld, ZoneCode, StarportClass } from "./types/uwp";
 import type { Language } from "./types/i18n";
 import type { StarportData, SizeData, AtmosphereData, GovernmentData } from "./types/game-data";
 import { useTranslation, getSTARPORT, getSIZE, getATMO, getHYDRO, getPOP, getGOV, getLAW_WEAPONS, getLAW_ARMOR } from "./i18n";
@@ -150,12 +150,14 @@ export default function App() {
     navigateTo("planet", planet.uwp);
   };
 
-  const loadWorldFromSearch = (worldUwp: string, worldName: string) => {
+  const loadWorldFromSearch = (worldUwp: string, worldName: string, world: TravellerMapWorld) => {
     const existing = findPlanet(worldUwp);
     const zone = existing?.zone || (ZONES.GREEN as ZoneCode);
-    setName(existing?.name || worldName);
+    const resolvedName = existing?.name || worldName;
+    setName(resolvedName);
     setUwp(worldUwp);
     setZoneInput(zone);
+    savePlanet(worldUwp, resolvedName, zone, world);
     navigateTo("planet", worldUwp);
   };
 
@@ -210,6 +212,7 @@ export default function App() {
         setName={setName}
         zoneInput={zoneInput}
         setZoneInput={setZoneInput}
+        world={findPlanet(uwp)?.world}
         lang={lang}
         STARPORT={STARPORT}
         SIZE={SIZE}

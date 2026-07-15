@@ -1,10 +1,9 @@
 // Traveller Map API helpers
 // Docs: https://travellermap.com/doc/api
 
-export interface WorldSearchResult {
-  name: string;
-  uwp: string;
-  sector: string;
+import type { TravellerMapWorld } from "../types/uwp";
+
+export interface WorldSearchResult extends TravellerMapWorld {
   hex: string;
 }
 
@@ -14,6 +13,9 @@ interface RawWorld {
   Sector: string;
   HexX: number;
   HexY: number;
+  SectorX: number;
+  SectorY: number;
+  SectorTags: string;
 }
 
 interface RawSearchResponse {
@@ -46,6 +48,11 @@ export const searchWorlds = async (
       name: w.Name,
       uwp: w.Uwp.toUpperCase(),
       sector: w.Sector,
+      hexX: w.HexX,
+      hexY: w.HexY,
+      sectorX: w.SectorX,
+      sectorY: w.SectorY,
+      sectorTags: w.SectorTags,
       hex: formatHex(w.HexX, w.HexY),
     });
   }

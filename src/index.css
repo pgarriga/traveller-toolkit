@@ -95,6 +95,66 @@ input::placeholder {
   margin-bottom: 10px;
 }
 
+/* World profile: single column on mobile, multi-column grid on desktop.
+   Vertical row-gap is 0 because each <Section> already carries marginBottom: 12. */
+.world-profile-grid {
+  display: grid;
+  gap: 0 12px;
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+/* Cards grid used by search results + recent planets */
+.card-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+}
+
+/* Container that widens on desktop but keeps mobile layout untouched */
+.wide-main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 20px 16px;
+}
+
+/* Inner block that stays narrow inside a wide container (form, status, etc.) */
+.narrow-block {
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Center + cap the jump map image so it never dominates the page on desktop */
+.jumpmap-image {
+  display: block;
+  width: 100%;
+  max-width: 520px;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 8px;
+}
+
+@media (min-width: 900px) {
+  .wide-main {
+    max-width: 1080px;
+  }
+
+  .world-profile-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .card-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 1200px) {
+  .card-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 /* UWP input row */
 .uwp-row {
   display: flex;

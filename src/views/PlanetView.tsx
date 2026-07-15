@@ -1,7 +1,7 @@
 import type { FC, ChangeEvent } from "react";
 import type { Theme } from "../types/theme";
 import type { TranslationFunction, Language } from "../types/i18n";
-import type { ZoneCode, StarportClass } from "../types/uwp";
+import type { TravellerMapWorld, ZoneCode, StarportClass } from "../types/uwp";
 import type { StarportData, SizeData, AtmosphereData, GovernmentData } from "../types/game-data";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
@@ -40,6 +40,7 @@ interface PlanetViewProps {
   setName: (name: string) => void;
   zoneInput: ZoneCode;
   setZoneInput: (zone: ZoneCode) => void;
+  world?: TravellerMapWorld;
   view: ViewType;
   goHome: () => void;
   navigateTo: (view: ViewType) => void;
@@ -65,6 +66,7 @@ export const PlanetView: FC<PlanetViewProps> = ({
   setName,
   zoneInput,
   setZoneInput,
+  world,
   view,
   goHome,
   navigateTo,
@@ -103,7 +105,7 @@ export const PlanetView: FC<PlanetViewProps> = ({
         setMenuOpen={setMenuOpen}
         t={t}
       />
-      <main style={{ maxWidth: 720, margin: "0 auto", padding: "20px 16px" }}>
+      <main className="wide-main">
         {/* Planet header */}
         <div style={{ background: theme.bgHeader, borderRadius: 12, padding: 20, marginBottom: 16, textAlign: "center" }}>
           <label htmlFor="planet-name" className="sr-only">{t("planetName") || "Planet name"}</label>
@@ -149,7 +151,102 @@ export const PlanetView: FC<PlanetViewProps> = ({
           </div>
         </div>
 
+        {/* Location / jump map */}
+        {world && (() => {
+          const hex = `${String(world.hexX).padStart(2, "0")}${String(world.hexY).padStart(2, "0")}`;
+          const jumpMapUrl = `https://travellermap.com/api/jumpmap?sector=${encodeURIComponent(world.sector)}&hex=${hex}&jump=4&scale=48&style=print`;
+          const travellerMapUrl = `https://travellermap.com/?sector=${encodeURIComponent(world.sector)}&hex=${hex}`;
+          return (
+            <section
+              aria-labelledby="location-heading"
+              style={{
+                background: theme.bgCard,
+                border: `1px solid ${theme.border}`,
+                borderLeft: `4px solid ${COLORS.primary}`,
+                borderRadius: 12,
+                padding: 16,
+                marginBottom: 16,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 8,
+                  flexWrap: "wrap",
+                  marginBottom: 8,
+                }}
+              >
+                <h2
+                  id="location-heading"
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: COLORS.primary,
+                    textTransform: "uppercase",
+                    letterSpacing: 2,
+                    margin: 0,
+                  }}
+                >
+                  {t("worldLocation")}
+                </h2>
+                <a
+                  href={travellerMapUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "6px 10px",
+                    borderRadius: 8,
+                    border: `1px solid ${COLORS.primary}`,
+                    color: COLORS.primary,
+                    background: "transparent",
+                    fontSize: 12,
+                    fontWeight: 500,
+                    textTransform: "uppercase",
+                    letterSpacing: 1,
+                    textDecoration: "none",
+                    fontFamily: "inherit",
+                  }}
+                >
+                  {t("viewOnTravellerMap")} ↗
+                </a>
+              </div>
+              <div style={{ fontSize: 13, color: theme.textMuted, marginBottom: 12 }}>
+                <span>{t("sectorLabel")}: <strong style={{ color: theme.text, fontWeight: 500 }}>{world.sector}</strong></span>
+                <span style={{ margin: "0 8px", color: theme.textDimmed }}>·</span>
+                <span>{t("hexLabel")}: <strong style={{ color: theme.text, fontWeight: 500, fontFamily: "monospace", letterSpacing: 1 }}>{hex}</strong></span>
+              </div>
+              <img
+                src={jumpMapUrl}
+                alt={t("jumpMapAlt")}
+                loading="lazy"
+                className="jumpmap-image"
+                style={{ background: theme.bg }}
+              />
+            </section>
+          );
+        })()}
+
+        {/* World profile */}
+        <h2
+          style={{
+            fontSize: 13,
+            fontWeight: 500,
+            color: COLORS.primary,
+            textTransform: "uppercase",
+            letterSpacing: 2,
+            margin: "24px 0 12px 0",
+          }}
+        >
+          {t("worldProfile")}
+        </h2>
+
         {/* Planet details */}
+        <div className="world-profile-grid">
         <Section title={`${t("starport")} — ${t("class")} ${parsed.sp}`} color={SECTION_COLORS.starport} theme={theme}>
           <Row label={t("quality")} value={STARPORT[parsed.sp].name} theme={theme} />
           <Row label={t("fuel")} value={STARPORT[parsed.sp].fuel} theme={theme} />
@@ -259,6 +356,7 @@ export const PlanetView: FC<PlanetViewProps> = ({
             <Row label={t("meaning")} value={zoneInput === ZONES.AMBER ? t("amberMeaning") : t("redMeaning")} theme={theme} />
           </Section>
         )}
+        </div>
 
         <div style={{ background: theme.bgCard, borderRadius: 12, padding: 16, textAlign: "center", marginTop: 8 }}>
           <div style={{ fontSize: 11, color: theme.textDimmed, textTransform: "uppercase", marginBottom: 6 }}>{t("worldLine")}</div>

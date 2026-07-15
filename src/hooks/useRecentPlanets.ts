@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import type { RecentPlanet, ZoneCode } from "../types/uwp";
+import type { RecentPlanet, TravellerMapWorld, ZoneCode } from "../types/uwp";
 import { ZONES } from "../constants/zones";
 
 const STORAGE_KEY = "traveller-recent";
@@ -8,7 +8,7 @@ const MAX_RECENT_PLANETS = 20;
 interface UseRecentPlanetsReturn {
   recentPlanets: RecentPlanet[];
   dataLoaded: boolean;
-  savePlanet: (uwp: string, name: string, zone?: ZoneCode) => void;
+  savePlanet: (uwp: string, name: string, zone?: ZoneCode, world?: TravellerMapWorld) => void;
   loadPlanet: (planet: RecentPlanet) => RecentPlanet;
   deletePlanet: (planetUwp: string) => void;
   clearAllPlanets: () => void;
@@ -45,19 +45,19 @@ export const useRecentPlanets = (): UseRecentPlanetsReturn => {
   }, [recentPlanets, dataLoaded]);
 
   // Save or update a planet
-  const savePlanet = useCallback((uwp: string, name: string, zone: ZoneCode = ZONES.GREEN as ZoneCode) => {
+  const savePlanet = useCallback((uwp: string, name: string, zone: ZoneCode = ZONES.GREEN as ZoneCode, world?: TravellerMapWorld) => {
     const normalizedUwp = uwp.toUpperCase();
     const planetName = name.trim() || normalizedUwp;
 
     setRecentPlanets(prev => {
       const existing = prev.find(p => p.uwp === normalizedUwp);
-      // Skip update if nothing changed
-      if (existing && existing.name === planetName && existing.zone === zone) {
+      // Skip update if nothing changed (no world provided, and name/zone match)
+      if (!world && existing && existing.name === planetName && existing.zone === zone) {
         return prev;
       }
       const filtered = prev.filter(p => p.uwp !== normalizedUwp);
       return [
-        { name: planetName, uwp: normalizedUwp, zone, timestamp: Date.now() },
+        { name: planetName, uwp: normalizedUwp, zone, timestamp: Date.now(), world: world ?? existing?.world },
         ...filtered
       ].slice(0, MAX_RECENT_PLANETS);
     });

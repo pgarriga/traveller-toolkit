@@ -2,7 +2,7 @@ import type { FC, FormEvent, MouseEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import type { Theme } from "../types/theme";
 import type { TranslationFunction } from "../types/i18n";
-import type { RecentPlanet, ZoneCode } from "../types/uwp";
+import type { RecentPlanet, TravellerMapWorld, ZoneCode } from "../types/uwp";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { Button } from "../components/ui/Button";
@@ -24,7 +24,7 @@ interface SearchViewProps {
   menuOpen: boolean;
   setMenuOpen: (open: boolean) => void;
   t: TranslationFunction;
-  onSelectWorld: (uwp: string, name: string) => void;
+  onSelectWorld: (uwp: string, name: string, world: TravellerMapWorld) => void;
   recentPlanets: RecentPlanet[];
   loadPlanet: (planet: RecentPlanet) => void;
   deletePlanet: (uwp: string) => void;
@@ -98,11 +98,12 @@ export const SearchView: FC<SearchViewProps> = ({
         setMenuOpen={setMenuOpen}
         t={t}
       />
-      <main style={{ maxWidth: 720, margin: "0 auto", padding: "20px 16px" }}>
+      <main className="wide-main">
         <PageHeader title={t("searchTitle")} icon={<IconSearch />} />
 
         <form
           onSubmit={handleSubmit}
+          className="narrow-block"
           style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}
         >
           <input
@@ -134,7 +135,7 @@ export const SearchView: FC<SearchViewProps> = ({
           </Button>
         </form>
 
-        <div style={{ minHeight: 20, marginBottom: 12, color: theme.textDimmed, fontSize: 13 }}>
+        <div className="narrow-block" style={{ minHeight: 20, marginBottom: 12, color: theme.textDimmed, fontSize: 13 }}>
           {loading && t("searchLoading")}
           {!loading && error && <span style={{ color: COLORS.danger }}>{error}</span>}
           {!loading && !error && results && (
@@ -152,17 +153,28 @@ export const SearchView: FC<SearchViewProps> = ({
         )}
 
         {!loading && !error && results && results.length > 0 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {results.map((planet) => (
+          <div className="card-grid">
+            {results.map((planet) => {
+              const world: TravellerMapWorld = {
+                name: planet.name,
+                uwp: planet.uwp,
+                sector: planet.sector,
+                hexX: planet.hexX,
+                hexY: planet.hexY,
+                sectorX: planet.sectorX,
+                sectorY: planet.sectorY,
+                sectorTags: planet.sectorTags,
+              };
+              return (
               <div
                 key={`${planet.sector}-${planet.hex}-${planet.uwp}`}
-                onClick={() => onSelectWorld(planet.uwp, planet.name)}
+                onClick={() => onSelectWorld(planet.uwp, planet.name, world)}
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    onSelectWorld(planet.uwp, planet.name);
+                    onSelectWorld(planet.uwp, planet.name, world);
                   }
                 }}
                 style={{
@@ -189,7 +201,8 @@ export const SearchView: FC<SearchViewProps> = ({
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
@@ -223,7 +236,7 @@ export const SearchView: FC<SearchViewProps> = ({
                 {t("noRecentPlanets")}
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div className="card-grid">
                 {recentPlanets.map((planet) => (
                   <div
                     key={planet.uwp}

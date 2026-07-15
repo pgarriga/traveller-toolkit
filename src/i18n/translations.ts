@@ -26,6 +26,12 @@ export const translations: Record<Language, Record<string, string>> = {
     // Planet display
     unnamed: "Sin nombre",
     planetName: "Nombre del planeta",
+    worldProfile: "Perfil de mundo",
+    worldLocation: "Ubicación",
+    jumpMapAlt: "Mapa de saltos del sistema",
+    sectorLabel: "Sector",
+    hexLabel: "Hex",
+    viewOnTravellerMap: "Ver en Traveller Map",
 
     // Invalid UWP
     // Section titles
@@ -339,6 +345,12 @@ export const translations: Record<Language, Record<string, string>> = {
     // Planet display
     unnamed: "Unnamed",
     planetName: "Planet name",
+    worldProfile: "World profile",
+    worldLocation: "Location",
+    jumpMapAlt: "System jump map",
+    sectorLabel: "Sector",
+    hexLabel: "Hex",
+    viewOnTravellerMap: "View on Traveller Map",
 
     // Invalid UWP
     // Section titles
