@@ -1,6 +1,6 @@
 # Traveller Toolkit
 
-[![Version](https://img.shields.io/badge/Version-3.3.2-blue?style=flat-square)](https://github.com/pgarriga/traveller-toolkit)
+[![Version](https://img.shields.io/badge/Version-3.3.3-blue?style=flat-square)](https://github.com/pgarriga/traveller-toolkit)
 [![React](https://img.shields.io/badge/React-19.2-61DAFB?style=flat-square&logo=react&logoColor=white)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-8.0-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
