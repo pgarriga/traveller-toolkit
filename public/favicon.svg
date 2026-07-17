@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- Space-black rounded square (Traveller manual surface) -->
-  <rect x="16" y="16" width="480" height="480" rx="96" fill="#1A1A18"/>
+  <!-- Cream rounded square (Traveller manual light surface) -->
+  <rect x="16" y="16" width="480" height="480" rx="96" fill="#F1EFE8"/>
   <!-- Flat-top hex outline in Traveller orange (points left/right, flat top/bottom — Traveller Map convention) -->
   <polygon points="72,256 164,96 348,96 440,256 348,416 164,416"
            fill="none" stroke="#D4521C" stroke-width="26" stroke-linejoin="round"/>
