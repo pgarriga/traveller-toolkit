@@ -8,7 +8,7 @@ import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { Button } from "../components/ui/Button";
 import { PageHeader } from "../components/ui/PageHeader";
-import { IconClock, IconSearch, IconTrash } from "../components/icons";
+import { IconPin, IconSearch, IconTrash } from "../components/icons";
 import { COLORS, SECTION_COLORS } from "../constants/colors";
 import { getZoneColor } from "../constants/zones";
 import { getTechLevelKey } from "../constants/gameRules";
@@ -83,20 +83,13 @@ export const RecentWorldsView: FC<RecentWorldsViewProps> = ({
   GOV,
   POP,
 }) => {
-  const [filter, setFilter] = useState("");
   const [sort, setSort] = useState<SortKey>("recent");
   const [editMode, setEditMode] = useState(false);
 
   const visiblePlanets = useMemo(() => {
-    const needle = filter.trim().toLowerCase();
-    const filtered = needle
-      ? recentPlanets.filter(
-          (p) =>
-            p.name.toLowerCase().includes(needle) || p.uwp.toLowerCase().includes(needle)
-        )
-      : recentPlanets.slice();
+    const sorted = recentPlanets.slice();
 
-    filtered.sort((a, b) => {
+    sorted.sort((a, b) => {
       switch (sort) {
         case "recent":
           return b.timestamp - a.timestamp;
@@ -119,8 +112,8 @@ export const RecentWorldsView: FC<RecentWorldsViewProps> = ({
       }
     });
 
-    return filtered;
-  }, [recentPlanets, filter, sort, STARPORT]);
+    return sorted;
+  }, [recentPlanets, sort, STARPORT]);
 
   return (
     <div style={{ minHeight: "100vh", background: theme.bg, color: theme.text, fontFamily: "inherit" }}>
@@ -134,7 +127,7 @@ export const RecentWorldsView: FC<RecentWorldsViewProps> = ({
         t={t}
       />
       <main className="wide-main">
-        <PageHeader title={t("recentWorldsTitle")} icon={<IconClock />} />
+        <PageHeader title={t("recentWorldsTitle")} icon={<IconPin />} />
 
         <section aria-labelledby="recent-heading" style={{ marginTop: 24 }}>
           {recentPlanets.length === 0 ? (
@@ -155,24 +148,6 @@ export const RecentWorldsView: FC<RecentWorldsViewProps> = ({
                   alignItems: "center",
                 }}
               >
-                <input
-                  type="search"
-                  value={filter}
-                  onChange={(e) => setFilter(e.target.value)}
-                  placeholder={t("recentFilterPlaceholder")}
-                  aria-label={t("recentFilterPlaceholder")}
-                  style={{
-                    flex: "1 1 200px",
-                    minWidth: 180,
-                    padding: "8px 12px",
-                    borderRadius: 8,
-                    border: `1px solid ${theme.border}`,
-                    background: theme.bgCard,
-                    color: theme.text,
-                    fontFamily: "inherit",
-                    fontSize: 14,
-                  }}
-                />
                 <label
                   style={{
                     display: "flex",
@@ -231,24 +206,7 @@ export const RecentWorldsView: FC<RecentWorldsViewProps> = ({
                 </button>
               </div>
 
-              <div
-                style={{
-                  fontSize: 12,
-                  color: theme.textDimmed,
-                  marginBottom: 12,
-                  minHeight: 18,
-                }}
-              >
-                {filter.trim().length > 0 &&
-                  `${visiblePlanets.length} ${t("recentCount")} ${recentPlanets.length}`}
-              </div>
-
-              {visiblePlanets.length === 0 ? (
-                <div style={{ textAlign: "center", padding: 40, color: theme.textDimmed, fontSize: 13 }}>
-                  {t("recentNoMatches")}
-                </div>
-              ) : (
-                <div className="card-grid card-grid--two">
+              <div className="card-grid card-grid--two">
               {visiblePlanets.map((planet) => {
                 const parsed = parseUwp(planet.uwp, STARPORT);
                 const popFull = parsed ? POP[parsed.po] : "";
@@ -271,8 +229,8 @@ export const RecentWorldsView: FC<RecentWorldsViewProps> = ({
                         color: SECTION_COLORS.population,
                       },
                       {
-                        label: `${t("government")} ${GOV[parsed.go].type}`,
-                        title: GOV[parsed.go].type,
+                        label: GOV[parsed.go].type,
+                        title: `${t("government")}: ${GOV[parsed.go].type}`,
                         color: COLORS.indigo,
                       },
                       {
@@ -382,8 +340,7 @@ export const RecentWorldsView: FC<RecentWorldsViewProps> = ({
                   </div>
                 );
               })}
-                </div>
-              )}
+              </div>
             </>
           )}
         </section>

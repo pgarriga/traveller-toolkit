@@ -18,8 +18,8 @@ export const translations: Record<Language, Record<string, string>> = {
     zoneRed: "Rojo",
 
     // Recent worlds (embedded inside the search view)
-    recentPlanets: "Mundos recientes",
-    noRecentPlanets: "No hay mundos recientes",
+    recentPlanets: "Mundos visitados",
+    noRecentPlanets: "No hay mundos visitados",
     delete: "Eliminar",
     clearAll: "Borrar todo",
 
@@ -222,8 +222,8 @@ export const translations: Record<Language, Record<string, string>> = {
     homePassengerDesc: "Calcula pasajeros disponibles (High/Middle/Basic/Low) aplicando DMs de población, starport, zona y parsecs",
     homeFreightDesc: "Calcula lotes de carga (Major/Minor/Incidental) y Mail Run con sus DMs e ingresos",
     homeSearchDesc: "Busca mundos oficiales del universo Traveller por nombre usando Traveller Map (https://travellermap.com).",
-    homeRecentDesc: "Accede rápidamente a los mundos visitados recientemente con sus atributos clave en un vistazo.",
-    recentWorldsTitle: "Mundos recientes",
+    homeRecentDesc: "Accede rápidamente a los mundos que has visitado con sus atributos clave en un vistazo.",
+    recentWorldsTitle: "Mundos visitados",
     recentFilterPlaceholder: "Filtrar por nombre o UWP",
     recentSortLabel: "Ordenar",
     recentSortRecent: "Más recientes",
@@ -351,8 +351,8 @@ export const translations: Record<Language, Record<string, string>> = {
     zoneRed: "Red",
 
     // Recent worlds (embedded inside the search view)
-    recentPlanets: "Recent worlds",
-    noRecentPlanets: "No recent worlds",
+    recentPlanets: "Visited worlds",
+    noRecentPlanets: "No visited worlds",
     delete: "Delete",
     clearAll: "Clear all",
 
@@ -555,8 +555,8 @@ export const translations: Record<Language, Record<string, string>> = {
     homePassengerDesc: "Calculate available passengers (High/Middle/Basic/Low) applying DMs from population, starport, zone and parsecs",
     homeFreightDesc: "Calculate cargo lots (Major/Minor/Incidental) and Mail Run with their DMs and income",
     homeSearchDesc: "Look up official Traveller worlds by name via the Traveller Map API (https://travellermap.com).",
-    homeRecentDesc: "Quickly access the worlds you've visited recently with a snapshot of their key attributes.",
-    recentWorldsTitle: "Recent worlds",
+    homeRecentDesc: "Quickly access the worlds you've visited with a snapshot of their key attributes.",
+    recentWorldsTitle: "Visited worlds",
     recentFilterPlaceholder: "Filter by name or UWP",
     recentSortLabel: "Sort",
     recentSortRecent: "Most recent",

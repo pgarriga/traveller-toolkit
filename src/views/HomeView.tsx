@@ -4,7 +4,7 @@ import type { TranslationFunction } from "../types/i18n";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { PageHeader } from "../components/ui/PageHeader";
-import { IconBox, IconUsers, IconSearch, IconClock } from "../components/icons";
+import { IconBox, IconUsers, IconSearch, IconPin } from "../components/icons";
 import { COLORS } from "../constants/colors";
 
 type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent";
@@ -49,7 +49,7 @@ export const HomeView: FC<HomeViewProps> = ({
     },
     {
       key: "recent",
-      icon: <IconClock />,
+      icon: <IconPin />,
       title: t("recentWorldsTitle"),
       description: t("homeRecentDesc"),
       accent: COLORS.info,

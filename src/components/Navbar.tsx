@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useEffect, useRef } from "react";
 import type { Theme } from "../types/theme";
 import type { TranslationFunction } from "../types/i18n";
-import { IconSettings, IconBox, IconMenu, IconClose, IconUsers, IconSearch, IconClock } from "./icons";
+import { IconSettings, IconBox, IconMenu, IconClose, IconUsers, IconSearch, IconPin } from "./icons";
 import { Button } from "./ui/Button";
 import { COLORS } from "../constants/colors";
 
@@ -171,7 +171,7 @@ export const Navbar: FC<NavbarProps> = ({ theme, view, goHome, navigateTo, menuO
             style={{ justifyContent: "flex-start" }}
             role="menuitem"
           >
-            <IconClock />{t("recentWorldsTitle")}
+            <IconPin />{t("recentWorldsTitle")}
           </Button>
           <Button
             variant="nav-mobile"
