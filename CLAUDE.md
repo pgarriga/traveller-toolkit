@@ -3,14 +3,17 @@
 ## Project Overview
 
 Traveller Toolkit - A multi-tool web app for the Mongoose Traveller 2nd Edition tabletop RPG. The home page lists the available tools and the user navigates between them. Current tools:
-- **Search Planet** — searches official Traveller worlds by name via the [Traveller Map](https://travellermap.com) API (`/api/search`), and also renders the "Recent Planets" list (previously visited planets persisted in `localStorage`) directly under the search input.
+- **Search World** — searches official Traveller worlds by name via the [Traveller Map](https://travellermap.com) API (`/api/search`). Selecting a result jumps to World Detail and auto-saves the world to Visited Worlds.
+- **Visited Worlds** — standalone tool at `/recent` listing the worlds you've visited (persisted in `localStorage`). Sortable dropdown, Edit/Done toggle for per-card deletion, colored tags per UWP attribute.
 - **Passenger Traffic** — rolls High / Middle / Basic / Low passenger availability with the Mongoose 2e DMs and computes income.
 - **Freight Calculator** — computes traffic DMs, rolls lots, and lets the player pick which lots to buy up to their cargo bay capacity. Includes an integrated Mail Run block.
+
+**UI terminology**: user-facing copy uses "world" (Traveller-native term). Code identifiers (`RecentPlanet`, `useRecentPlanets`, `planet` route, `planetName` translation key, `PlanetView`) keep the "planet" naming to avoid a cross-file rename — this asymmetry is intentional.
 
 ## Tech Stack
 
 - **React 19** - UI framework
-- **TypeScript 5** - Type-safe JavaScript (strict mode enabled)
+- **TypeScript 7** - Type-safe JavaScript (strict mode enabled)
 - **Vite 8** - Build tool and dev server
 - **Traveller Map API** - `https://travellermap.com/api/search` for planet lookup (returns Name, Sector, Hex, UWP in the `World` items)
 - **No external UI libraries** - Custom components with inline styles
@@ -48,7 +51,7 @@ src/
 │   └── index.ts              # Re-exports all types
 ├── components/
 │   ├── icons/
-│   │   └── index.tsx         # SVG icon components (IconSearch, IconBox, IconClock, IconUsers, IconMail, IconSettings, IconTrash, IconMenu, IconClose)
+│   │   └── index.tsx         # SVG icon components (IconSearch, IconPin, IconBox, IconClock, IconUsers, IconMail, IconSettings, IconTrash, IconMenu, IconClose)
 │   ├── ui/
 │   │   ├── Button.tsx        # Reusable button with variants
 │   │   ├── Section.tsx       # Card section with colored border
@@ -60,8 +63,9 @@ src/
 │   └── ErrorBoundary.tsx     # Error boundary with fallback UI
 ├── views/
 │   ├── HomeView.tsx          # Tools list (cards) — landing page at "/"
-│   ├── SearchView.tsx        # Planet search (Traveller Map) + recent planets — "/search" (also serves "/recent" as alias)
-│   ├── PlanetView.tsx        # Planet detail view — "/planet/{UWP}"
+│   ├── SearchView.tsx        # World search (Traveller Map) — "/search"
+│   ├── RecentWorldsView.tsx  # Visited Worlds tool (sort + edit mode) — "/recent"
+│   ├── PlanetView.tsx        # World detail view — "/planet/{UWP}"
 │   ├── FreightView.tsx       # Freight calculator (+ Mail Run) — "/freight"
 │   ├── PassengerView.tsx     # Passenger traffic calculator — "/passengers"
 │   └── SettingsView.tsx      # Settings page — "/settings"
@@ -113,14 +117,14 @@ A UWP code is 8 characters: `A123456-7`
 
 ### URL Routing
 - `/` — Home (tools list, `HomeView`)
-- `/search` — Planet search + recent planets (`SearchView`)
-- `/recent` — alias, resolves to `/search` in `parseUrl` (kept for backwards-compatible bookmarks)
+- `/search` — World search (`SearchView`)
+- `/recent` — Visited Worlds (`RecentWorldsView`) — its own view, not an alias
 - `/passengers` — Passenger Traffic (`PassengerView`)
 - `/freight` — Freight Calculator + Mail Run (`FreightView`)
 - `/settings` — Settings (`SettingsView`)
-- `/planet/{UWP}` — Planet detail (`PlanetView`, e.g. `/planet/A123456-7`)
+- `/planet/{UWP}` — World detail (`PlanetView`, e.g. `/planet/A123456-7`)
 
-The router is hand-rolled (no library) in `utils/routing.ts` and `App.tsx` manages the `ViewType` state plus `popstate` for browser back/forward. The Navbar logo calls `goHome` (clears the working UWP/name/zone state and navigates to `/`). There is no `resetDecoder` — the decoder view was removed; the equivalent flow is now Search Planet.
+The router is hand-rolled (no library) in `utils/routing.ts` and `App.tsx` manages the `ViewType` state plus `popstate` for browser back/forward. The `ViewType` union is duplicated in every view file for locality — when you add a new route/view, update every union (App, Navbar, all view files) plus `parseUrl`/`buildUrl` in `utils/routing.ts`. The Navbar logo calls `goHome` (clears the working UWP/name/zone state and navigates to `/`).
 
 ### Freight Calculator (Mongoose 2e rules)
 
@@ -349,19 +353,20 @@ const color: string = getZoneColor(planet.zone);
 ### Icons (`components/icons/index.tsx`)
 ```tsx
 import {
-  IconSearch, IconBox, IconClock, IconUsers, IconMail,
+  IconSearch, IconPin, IconBox, IconClock, IconUsers, IconMail,
   IconSettings, IconTrash, IconMenu, IconClose,
 } from "../components/icons";
 
 // All icons have aria-hidden="true" and consistent sizing (16x16, marginRight: 6).
 // Semantic mapping currently used:
-//   IconSearch  → Search Planet (home card, search view header, navbar entry, search button)
-//   IconClock   → Recent Planets section header inside SearchView
+//   IconSearch  → Search World (home card, search view header, navbar entry, search button)
+//   IconPin     → Visited Worlds (home card, recent view header, navbar entry)
 //   IconBox     → Freight Calculator (home card, freight header, navbar entry, calculate button)
 //   IconUsers   → Passenger Traffic (home card, passenger header, navbar entry)
 //   IconMail    → Mail Run section inside FreightView
 //   IconSettings→ Settings (navbar entry, settings view header)
-//   IconTrash   → Delete-planet action in the recent list
+//   IconTrash   → Delete-world action inside RecentWorldsView edit mode
+//   IconClock   → Currently unused in the UI; kept exported for future use
 ```
 
 ### Game Rules (`constants/gameRules.ts`)
@@ -515,9 +520,17 @@ npm run build      # Build check - MUST succeed
 
 ### After updating dependencies:
 - `/update-badges` - Sync README.md badges with package.json versions
+- **Update the Tech Stack table in this file (CLAUDE.md) too** when a major version of React / TypeScript / Vite / any listed tool changes. Same rule for the README Tech Stack table and the version badges at the top. Docs must reflect the versions that a fresh clone actually installs.
 
 ### After bumping version (npm version patch/minor/major):
 - `/sync-version` - Sync version in README badges and verify build
+
+### After architecture changes (new tool/view, renamed route, new hook, removed feature):
+- Update the tool list in the **Project Overview** section of this file (CLAUDE.md) and the **Available Tools** / **Features** tables in README.md so both docs list every current tool and describe it correctly.
+- Update the **Project Structure** tree in CLAUDE.md and the mirrored tree in README.md when you add, remove or rename a file listed there.
+- Update the **URL Routing** block in CLAUDE.md when a route is added, removed or repurposed.
+- Update the **Iconography** semantic mapping (icons block in CLAUDE.md) when the icon assigned to a tool changes or a new icon is added.
+- The pattern the codebase enforces is: **whatever a fresh reader would learn from CLAUDE.md and README.md must still be true after your change.** If a change makes an existing sentence wrong or misleading, edit that sentence in the same commit.
 
 These checks ensure the app works well on mobile devices, is accessible to all users, and documentation stays current.
 

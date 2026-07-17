@@ -2,7 +2,7 @@
 
 [![Version](https://img.shields.io/badge/Version-3.3.4-blue?style=flat-square)](https://github.com/pgarriga/traveller-toolkit)
 [![React](https://img.shields.io/badge/React-19.2-61DAFB?style=flat-square&logo=react&logoColor=white)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-7.0-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-8.0-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
@@ -15,18 +15,19 @@ A modern, browser-based set of tools for the **Mongoose Traveller 2nd Edition** 
 | Route | Tool | What it does |
 |-------|------|--------------|
 | `/` | **Home** | Lists the available tools as cards. |
-| `/search` | **Search Planet** | Looks up official Traveller worlds by name via the [Traveller Map](https://travellermap.com) API and jumps into the planet detail with a full UWP breakdown. When no search is active, lists your recently visited planets (persisted in `localStorage`). |
+| `/search` | **Search World** | Looks up official Traveller worlds by name via the [Traveller Map](https://travellermap.com) API and jumps into the world detail with a full UWP breakdown. |
+| `/recent` | **Visited Worlds** | Standalone tool listing the worlds you've visited (persisted in `localStorage`). Sortable and editable — see [Visited Worlds](#visited-worlds) below. |
 | `/passengers` | **Passenger Traffic** | Rolls High / Middle / Basic / Low passenger availability with the Mongoose 2e DMs and computes income. |
 | `/freight` | **Freight Calculator** | Computes traffic DMs between two worlds, rolls lots automatically, and lets you pick which lots to take up to your cargo bay's capacity. Shows income live as you toggle lots. |
 | `/settings` | **Settings** | Theme (auto / light / dark) and language (auto / Spanish / English). |
-| `/planet/{UWP}` | **Planet Detail** | Editable planet name + UWP + zone, deep-linkable. |
+| `/planet/{UWP}` | **World Detail** | Editable world name + UWP + zone, deep-linkable. |
 
 ## Features
 
-### Search Planet
+### Search World
 - **Traveller Map lookup** — Type at least 3 characters and query the [Traveller Map](https://travellermap.com) `/api/search` endpoint.
-- **Live results** — Each match shows name, UWP, sector and hex, styled like the Recent Planets list.
-- **One-click detail** — Selecting a result jumps into the Planet Detail view with a full UWP breakdown:
+- **Live results** — Each match shows name, UWP, sector and hex.
+- **One-click detail** — Selecting a result jumps into the World Detail view with a full UWP breakdown:
   - Starport class, facilities, and services
   - Planet size, diameter, and gravity
   - Atmosphere type, pressure, and required equipment
@@ -48,12 +49,13 @@ A modern, browser-based set of tools for the **Mongoose Traveller 2nd Edition** 
 - **Late-delivery payment** — Optional toggle applies the reference −50% modifier to net income.
 - **Gated output** — The "Price per ton", "Available lots" and "Summary" sections only appear after you press "Calculate lots", so the workflow is configure → calculate → pick.
 
-### Recent Planets (inside Search Planet)
-- Auto-saves planets when you visit them and lists them under the search box.
-- Stored in `localStorage` (key: `traveller-recent`).
-- Bulk-clear or per-planet delete from the search view.
-- The list is hidden while a search is running or when results are on screen; it reappears once results are dismissed.
-- URL alias: `/recent` redirects to `/search` for backwards compatibility.
+### Visited Worlds
+- **Standalone tool** at `/recent` (its own card on the home page, its own navbar entry).
+- **Auto-saves** worlds when you visit them; the list survives reloads via `localStorage` (key: `traveller-recent`).
+- **Compact cards** with the world name and UWP on one row, and colored tags for Starport class, Atmosphere, Population (Twitter-style K/M/B ranges), Government type and Tech Level.
+- **Sort** by most recent, oldest, name (A→Z / Z→A), tech level or population — dropdown at the top of the list.
+- **Edit mode** — toggle "Edit" / "Done" to reveal per-card delete buttons. Card navigation is disabled while editing so you don't open a world by accident.
+- **Empty state** offers a shortcut back to Search World.
 
 ### General
 - **Bilingual** — Spanish and English with auto-detection (`es`, `ca`, `gl`, `eu` → Spanish; everything else → English). Manual override in Settings.
@@ -95,11 +97,11 @@ npm run preview
 
 ## Usage
 
-### Looking up a planet
+### Looking up a world
 
-1. From the home page, open **Search Planet**.
-2. Type at least 3 characters of the planet name (e.g. `Regi`) and press **Search**.
-3. Pick the planet from the results — it opens the Planet Detail view with the full UWP breakdown and is auto-saved to Recent Planets.
+1. From the home page, open **Search World**.
+2. Type at least 3 characters of the world name (e.g. `Regi`) and press **Search**.
+3. Pick the world from the results — it opens the World Detail view with the full UWP breakdown and is auto-saved to **Visited Worlds** (`/recent`).
 
 ### Calculating freight
 
@@ -138,9 +140,9 @@ A UWP code consists of 8 characters in the format `XNNNNNN-N`:
 | Technology | Purpose |
 |------------|---------|
 | [React 19](https://react.dev/) | UI Framework |
-| [TypeScript 5](https://www.typescriptlang.org/) | Type Safety (strict mode) |
+| [TypeScript 7](https://www.typescriptlang.org/) | Type Safety (strict mode) |
 | [Vite 8](https://vitejs.dev/) | Build Tool & Dev Server |
-| [Traveller Map API](https://travellermap.com/doc/api) | Planet search + canonical UWP lookup |
+| [Traveller Map API](https://travellermap.com/doc/api) | World search + canonical UWP lookup |
 
 No external UI library, no router library — custom components with inline styles, and a hand-rolled router built on top of the History API (`utils/routing.ts`).
 
@@ -158,15 +160,15 @@ All UI elements, labels, and game data are fully translated. You can also overri
 ```
 src/
 ├── components/
-│   ├── icons/          # SVG icon components (IconSearch, IconBox, IconClock, ...)
-│   └── ui/             # Button, Section, Row, Badge, PageHeader
+│   ├── icons/          # SVG icon components (IconSearch, IconPin, IconBox, IconUsers, ...)
+│   └── ui/             # Button, Section, Row, PageHeader
 ├── constants/          # colors, zones, gameRules, freight, mail, passenger
 ├── hooks/              # useThemeMode, useRecentPlanets
 ├── i18n/               # translations (ES/EN) + game data
 ├── types/              # theme, uwp, i18n, game-data, freight, mail, passenger
 ├── utils/              # routing, uwp, freight, mail, passenger, travellerMap, i18n-helpers
-├── views/              # HomeView, SearchView, FreightView, PassengerView,
-│                       # PlanetView, SettingsView
+├── views/              # HomeView, SearchView, RecentWorldsView,
+│                       # FreightView, PassengerView, PlanetView, SettingsView
 ├── App.tsx             # Main orchestration: view state + routing + popstate
 ├── index.css           # Global styles + responsive breakpoints
 └── main.tsx            # Entry point (wraps App in ErrorBoundary)
