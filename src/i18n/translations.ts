@@ -17,15 +17,15 @@ export const translations: Record<Language, Record<string, string>> = {
     zoneAmber: "Ámbar",
     zoneRed: "Rojo",
 
-    // Recent planets (embedded inside the search view)
-    recentPlanets: "Planetas recientes",
-    noRecentPlanets: "No hay planetas recientes",
+    // Recent worlds (embedded inside the search view)
+    recentPlanets: "Mundos recientes",
+    noRecentPlanets: "No hay mundos recientes",
     delete: "Eliminar",
     clearAll: "Borrar todo",
 
-    // Planet display
+    // World display
     unnamed: "Sin nombre",
-    planetName: "Nombre del planeta",
+    planetName: "Nombre del mundo",
     worldProfile: "Perfil de mundo",
     worldLocation: "Ubicación",
     jumpMapAlt: "Mapa de saltos del sistema",
@@ -147,8 +147,8 @@ export const translations: Record<Language, Record<string, string>> = {
     langDescription: "El modo automático detecta el idioma de tu navegador",
 
     // Freight calculator
-    freightTitle: "Tráfico de Carga",
-    passengerTitle: "Tráfico de Pasajeros",
+    freightTitle: "Tráfico de carga",
+    passengerTitle: "Tráfico de pasajeros",
     comingSoon: "Próximamente",
     freightOriginSection: "Mundo de origen",
     freightDestinationSection: "Mundo de destino",
@@ -221,11 +221,25 @@ export const translations: Record<Language, Record<string, string>> = {
     homeTitle: "Herramientas",
     homePassengerDesc: "Calcula pasajeros disponibles (High/Middle/Basic/Low) aplicando DMs de población, starport, zona y parsecs",
     homeFreightDesc: "Calcula lotes de carga (Major/Minor/Incidental) y Mail Run con sus DMs e ingresos",
-    homeSearchDesc: "Busca planetas oficiales del universo Traveller por nombre usando Traveller Map (https://travellermap.com). Incluye acceso a los planetas visitados recientemente.",
+    homeSearchDesc: "Busca mundos oficiales del universo Traveller por nombre usando Traveller Map (https://travellermap.com).",
+    homeRecentDesc: "Accede rápidamente a los mundos visitados recientemente con sus atributos clave en un vistazo.",
+    recentWorldsTitle: "Mundos recientes",
+    recentFilterPlaceholder: "Filtrar por nombre o UWP",
+    recentSortLabel: "Ordenar",
+    recentSortRecent: "Más recientes",
+    recentSortOldest: "Más antiguos",
+    recentSortNameAsc: "Nombre A→Z",
+    recentSortNameDesc: "Nombre Z→A",
+    recentSortTL: "Nivel tecnológico ↓",
+    recentSortPop: "Población ↓",
+    recentNoMatches: "Ningún mundo coincide con el filtro",
+    recentCount: "de",
+    recentEdit: "Editar",
+    recentEditDone: "Hecho",
 
-    // Planet search (Traveller Map)
-    searchTitle: "Buscar planeta",
-    searchPlaceholder: "Nombre del planeta (mín. 3 caracteres)",
+    // World search (Traveller Map)
+    searchTitle: "Buscar mundo",
+    searchPlaceholder: "Nombre del mundo (mín. 3 caracteres)",
     searchButton: "Buscar",
     searchMinChars: "Introduce al menos 3 caracteres",
     searchLoading: "Buscando...",
@@ -336,15 +350,15 @@ export const translations: Record<Language, Record<string, string>> = {
     zoneAmber: "Amber",
     zoneRed: "Red",
 
-    // Recent planets (embedded inside the search view)
-    recentPlanets: "Recent planets",
-    noRecentPlanets: "No recent planets",
+    // Recent worlds (embedded inside the search view)
+    recentPlanets: "Recent worlds",
+    noRecentPlanets: "No recent worlds",
     delete: "Delete",
     clearAll: "Clear all",
 
-    // Planet display
+    // World display
     unnamed: "Unnamed",
-    planetName: "Planet name",
+    planetName: "World name",
     worldProfile: "World profile",
     worldLocation: "Location",
     jumpMapAlt: "System jump map",
@@ -466,8 +480,8 @@ export const translations: Record<Language, Record<string, string>> = {
     langDescription: "Auto mode detects your browser language",
 
     // Freight calculator
-    freightTitle: "Freight Traffic",
-    passengerTitle: "Passenger Traffic",
+    freightTitle: "Freight traffic",
+    passengerTitle: "Passenger traffic",
     comingSoon: "Coming soon",
     freightOriginSection: "Origin world",
     freightDestinationSection: "Destination world",
@@ -540,11 +554,25 @@ export const translations: Record<Language, Record<string, string>> = {
     homeTitle: "Tools",
     homePassengerDesc: "Calculate available passengers (High/Middle/Basic/Low) applying DMs from population, starport, zone and parsecs",
     homeFreightDesc: "Calculate cargo lots (Major/Minor/Incidental) and Mail Run with their DMs and income",
-    homeSearchDesc: "Look up official Traveller worlds by name via the Traveller Map API (https://travellermap.com). Includes quick access to recently visited planets.",
+    homeSearchDesc: "Look up official Traveller worlds by name via the Traveller Map API (https://travellermap.com).",
+    homeRecentDesc: "Quickly access the worlds you've visited recently with a snapshot of their key attributes.",
+    recentWorldsTitle: "Recent worlds",
+    recentFilterPlaceholder: "Filter by name or UWP",
+    recentSortLabel: "Sort",
+    recentSortRecent: "Most recent",
+    recentSortOldest: "Oldest",
+    recentSortNameAsc: "Name A→Z",
+    recentSortNameDesc: "Name Z→A",
+    recentSortTL: "Tech level ↓",
+    recentSortPop: "Population ↓",
+    recentNoMatches: "No world matches the filter",
+    recentCount: "of",
+    recentEdit: "Edit",
+    recentEditDone: "Done",
 
-    // Planet search (Traveller Map)
-    searchTitle: "Search planet",
-    searchPlaceholder: "Planet name (min. 3 characters)",
+    // World search (Traveller Map)
+    searchTitle: "Search world",
+    searchPlaceholder: "World name (min. 3 characters)",
     searchButton: "Search",
     searchMinChars: "Enter at least 3 characters",
     searchLoading: "Searching...",

@@ -33,7 +33,7 @@ import {
 } from "../constants/passenger";
 import { calculatePassengers } from "../utils/passenger";
 
-type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search";
+type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent";
 
 interface PassengerViewProps {
   theme: Theme;

@@ -150,7 +150,7 @@ input::placeholder {
 }
 
 @media (min-width: 1200px) {
-  .card-grid {
+  .card-grid:not(.card-grid--two) {
     grid-template-columns: repeat(3, 1fr);
   }
 }
@@ -255,7 +255,7 @@ input::placeholder {
 /* Mobile styles - 480px breakpoint */
 @media (max-width: 480px) {
   .app-title {
-    font-size: 26px;
+    font-size: 24px;
   }
 
   .form-grid {

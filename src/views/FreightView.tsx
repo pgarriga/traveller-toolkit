@@ -41,7 +41,7 @@ import {
 import { calculateFreight } from "../utils/freight";
 import { calculateMail } from "../utils/mail";
 
-type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search";
+type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent";
 
 interface FreightViewProps {
   theme: Theme;

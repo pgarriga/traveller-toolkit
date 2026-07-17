@@ -1,18 +1,18 @@
-import type { FC, FormEvent, MouseEvent } from "react";
+import type { FC, FormEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import type { Theme } from "../types/theme";
 import type { TranslationFunction } from "../types/i18n";
-import type { RecentPlanet, TravellerMapWorld, ZoneCode } from "../types/uwp";
+import type { TravellerMapWorld, ZoneCode } from "../types/uwp";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { Button } from "../components/ui/Button";
 import { PageHeader } from "../components/ui/PageHeader";
-import { IconSearch, IconClock, IconTrash } from "../components/icons";
+import { IconSearch } from "../components/icons";
 import { COLORS } from "../constants/colors";
 import { ZONES, getZoneColor } from "../constants/zones";
 import { searchWorlds, type WorldSearchResult } from "../utils/travellerMap";
 
-type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search";
+type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent";
 
 const MIN_QUERY_LENGTH = 3;
 
@@ -25,10 +25,6 @@ interface SearchViewProps {
   setMenuOpen: (open: boolean) => void;
   t: TranslationFunction;
   onSelectWorld: (uwp: string, name: string, world: TravellerMapWorld) => void;
-  recentPlanets: RecentPlanet[];
-  loadPlanet: (planet: RecentPlanet) => void;
-  deletePlanet: (uwp: string) => void;
-  clearAllPlanets: () => void;
 }
 
 export const SearchView: FC<SearchViewProps> = ({
@@ -40,10 +36,6 @@ export const SearchView: FC<SearchViewProps> = ({
   setMenuOpen,
   t,
   onSelectWorld,
-  recentPlanets,
-  loadPlanet,
-  deletePlanet,
-  clearAllPlanets,
 }) => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<WorldSearchResult[] | null>(null);
@@ -53,7 +45,6 @@ export const SearchView: FC<SearchViewProps> = ({
 
   const trimmed = query.trim();
   const canSearch = trimmed.length >= MIN_QUERY_LENGTH && !loading;
-  const hasResultsPane = loading || error !== null || results !== null;
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
@@ -204,84 +195,6 @@ export const SearchView: FC<SearchViewProps> = ({
               );
             })}
           </div>
-        )}
-
-        {!hasResultsPane && (
-          <section aria-labelledby="recent-heading" style={{ marginTop: 24 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 8 }}>
-              <h2
-                id="recent-heading"
-                style={{
-                  fontSize: 13,
-                  fontWeight: 500,
-                  color: COLORS.primary,
-                  textTransform: "uppercase",
-                  letterSpacing: 2,
-                  margin: 0,
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <IconClock />{t("recentPlanets")}
-              </h2>
-              {recentPlanets.length > 0 && (
-                <Button variant="ghost" size="sm" theme={theme} onClick={clearAllPlanets}>
-                  {t("clearAll")}
-                </Button>
-              )}
-            </div>
-
-            {recentPlanets.length === 0 ? (
-              <div style={{ textAlign: "center", padding: 40, color: theme.textDimmed, fontSize: 13 }}>
-                {t("noRecentPlanets")}
-              </div>
-            ) : (
-              <div className="card-grid">
-                {recentPlanets.map((planet) => (
-                  <div
-                    key={planet.uwp}
-                    onClick={() => loadPlanet(planet)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        loadPlanet(planet);
-                      }
-                    }}
-                    style={{
-                      background: theme.bgCard,
-                      borderRadius: 10,
-                      padding: "12px 14px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                      cursor: "pointer",
-                      border: `1px solid ${theme.border}`,
-                      borderLeft: `3px solid ${getZoneColor(planet.zone)}`,
-                    }}
-                  >
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 15, fontWeight: 500, color: theme.text, marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {planet.name}
-                      </div>
-                      <div style={{ fontFamily: "monospace", fontSize: 12, color: theme.textDimmed, letterSpacing: 0.5 }}>
-                        {planet.uwp}
-                      </div>
-                    </div>
-                    <Button
-                      variant="icon"
-                      theme={theme}
-                      onClick={(e: MouseEvent) => { e.stopPropagation(); deletePlanet(planet.uwp); }}
-                      aria-label={t("delete") || "Delete"}
-                    >
-                      <IconTrash />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
         )}
 
         <Footer theme={theme} t={t} />

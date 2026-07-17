@@ -19,7 +19,7 @@ import {
 } from "../constants/gameRules";
 import { requiresWarning } from "../utils/i18n-helpers";
 
-type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search";
+type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent";
 
 interface ParsedUWP {
   sp: StarportClass;
@@ -108,11 +108,11 @@ export const PlanetView: FC<PlanetViewProps> = ({
       <main className="wide-main">
         {/* Planet header */}
         <div style={{ background: theme.bgHeader, borderRadius: 12, padding: 20, marginBottom: 16, textAlign: "center" }}>
-          <label htmlFor="planet-name" className="sr-only">{t("planetName") || "Planet name"}</label>
+          <label htmlFor="planet-name" className="sr-only">{t("planetName") || "World name"}</label>
           <input
             id="planet-name"
             className="planet-name"
-            aria-label={t("planetName") || "Planet name"}
+            aria-label={t("planetName") || "World name"}
             value={name}
             onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
             placeholder={t("unnamed")}
