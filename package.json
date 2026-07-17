@@ -2,6 +2,30 @@
   "name": "traveller-toolkit",
   "private": true,
   "version": "3.3.0",
+  "description": "A modern, browser-based set of tools for the Mongoose Traveller 2nd Edition tabletop RPG.",
+  "keywords": [
+    "traveller",
+    "mongoose-traveller",
+    "traveller-rpg",
+    "ttrpg",
+    "tabletop-rpg",
+    "uwp",
+    "traveller-map",
+    "react"
+  ],
+  "homepage": "https://pgarriga.github.io/traveller-toolkit",
+  "bugs": {
+    "url": "https://github.com/pgarriga/traveller-toolkit/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pgarriga/traveller-toolkit.git"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "pgarriga",
+    "url": "https://github.com/pgarriga"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
