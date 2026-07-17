@@ -1,6 +1,6 @@
 // i18n type definitions
 
-export type Language = "es" | "en";
+export type Language = "es" | "en" | "ca";
 
 export type LangMode = "auto" | Language;
 
@@ -126,6 +126,7 @@ export type TranslationKey =
   | "langAuto"
   | "langEs"
   | "langEn"
+  | "langCa"
   | "langDescription"
   // Freight calculator
   | "freightTitle"

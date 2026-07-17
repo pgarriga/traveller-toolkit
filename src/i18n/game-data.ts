@@ -25,6 +25,14 @@ export function getSTARPORT(t: TranslationFunction): Record<Language, Record<Sta
       E: { name: "Frontier", fuel: none, berth: free, services: none, bases: none },
       X: { name: "No starport", fuel: none, berth: na, services: none, bases: none },
     },
+    ca: {
+      A: { name: "Excel·lent", fuel: "Refinat", berth: "1D×1.000 Cr", services: "Drassana (tots), Reparació", bases: "Naval 8+, Explorador 10+, Investigació 8+, SAV" },
+      B: { name: "Bo", fuel: "Refinat", berth: "1D×500 Cr", services: "Drassana (astronaus), Reparació", bases: "Naval 8+, Explorador 8+, Investigació 10+, SAV" },
+      C: { name: "Rutinari", fuel: "Sense refinar", berth: "1D×100 Cr", services: "Drassana (llançadores), Reparació", bases: "Explorador 8+, Investigació 10+, SAV 10+" },
+      D: { name: "Pobre", fuel: "Sense refinar", berth: "1D×10 Cr", services: "Reparació limitada", bases: "Explorador 7+" },
+      E: { name: "Fronterer", fuel: none, berth: free, services: none, bases: none },
+      X: { name: "Sense astroport", fuel: none, berth: na, services: none, bases: none },
+    },
   };
 }
 
@@ -55,6 +63,19 @@ export function getSIZE(lang: Language): SizeData[] {
       { d: "12,800 km", g: "1.0", ex: "Earth", desc: "Similar to Earth." },
       { d: "14,400 km", g: "1.25", ex: "", desc: "Large world." },
       { d: "16,000 km", g: "1.4", ex: "", desc: "Very large world. High gravity (≥1.4g)." },
+    ],
+    ca: [
+      { d: "<1.000 km", g: "Insignificant", ex: "Asteroide", desc: "Asteroide o complex orbital. Sense atmosfera." },
+      { d: "1.600 km", g: "0,05", ex: "Tritó", desc: "Cos molt petit, sense atmosfera respirable." },
+      { d: "3.200 km", g: "0,15", ex: "Lluna, Europa", desc: "Petit satèl·lit." },
+      { d: "4.800 km", g: "0,25", ex: "Mercuri", desc: "Món petit." },
+      { d: "6.400 km", g: "0,35", ex: "", desc: "Món petit, gravetat baixa." },
+      { d: "8.000 km", g: "0,45", ex: "Mart", desc: "Món mitjà-petit, gravetat baixa." },
+      { d: "9.600 km", g: "0,7", ex: "", desc: "Món mitjà. Gravetat baixa (≤0,7g)." },
+      { d: "11.200 km", g: "0,9", ex: "", desc: "Món mitjà-gran." },
+      { d: "12.800 km", g: "1,0", ex: "Terra", desc: "Similar a la Terra." },
+      { d: "14.400 km", g: "1,25", ex: "", desc: "Món gran." },
+      { d: "16.000 km", g: "1,4", ex: "", desc: "Món molt gran. Gravetat alta (≥1,4g)." },
     ],
   };
   return data[lang];
@@ -98,6 +119,24 @@ export function getATMO(lang: Language): AtmosphereData[] {
       { comp: "Low density", pres: "≤0.5", equip: "Varies", desc: "Only breathable in lowlands and depressions." },
       { comp: "Unusual", pres: "Varies", equip: "Varies", desc: "Atmosphere with strange behavior." },
     ],
+    ca: [
+      { comp: "Cap", pres: "0,00", equip: "Vestit espacial", desc: "Sense atmosfera." },
+      { comp: "Traces", pres: "0,001-0,09", equip: "Vestit espacial", desc: "Atmosfera vestigial." },
+      { comp: "Molt tènue, Nociva", pres: "0,1-0,42", equip: "Respirador + Filtre", desc: "Molt tènue i tòxica." },
+      { comp: "Molt tènue", pres: "0,1-0,42", equip: "Respirador", desc: "Molt tènue però no tòxica." },
+      { comp: "Tènue, Nociva", pres: "0,43-0,7", equip: "Filtre", desc: "Tènue i tòxica." },
+      { comp: "Tènue", pres: "0,43-0,7", equip: "Cap", desc: "Tènue però respirable." },
+      { comp: "Estàndard", pres: "0,71-1,49", equip: "Cap", desc: "Atmosfera similar a la Terra." },
+      { comp: "Estàndard, Nociva", pres: "0,71-1,49", equip: "Filtre", desc: "Pressió estàndard però tòxica." },
+      { comp: "Densa", pres: "1,5-2,49", equip: "Cap", desc: "Atmosfera densa però respirable." },
+      { comp: "Densa, Nociva", pres: "1,5-2,49", equip: "Filtre", desc: "Densa i tòxica." },
+      { comp: "Exòtica", pres: "Varia", equip: "Subministrament d'aire", desc: "No respirable però no perillosa." },
+      { comp: "Corrosiva", pres: "Varia", equip: "Vestit espacial", desc: "Altament perillosa! 1D dany/torn." },
+      { comp: "Insidiosa", pres: "Varia", equip: "Vestit espacial", desc: "Corrosiva + destrueix l'equip en 2D hores." },
+      { comp: "Densitat alta", pres: "2,5+", equip: "Varia", desc: "N₂/O₂ a molt alta pressió. Només habitable en altitud." },
+      { comp: "Densitat baixa", pres: "≤0,5", equip: "Varia", desc: "Només respirable a terres baixes i depressions." },
+      { comp: "Inusual", pres: "Varia", equip: "Varia", desc: "Atmosfera amb comportament estrany." },
+    ],
   };
   return data[lang];
 }
@@ -115,6 +154,12 @@ export function getHYDRO(lang: Language): string[] {
       "26%-35% — Small seas and oceans", "36%-45% — Wet world", "46%-55% — Large oceans",
       "56%-65%", "66%-75% — Similar to Earth", "76%-85% — Water world",
       "86%-95% — Only islands and archipelagos", "96%-100% — Almost all water",
+    ],
+    ca: [
+      "0%-5% — Món desèrtic", "6%-15% — Món sec", "16%-25% — Alguns petits mars",
+      "26%-35% — Petits mars i oceans", "36%-45% — Món humit", "46%-55% — Grans oceans",
+      "56%-65%", "66%-75% — Similar a la Terra", "76%-85% — Món aquàtic",
+      "86%-95% — Només illes i arxipèlags", "96%-100% — Gairebé tot aigua",
     ],
   };
   return data[lang];
@@ -135,6 +180,13 @@ export function getPOP(lang: Language): string[] {
       "Millions (1,000,000+)", "Tens of millions (10,000,000+) — Large city",
       "Hundreds of millions (100,000,000+)", "Billions (1,000,000,000+) — Current Earth",
       "Tens of billions (10,000,000,000+)", "Hundreds of billions", "Trillions — Ecumenopolis",
+    ],
+    ca: [
+      "Cap (deshabitat)", "Pocs (1+) — Granja/família", "Centenars (100+) — Poblet",
+      "Milers (1.000+)", "Desenes de milers (10.000+) — Poble", "Centenars de milers (100.000+) — Ciutat mitjana",
+      "Milions (1.000.000+)", "Desenes de milions (10.000.000+) — Gran ciutat",
+      "Centenars de milions (100.000.000+)", "Milers de milions (1.000.000.000+) — Terra actual",
+      "Desenes de milers de milions (10.000.000.000+)", "Centenars de milers de milions", "Bilions — Món-ciutat",
     ],
   };
   return data[lang];
@@ -178,6 +230,24 @@ export function getGOV(lang: Language): GovernmentData[] {
       { type: "Religious autocracy", desc: "Religious leader with absolute power.", contra: "Varies" },
       { type: "Totalitarian oligarchy", desc: "Minority with absolute control by coercion.", contra: "Varies" },
     ],
+    ca: [
+      { type: "Cap", desc: "Sense estructura. Predominen els lligams familiars.", contra: "Cap" },
+      { type: "Companyia/Corporació", desc: "Elit gerencial d'empresa. Els ciutadans són empleats.", contra: "Armes, drogues, Viatgers" },
+      { type: "Democràcia participativa", desc: "Decisions pel consentiment directe de la ciutadania.", contra: "Drogues" },
+      { type: "Oligarquia autoperpetuada", desc: "Governada per una minoria restringida.", contra: "Tecnologia, armes, viatgers" },
+      { type: "Democràcia representativa", desc: "Els representants elegits prenen les decisions.", contra: "Drogues, armes, psiònics" },
+      { type: "Tecnocràcia feudal", desc: "Governants elegits per competència tècnica.", contra: "Tecnologia, armes, ordinadors" },
+      { type: "Govern captiu", desc: "Lideratge imposat per un grup extern.", contra: "Armes, tecnologia, viatgers" },
+      { type: "Balcanització", desc: "Sense autoritat central. Governs rivals competeixen.", contra: "Varia" },
+      { type: "Burocràcia de servei civil", desc: "Organismes amb personal seleccionat per experiència.", contra: "Drogues, armes" },
+      { type: "Burocràcia impersonal", desc: "Agències aïllades dels ciutadans.", contra: "Tecnologia, armes, drogues, Viatgers, psiònics" },
+      { type: "Dictador carismàtic", desc: "Un líder únic amb confiança aclaparadora.", contra: "Cap" },
+      { type: "Líder no carismàtic", desc: "Dictadura militar o regnat hereditari.", contra: "Armes, tecnologia, ordinadors" },
+      { type: "Oligarquia carismàtica", desc: "Grup selecte amb confiança popular.", contra: "Armes" },
+      { type: "Dictadura religiosa", desc: "Una organització religiosa governa.", contra: "Varia" },
+      { type: "Autocràcia religiosa", desc: "Líder religiós amb poder absolut.", contra: "Varia" },
+      { type: "Oligarquia totalitària", desc: "Minoria amb control absolut per coacció.", contra: "Varia" },
+    ],
   };
   return data[lang];
 }
@@ -194,6 +264,11 @@ export function getLAW_WEAPONS(lang: Language): string[] {
       "Military weapons", "Light assault weapons and SMGs", "Concealed personal weapons",
       "All firearms except shotguns/stunners", "Shotguns", "All bladed weapons, stunners", "All weapons",
     ],
+    ca: [
+      "Sense restriccions", "Gas verinós, explosius, ADM", "Armes energètiques portàtils i làser",
+      "Armes militars", "Armes d'assalt lleugeres i subfusells", "Armes personals amagades",
+      "Totes les armes de foc excepte escopetes/atordidors", "Escopetes", "Totes les armes blanques, atordidors", "Totes les armes",
+    ],
   };
   return data[lang];
 }
@@ -207,6 +282,10 @@ export function getLAW_ARMOR(lang: Language): string[] {
     en: [
       "No restrictions", "Battle dress", "Combat armor", "Flak jacket",
       "Cloth", "Mesh", "Jack", "Nothing visible", "All visible armor", "All armor",
+    ],
+    ca: [
+      "Sense restriccions", "Vestit de combat", "Armadura de combat", "Armilla antibales",
+      "Teixit", "Malla", "Jack", "Res visible", "Tota armadura visible", "Totes les armadures",
     ],
   };
   return data[lang];
