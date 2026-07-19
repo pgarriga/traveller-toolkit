@@ -18,6 +18,7 @@ export interface FreightInputs {
   origin: FreightWorldInputs;
   destination: FreightWorldInputs;
   parsecs: ParsecDistance;
+  jumps: ParsecDistance[];
   cargoBay: number;
   skillEffect: number;
   rollMajor: number | null;

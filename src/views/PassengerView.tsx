@@ -17,6 +17,7 @@ import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { Section } from "../components/ui/Section";
 import { Button } from "../components/ui/Button";
+import { JumpCountField, distributeJumps } from "../components/ui/JumpsEditor";
 import { PageHeader } from "../components/ui/PageHeader";
 import { IconUsers } from "../components/icons";
 import { COLORS, SECTION_COLORS } from "../constants/colors";
@@ -24,6 +25,7 @@ import {
   BROKER_EFFECT_MAX,
   BROKER_EFFECT_MIN,
   PARSEC_OPTIONS,
+  PASSAGE_PRICES,
   PASSENGER_CLASS_OPTIONS,
   PASSENGER_POP_OPTIONS,
   PASSENGER_STARPORT_OPTIONS,
@@ -152,6 +154,8 @@ export const PassengerView: FC<PassengerViewProps> = ({
   const [origin, setOrigin] = useState<PassengerWorldInputs>(DEFAULT_WORLD);
   const [destination, setDestination] = useState<PassengerWorldInputs>(DEFAULT_WORLD);
   const [parsecs, setParsecs] = useState<ParsecDistance>(1);
+  const [jumpCount, setJumpCount] = useState<number>(1);
+  const jumps = useMemo(() => distributeJumps(parsecs, jumpCount), [parsecs, jumpCount]);
   const [brokerEffect, setBrokerEffect] = useState<number>(0);
   const [stewardSkill, setStewardSkill] = useState<number>(0);
   const [rolls, setRolls] = useState<RollState>(DEFAULT_ROLLS);
@@ -163,6 +167,7 @@ export const PassengerView: FC<PassengerViewProps> = ({
     origin,
     destination,
     parsecs,
+    jumps,
     brokerEffect,
     stewardSkill,
     rollHigh: parseRollInput(rolls.high),
@@ -173,7 +178,7 @@ export const PassengerView: FC<PassengerViewProps> = ({
     diceMiddle: [],
     diceBasic: [],
     diceLow: [],
-  }), [origin, destination, parsecs, brokerEffect, stewardSkill, rolls]);
+  }), [origin, destination, parsecs, jumps, brokerEffect, stewardSkill, rolls]);
 
   const liveResult = useMemo(() => calculatePassengers(liveInputs, t), [liveInputs, t]);
 
@@ -296,6 +301,9 @@ export const PassengerView: FC<PassengerViewProps> = ({
     const diceText = classResult.dice && classResult.dice.length > 0
       ? `${classResult.dice.join(" + ")} = ${diceSum}`
       : t("freightDash");
+    const perJumpText = jumps.length > 1
+      ? jumps.map(j => `J-${j} ${formatCredits(PASSAGE_PRICES[j][cls], lang)}`).join(" + ")
+      : null;
 
     return (
       <div key={cls} style={{ padding: "12px 0", borderTop: `1px solid ${theme.border}`, display: "flex", flexDirection: "column", gap: 8 }}>
@@ -303,9 +311,16 @@ export const PassengerView: FC<PassengerViewProps> = ({
           <span style={{ color, fontSize: 14, fontWeight: 500, textTransform: "uppercase", letterSpacing: 1 }}>
             {t(classKey(cls))}
           </span>
-          <span style={{ fontFamily: "monospace", fontSize: 12, color: theme.textDimmed }}>
-            {t("passengerColPrice")}: {formatCredits(classResult.pricePerSeat, lang)}
-          </span>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+            <span style={{ fontFamily: "monospace", fontSize: 12, color: theme.textDimmed }}>
+              {t("passengerColPrice")}: {formatCredits(classResult.pricePerSeat, lang)}
+            </span>
+            {perJumpText && (
+              <span style={{ fontFamily: "monospace", fontSize: 11, color: theme.textDimmed }}>
+                = {perJumpText}
+              </span>
+            )}
+          </div>
         </div>
 
         {classResult.rolled2D === null ? (
@@ -395,6 +410,85 @@ export const PassengerView: FC<PassengerViewProps> = ({
                   <option key={p} value={p}>{p}</option>
                 ))}
               </select>
+            </div>
+            <JumpCountField
+              parsecs={parsecs}
+              jumpCount={jumpCount}
+              setJumpCount={setJumpCount}
+              theme={theme}
+              t={t}
+            />
+          </div>
+          <div style={{ marginTop: 12 }}>
+            <div style={{ fontSize: 12, color: theme.textDimmed, fontWeight: 500, marginBottom: 6 }}>
+              {t("routeJumpsBreakdown")} ({t("passengerColPrice")})
+            </div>
+            <div style={{ overflowX: "auto" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 320 }}>
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "56px repeat(4, minmax(0, 1fr))",
+                  gap: 8,
+                  padding: "3px 0",
+                  fontSize: 10,
+                  color: theme.textDimmed,
+                  textTransform: "uppercase",
+                  letterSpacing: 0.5,
+                }}>
+                  <span></span>
+                  {PASSENGER_CLASS_OPTIONS.map(cls => (
+                    <span key={cls} style={{ textAlign: "right", color: classColor(cls), fontWeight: 500 }}>
+                      {t(classKey(cls))}
+                    </span>
+                  ))}
+                </div>
+                {jumps.map((j, idx) => (
+                  <div key={idx} style={{
+                    display: "grid",
+                    gridTemplateColumns: "56px repeat(4, minmax(0, 1fr))",
+                    gap: 8,
+                    alignItems: "baseline",
+                    fontSize: 13,
+                    fontFamily: "monospace",
+                    padding: "3px 0",
+                    borderBottom: `1px dashed ${theme.border}`,
+                  }}>
+                    <span style={{ color: COLORS.primary, fontWeight: 500 }}>J-{j}</span>
+                    {PASSENGER_CLASS_OPTIONS.map(cls => (
+                      <span key={cls} style={{ color: theme.text, textAlign: "right" }}>
+                        {formatCredits(PASSAGE_PRICES[j][cls], lang)}
+                      </span>
+                    ))}
+                  </div>
+                ))}
+                {jumps.length > 1 && (
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "56px repeat(4, minmax(0, 1fr))",
+                    gap: 8,
+                    alignItems: "baseline",
+                    fontSize: 13,
+                    fontFamily: "monospace",
+                    padding: "6px 0 0",
+                    fontWeight: 500,
+                  }}>
+                    <span style={{ color: theme.textDimmed, textTransform: "uppercase", letterSpacing: 0.5, fontSize: 11 }}>
+                      {t("routeJumpsTotal")}
+                    </span>
+                    {PASSENGER_CLASS_OPTIONS.map(cls => {
+                      const total = jumps.reduce((s, jj) => s + PASSAGE_PRICES[jj][cls], 0);
+                      return (
+                        <span key={cls} style={{ color: COLORS.success, textAlign: "right" }}>
+                          {formatCredits(total, lang)}
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 6 }}>
+              {t("routeJumpsHint")}
             </div>
           </div>
         </Section>

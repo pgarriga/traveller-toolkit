@@ -19,10 +19,12 @@ import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { Section } from "../components/ui/Section";
 import { Button } from "../components/ui/Button";
+import { JumpCountField, JumpsBreakdown, distributeJumps } from "../components/ui/JumpsEditor";
 import { PageHeader } from "../components/ui/PageHeader";
 import { IconBox, IconMail } from "../components/icons";
 import { COLORS, SECTION_COLORS } from "../constants/colors";
 import {
+  FREIGHT_RATES_PER_TON,
   PARSEC_OPTIONS,
   POPULATION_OPTIONS,
   STARPORT_OPTIONS,
@@ -154,6 +156,8 @@ export const FreightView: FC<FreightViewProps> = ({
   const [origin, setOrigin] = useState<FreightWorldInputs>(DEFAULT_WORLD);
   const [destination, setDestination] = useState<FreightWorldInputs>(DEFAULT_WORLD);
   const [parsecs, setParsecs] = useState<ParsecDistance>(1);
+  const [jumpCount, setJumpCount] = useState<number>(1);
+  const jumps = useMemo(() => distributeJumps(parsecs, jumpCount), [parsecs, jumpCount]);
   const [cargoBay, setCargoBay] = useState<number>(0);
   const [skillEffect, setSkillEffect] = useState<number>(0);
   const [rollMajorRaw, setRollMajorRaw] = useState<string>("");
@@ -167,6 +171,7 @@ export const FreightView: FC<FreightViewProps> = ({
     origin,
     destination,
     parsecs,
+    jumps,
     cargoBay,
     skillEffect,
     rollMajor: parseRollInput(rollMajorRaw),
@@ -176,7 +181,7 @@ export const FreightView: FC<FreightViewProps> = ({
     diceMinor: [],
     diceIncidental: [],
     onTime,
-  }), [origin, destination, parsecs, cargoBay, skillEffect, rollMajorRaw, rollMinorRaw, rollIncidentalRaw, onTime]);
+  }), [origin, destination, parsecs, jumps, cargoBay, skillEffect, rollMajorRaw, rollMinorRaw, rollIncidentalRaw, onTime]);
 
   const liveResult = useMemo(() => calculateFreight(inputs, t), [inputs, t]);
 
@@ -434,6 +439,13 @@ export const FreightView: FC<FreightViewProps> = ({
                 ))}
               </select>
             </div>
+            <JumpCountField
+              parsecs={parsecs}
+              jumpCount={jumpCount}
+              setJumpCount={setJumpCount}
+              theme={theme}
+              t={t}
+            />
             <div>
               <label style={labelStyle}>{t("freightCargoBay")}</label>
               <input
@@ -445,6 +457,15 @@ export const FreightView: FC<FreightViewProps> = ({
               />
             </div>
           </div>
+          <JumpsBreakdown
+            parsecs={parsecs}
+            jumpCount={jumpCount}
+            theme={theme}
+            t={t}
+            priceFor={j => FREIGHT_RATES_PER_TON[j]}
+            formatPrice={n => formatCredits(n, lang)}
+            priceSuffix=" /t"
+          />
         </Section>
 
         <Section title={t("freightSkillsSection")} color={SECTION_COLORS.atmosphere} theme={theme}>

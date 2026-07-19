@@ -1,4 +1,5 @@
 import type {
+  ParsecDistance,
   PassengerClass,
   PassengerClassResult,
   PassengerDMBreakdownItem,
@@ -29,6 +30,7 @@ export const calculatePassengers = (
     origin,
     destination,
     parsecs,
+    jumps,
     brokerEffect,
     stewardSkill,
     rollHigh,
@@ -61,7 +63,9 @@ export const calculatePassengers = (
   const baseDM =
     worldDM(origin) + worldDM(destination) + parsecPenalty + brokerEffect + stewardSkill;
 
-  const pricesForRoute = PASSAGE_PRICES[parsecs];
+  const effectiveJumps: ParsecDistance[] = jumps.length > 0 ? jumps : [parsecs];
+  const pricePerSeatFor = (cls: PassengerClass): number =>
+    effectiveJumps.reduce((sum, j) => sum + PASSAGE_PRICES[j][cls], 0);
 
   const buildClass = (
     type: PassengerClass,
@@ -69,7 +73,7 @@ export const calculatePassengers = (
     dice: number[],
   ): PassengerClassResult => {
     const dm = baseDM + PASSENGER_CLASS_DM[type];
-    const pricePerSeat = pricesForRoute[type];
+    const pricePerSeat = pricePerSeatFor(type);
 
     if (roll === null) {
       return {

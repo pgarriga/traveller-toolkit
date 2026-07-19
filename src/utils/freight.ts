@@ -5,6 +5,7 @@ import type {
   DMBreakdownItem,
   LotResult,
   LotType,
+  ParsecDistance,
 } from "../types/freight";
 import type { TranslationFunction } from "../types/i18n";
 import {
@@ -34,6 +35,7 @@ export const calculateFreight = (
     origin,
     destination,
     parsecs,
+    jumps,
     cargoBay,
     skillEffect,
     rollMajor,
@@ -66,7 +68,11 @@ export const calculateFreight = (
   const baseDM =
     worldDM(origin) + worldDM(destination) + parsecPenalty + skillEffect;
 
-  const ratePerTon = FREIGHT_RATES_PER_TON[parsecs];
+  const effectiveJumps: ParsecDistance[] = jumps.length > 0 ? jumps : [parsecs];
+  const ratePerTon = effectiveJumps.reduce(
+    (sum, j) => sum + FREIGHT_RATES_PER_TON[j],
+    0,
+  );
 
   const buildLot = (type: LotType, roll: number | null, dice: number[]): LotResult => {
     const dm = baseDM + LOT_TYPE_DM[type];

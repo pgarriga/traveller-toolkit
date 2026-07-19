@@ -16,6 +16,7 @@ export interface PassengerInputs {
   origin: PassengerWorldInputs;
   destination: PassengerWorldInputs;
   parsecs: ParsecDistance;
+  jumps: ParsecDistance[];
   brokerEffect: number;
   stewardSkill: number;
   rollHigh: number | null;
