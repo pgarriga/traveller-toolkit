@@ -272,6 +272,8 @@ export const RecentWorldsView: FC<RecentWorldsViewProps> = ({
                           display: "flex",
                           alignItems: "baseline",
                           gap: 8,
+                          rowGap: 2,
+                          flexWrap: "wrap",
                           marginBottom: tags.length > 0 ? 8 : 0,
                           minWidth: 0,
                         }}
@@ -301,6 +303,22 @@ export const RecentWorldsView: FC<RecentWorldsViewProps> = ({
                         >
                           {planet.uwp}
                         </div>
+                        {planet.world && (
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: theme.textDimmed,
+                              flexShrink: 0,
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {planet.world.sector}
+                            {" · "}
+                            <span style={{ fontFamily: "monospace", letterSpacing: 0.5 }}>
+                              {`${String(planet.world.hexX).padStart(2, "0")}${String(planet.world.hexY).padStart(2, "0")}`}
+                            </span>
+                          </div>
+                        )}
                       </div>
                       {tags.length > 0 && (
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
