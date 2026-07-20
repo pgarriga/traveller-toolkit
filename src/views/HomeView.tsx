@@ -84,17 +84,10 @@ export const HomeView: FC<HomeViewProps> = ({
         setMenuOpen={setMenuOpen}
         t={t}
       />
-      <main style={{ maxWidth: 880, margin: "0 auto", padding: "20px 16px" }}>
+      <main className="wide-main">
         <PageHeader title={t("homeTitle")} />
 
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 12,
-            marginBottom: 24,
-          }}
-        >
+        <div className="card-grid card-grid--two" style={{ marginBottom: 24 }}>
           {tools.map(tool => (
             <button
               key={tool.key}

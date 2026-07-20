@@ -46,9 +46,10 @@ export const SettingsView: FC<SettingsViewProps> = ({
       setMenuOpen={setMenuOpen}
       t={t}
     />
-    <main style={{ maxWidth: 720, margin: "0 auto", padding: "20px 16px" }}>
+    <main className="wide-main">
       <PageHeader title={t("settings")} icon={<IconSettings />} />
 
+      <div className="two-col-grid">
       <div style={{ background: theme.bgCard, borderRadius: 12, padding: 20, marginBottom: 16, border: `1px solid ${theme.border}` }}>
         <div style={{ fontSize: 14, fontWeight: 500, color: theme.text, marginBottom: 12 }}>{t("theme")}</div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -96,6 +97,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
         <div style={{ fontSize: 12, color: theme.textDimmed, marginTop: 12 }}>
           {t("langDescription")}
         </div>
+      </div>
       </div>
 
       <Footer theme={theme} t={t} showVersion />

@@ -146,7 +146,7 @@ export const SearchView: FC<SearchViewProps> = ({
         )}
 
         {!loading && !error && results && results.length > 0 && (
-          <div className="card-grid">
+          <div className="card-grid card-grid--two">
             {results.map((planet) => {
               const world: TravellerMapWorld = {
                 name: planet.name,

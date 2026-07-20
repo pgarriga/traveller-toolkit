@@ -392,10 +392,12 @@ export const PassengerView: FC<PassengerViewProps> = ({
         setMenuOpen={setMenuOpen}
         t={t}
       />
-      <main style={{ maxWidth: 880, margin: "0 auto", padding: "20px 16px" }}>
+      <main className="wide-main">
         <PassengerBanner theme={theme} />
         <PageHeader title={t("passengerTitle")} icon={<IconUsers />} />
 
+        <div className="two-col-grid">
+        <div>
         {renderWorld(t("passengerOriginSection"), origin, setOrigin, SECTION_COLORS.starport)}
         {renderWorld(t("passengerDestinationSection"), destination, setDestination, SECTION_COLORS.population)}
 
@@ -531,7 +533,9 @@ export const PassengerView: FC<PassengerViewProps> = ({
             </div>
           </div>
         </Section>
+        </div>
 
+        <div>
         <Section title={t("passengerDMsSection")} color={COLORS.primary} theme={theme}>
           {liveResult.breakdown.length === 0 ? (
             <div style={{ fontSize: 13, color: theme.textDimmed }}>{t("passengerNoFactors")}</div>
@@ -590,6 +594,8 @@ export const PassengerView: FC<PassengerViewProps> = ({
             {t("passengerRollHelp")}
           </div>
         </Section>
+        </div>
+        </div>
 
         <div style={{ margin: "20px 0" }}>
           <Button

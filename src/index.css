@@ -111,6 +111,17 @@ input::placeholder {
   grid-template-columns: 1fr;
 }
 
+/* Two-column form layout used by Freight / Passenger / Settings on desktop.
+   Below 900px it collapses to a single column (default form flow).
+   Row-gap is 0 because inner <Section> already carries marginBottom: 12. */
+.two-col-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  column-gap: 16px;
+  row-gap: 0;
+  align-items: start;
+}
+
 /* Container that widens on desktop but keeps mobile layout untouched */
 .wide-main {
   max-width: 720px;
@@ -145,6 +156,10 @@ input::placeholder {
   }
 
   .card-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .two-col-grid {
     grid-template-columns: 1fr 1fr;
   }
 }

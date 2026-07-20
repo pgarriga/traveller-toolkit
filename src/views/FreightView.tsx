@@ -420,10 +420,12 @@ export const FreightView: FC<FreightViewProps> = ({
         setMenuOpen={setMenuOpen}
         t={t}
       />
-      <main style={{ maxWidth: 880, margin: "0 auto", padding: "20px 16px" }}>
+      <main className="wide-main">
         <FreightBanner theme={theme} />
         <PageHeader title={t("freightTitle")} icon={<IconBox />} />
 
+        <div className="two-col-grid">
+        <div>
         {renderWorld(t("freightOriginSection"), origin, setOrigin, SECTION_COLORS.starport)}
         {renderWorld(t("freightDestinationSection"), destination, setDestination, SECTION_COLORS.population)}
 
@@ -487,7 +489,9 @@ export const FreightView: FC<FreightViewProps> = ({
             </div>
           </div>
         </Section>
+        </div>
 
+        <div>
         {/* Live DM preview */}
         <Section title={t("freightDMsSection")} color={COLORS.primary} theme={theme}>
           {liveResult.breakdown.length === 0 ? (
@@ -650,6 +654,8 @@ export const FreightView: FC<FreightViewProps> = ({
             <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 6 }}>{t("mailRollNote")}</div>
           </div>
         </Section>
+        </div>
+        </div>
 
         <div style={{ margin: "20px 0" }}>
           <Button
