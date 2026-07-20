@@ -25,7 +25,7 @@
   --font-size-lg: 16px;
   --font-size-xl: 18px;
   --font-size-2xl: 24px;
-  --font-size-3xl: 32px;
+  --font-size-3xl: 31px;
 
   /* Font weights — Traveller manual uses only regular (400) and medium (500) */
   --font-weight-regular: 400;
@@ -255,7 +255,7 @@ input::placeholder {
 /* Mobile styles - 480px breakpoint */
 @media (max-width: 480px) {
   .app-title {
-    font-size: 24px;
+    font-size: 23px;
   }
 
   .form-grid {
