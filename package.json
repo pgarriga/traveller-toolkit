@@ -1,7 +1,7 @@
 {
   "name": "traveller-toolkit",
   "private": true,
-  "version": "3.4.2",
+  "version": "3.4.3",
   "description": "A modern, browser-based set of tools for the Mongoose Traveller 2nd Edition tabletop RPG.",
   "keywords": [
     "traveller",
