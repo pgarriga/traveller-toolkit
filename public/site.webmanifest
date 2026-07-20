@@ -4,8 +4,8 @@
   "description": "A growing collection of free, browser-based tools for the Mongoose Traveller 2nd Edition tabletop RPG.",
   "start_url": "/traveller-toolkit/",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
+  "background_color": "#1A1A18",
+  "theme_color": "#1A1A18",
   "icons": [
     {
       "src": "/traveller-toolkit/android-chrome-192x192.png",
