@@ -21,6 +21,7 @@ import { Section } from "../components/ui/Section";
 import { Button } from "../components/ui/Button";
 import { JumpCountField, JumpsBreakdown, distributeJumps } from "../components/ui/JumpsEditor";
 import { PageHeader } from "../components/ui/PageHeader";
+import { FreightBanner } from "../components/banners";
 import { IconBox, IconMail } from "../components/icons";
 import { COLORS, SECTION_COLORS } from "../constants/colors";
 import {
@@ -420,6 +421,7 @@ export const FreightView: FC<FreightViewProps> = ({
         t={t}
       />
       <main style={{ maxWidth: 880, margin: "0 auto", padding: "20px 16px" }}>
+        <FreightBanner theme={theme} />
         <PageHeader title={t("freightTitle")} icon={<IconBox />} />
 
         {renderWorld(t("freightOriginSection"), origin, setOrigin, SECTION_COLORS.starport)}

@@ -7,6 +7,7 @@ import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { Button } from "../components/ui/Button";
 import { PageHeader } from "../components/ui/PageHeader";
+import { SearchBanner } from "../components/banners";
 import { IconSearch } from "../components/icons";
 import { COLORS } from "../constants/colors";
 import { ZONES, getZoneColor } from "../constants/zones";
@@ -90,6 +91,7 @@ export const SearchView: FC<SearchViewProps> = ({
         t={t}
       />
       <main className="wide-main">
+        <SearchBanner theme={theme} />
         <PageHeader title={t("searchTitle")} icon={<IconSearch />} />
 
         <form

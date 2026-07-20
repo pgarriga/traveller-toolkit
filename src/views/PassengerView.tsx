@@ -19,6 +19,7 @@ import { Section } from "../components/ui/Section";
 import { Button } from "../components/ui/Button";
 import { JumpCountField, distributeJumps } from "../components/ui/JumpsEditor";
 import { PageHeader } from "../components/ui/PageHeader";
+import { PassengerBanner } from "../components/banners";
 import { IconUsers } from "../components/icons";
 import { COLORS, SECTION_COLORS } from "../constants/colors";
 import {
@@ -392,6 +393,7 @@ export const PassengerView: FC<PassengerViewProps> = ({
         t={t}
       />
       <main style={{ maxWidth: 880, margin: "0 auto", padding: "20px 16px" }}>
+        <PassengerBanner theme={theme} />
         <PageHeader title={t("passengerTitle")} icon={<IconUsers />} />
 
         {renderWorld(t("passengerOriginSection"), origin, setOrigin, SECTION_COLORS.starport)}

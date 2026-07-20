@@ -8,6 +8,7 @@ import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { Button } from "../components/ui/Button";
 import { PageHeader } from "../components/ui/PageHeader";
+import { RecentBanner } from "../components/banners";
 import { IconPin, IconSearch, IconTrash } from "../components/icons";
 import { COLORS, SECTION_COLORS } from "../constants/colors";
 import { getZoneColor } from "../constants/zones";
@@ -127,6 +128,7 @@ export const RecentWorldsView: FC<RecentWorldsViewProps> = ({
         t={t}
       />
       <main className="wide-main">
+        <RecentBanner theme={theme} />
         <PageHeader title={t("recentWorldsTitle")} icon={<IconPin />} />
 
         <section aria-labelledby="recent-heading" style={{ marginTop: 24 }}>
