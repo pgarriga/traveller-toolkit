@@ -38,18 +38,24 @@ const POP_ABBR = [
   "1Q+",
 ] as const;
 
-type SortKey = "recent" | "oldest" | "nameAsc" | "nameDesc" | "tl" | "pop";
+type SortKey = "recent" | "oldest" | "nameAsc" | "nameDesc" | "tl" | "pop" | "subsector";
 
-const SORT_OPTIONS: readonly SortKey[] = ["recent", "oldest", "nameAsc", "nameDesc", "tl", "pop"];
+const SORT_OPTIONS: readonly SortKey[] = ["recent", "oldest", "nameAsc", "nameDesc", "tl", "pop", "subsector"];
 
-const SORT_LABEL_KEY: Record<SortKey, "recentSortRecent" | "recentSortOldest" | "recentSortNameAsc" | "recentSortNameDesc" | "recentSortTL" | "recentSortPop"> = {
+const SORT_LABEL_KEY: Record<SortKey, "recentSortRecent" | "recentSortOldest" | "recentSortNameAsc" | "recentSortNameDesc" | "recentSortTL" | "recentSortPop" | "recentSortSubsector"> = {
   recent: "recentSortRecent",
   oldest: "recentSortOldest",
   nameAsc: "recentSortNameAsc",
   nameDesc: "recentSortNameDesc",
   tl: "recentSortTL",
   pop: "recentSortPop",
+  subsector: "recentSortSubsector",
 };
+
+// Traveller sectors are a 4×4 grid of 8-wide × 10-tall subsectors labeled A–P
+// (A top-left, P bottom-right). Deterministic from hex coordinates within the sector.
+const subsectorIndex = (hexX: number, hexY: number): number =>
+  Math.floor((hexX - 1) / 8) + Math.floor((hexY - 1) / 10) * 4;
 
 interface RecentWorldsViewProps {
   theme: Theme;
@@ -109,6 +115,18 @@ export const RecentWorldsView: FC<RecentWorldsViewProps> = ({
           const ap = parseUwp(a.uwp, STARPORT)?.po ?? -1;
           const bp = parseUwp(b.uwp, STARPORT)?.po ?? -1;
           return bp - ap;
+        }
+        case "subsector": {
+          // Worlds without Traveller Map metadata (no sector/hex) sort last.
+          if (!a.world && !b.world) return a.name.localeCompare(b.name);
+          if (!a.world) return 1;
+          if (!b.world) return -1;
+          const sectorCmp = a.world.sector.localeCompare(b.world.sector);
+          if (sectorCmp !== 0) return sectorCmp;
+          return (
+            subsectorIndex(a.world.hexX, a.world.hexY) -
+            subsectorIndex(b.world.hexX, b.world.hexY)
+          );
         }
       }
     });

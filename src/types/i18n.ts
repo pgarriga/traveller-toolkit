@@ -211,6 +211,7 @@ export type TranslationKey =
   | "recentSortNameDesc"
   | "recentSortTL"
   | "recentSortPop"
+  | "recentSortSubsector"
   | "recentNoMatches"
   | "recentCount"
   | "recentEdit"
