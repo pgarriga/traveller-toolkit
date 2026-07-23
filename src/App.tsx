@@ -240,11 +240,11 @@ export default function App() {
   }
 
   if (view === "freight") {
-    return <FreightView {...commonProps} lang={lang} />;
+    return <FreightView {...commonProps} lang={lang} recentPlanets={recentPlanets} savePlanet={savePlanet} />;
   }
 
   if (view === "passenger") {
-    return <PassengerView {...commonProps} lang={lang} />;
+    return <PassengerView {...commonProps} lang={lang} recentPlanets={recentPlanets} savePlanet={savePlanet} />;
   }
 
   if (view === "search") {

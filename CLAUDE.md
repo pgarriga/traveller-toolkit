@@ -57,7 +57,8 @@ src/
 │   │   ├── Section.tsx       # Card section with colored border
 │   │   ├── Row.tsx           # Label-value row for data display
 │   │   ├── Badge.tsx         # Colored badge/tag
-│   │   └── PageHeader.tsx    # Shared centered gradient h1 + optional icon
+│   │   ├── PageHeader.tsx    # Shared centered gradient h1 + optional icon
+│   │   └── WorldPicker.tsx   # Visited-worlds dropdown + inline Traveller Map search
 │   ├── Navbar.tsx            # Navigation bar (desktop + mobile, with a11y)
 │   ├── Footer.tsx            # Disclaimer footer
 │   └── ErrorBoundary.tsx     # Error boundary with fallback UI
@@ -85,7 +86,8 @@ src/
 │   ├── freight.ts            # calculateFreight (DM breakdown + lot rolling)
 │   ├── mail.ts               # calculateMail (Mail Run)
 │   ├── passenger.ts          # calculatePassengers
-│   ├── travellerMap.ts       # searchWorlds() → calls https://travellermap.com/api/search and maps World items
+│   ├── travellerMap.ts       # searchWorlds() + fetchWorldZone() → Traveller Map API
+│   ├── planetToWorldInputs.ts # Maps a RecentPlanet to Passenger/Freight world inputs
 │   └── i18n-helpers.ts       # isNoneValue, requiresWarning
 ├── i18n/
 │   ├── translations.ts       # UI translations (ES/EN)

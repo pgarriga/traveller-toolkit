@@ -2,6 +2,7 @@ import type { FC, ChangeEvent } from "react";
 import { useMemo, useState } from "react";
 import type { Theme } from "../types/theme";
 import type { Language, TranslationFunction } from "../types/i18n";
+import type { RecentPlanet, TravellerMapWorld, ZoneCode } from "../types/uwp";
 import type {
   ParsecDistance,
   PassengerClass,
@@ -18,6 +19,7 @@ import { Footer } from "../components/Footer";
 import { Section } from "../components/ui/Section";
 import { Button } from "../components/ui/Button";
 import { JumpCountField, distributeJumps } from "../components/ui/JumpsEditor";
+import { WorldPicker } from "../components/ui/WorldPicker";
 import { PageHeader } from "../components/ui/PageHeader";
 import { PassengerBanner } from "../components/banners";
 import { IconUsers } from "../components/icons";
@@ -35,6 +37,7 @@ import {
   STEWARD_SKILL_MIN,
 } from "../constants/passenger";
 import { calculatePassengers } from "../utils/passenger";
+import { planetToPassengerWorld } from "../utils/planetToWorldInputs";
 
 type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent";
 
@@ -47,6 +50,8 @@ interface PassengerViewProps {
   menuOpen: boolean;
   setMenuOpen: (open: boolean) => void;
   t: TranslationFunction;
+  recentPlanets: RecentPlanet[];
+  savePlanet: (uwp: string, name: string, zone: ZoneCode, world?: TravellerMapWorld) => void;
 }
 
 const DEFAULT_WORLD: PassengerWorldInputs = {
@@ -151,9 +156,24 @@ export const PassengerView: FC<PassengerViewProps> = ({
   menuOpen,
   setMenuOpen,
   t,
+  recentPlanets,
+  savePlanet,
 }) => {
   const [origin, setOrigin] = useState<PassengerWorldInputs>(DEFAULT_WORLD);
   const [destination, setDestination] = useState<PassengerWorldInputs>(DEFAULT_WORLD);
+  const [originLinkUwp, setOriginLinkUwp] = useState<string | null>(null);
+  const [destinationLinkUwp, setDestinationLinkUwp] = useState<string | null>(null);
+
+  const applyPlanet = (
+    planet: RecentPlanet,
+    setWorld: (w: PassengerWorldInputs) => void,
+    setLink: (uwp: string | null) => void,
+  ): void => {
+    const mapped = planetToPassengerWorld(planet);
+    if (!mapped) return;
+    setWorld(mapped);
+    setLink(planet.uwp);
+  };
   const [parsecs, setParsecs] = useState<ParsecDistance>(1);
   const [jumpCount, setJumpCount] = useState<number>(1);
   const jumps = useMemo(() => distributeJumps(parsecs, jumpCount), [parsecs, jumpCount]);
@@ -250,50 +270,68 @@ export const PassengerView: FC<PassengerViewProps> = ({
   const renderWorld = (
     label: string,
     world: PassengerWorldInputs,
-    setWorld: (w: PassengerWorldInputs) => void,
+    setWorldRaw: (w: PassengerWorldInputs) => void,
+    linkUwp: string | null,
+    setLinkUwp: (uwp: string | null) => void,
     color: string,
-  ) => (
-    <Section title={label} color={color} theme={theme}>
-      <div style={fieldGridStyle}>
-        <div>
-          <label style={labelStyle}>{t("passengerPopulation")}</label>
-          <select
-            style={inputStyle}
-            value={world.population}
-            onChange={e => setWorld({ ...world, population: e.target.value as PassengerPopTier })}
-          >
-            {PASSENGER_POP_OPTIONS.map(p => (
-              <option key={p} value={p}>{t(popKey(p))}</option>
-            ))}
-          </select>
+  ) => {
+    const handleManual = (w: PassengerWorldInputs): void => {
+      setWorldRaw(w);
+      setLinkUwp(null);
+    };
+    return (
+      <Section title={label} color={color} theme={theme}>
+        <WorldPicker
+          theme={theme}
+          t={t}
+          recentPlanets={recentPlanets}
+          linkUwp={linkUwp}
+          onPick={planet => applyPlanet(planet, setWorldRaw, setLinkUwp)}
+          onClear={() => setLinkUwp(null)}
+          savePlanet={savePlanet}
+          labelStyle={labelStyle}
+        />
+        <div style={fieldGridStyle}>
+          <div>
+            <label style={labelStyle}>{t("passengerPopulation")}</label>
+            <select
+              style={inputStyle}
+              value={world.population}
+              onChange={e => handleManual({ ...world, population: e.target.value as PassengerPopTier })}
+            >
+              {PASSENGER_POP_OPTIONS.map(p => (
+                <option key={p} value={p}>{t(popKey(p))}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>{t("passengerStarport")}</label>
+            <select
+              style={inputStyle}
+              value={world.starport}
+              onChange={e => handleManual({ ...world, starport: e.target.value as PassengerStarport })}
+            >
+              {PASSENGER_STARPORT_OPTIONS.map(s => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>{t("passengerZone")}</label>
+            <select
+              style={inputStyle}
+              value={world.zone}
+              onChange={e => handleManual({ ...world, zone: e.target.value as PassengerZoneTier })}
+            >
+              {PASSENGER_ZONE_OPTIONS.map(z => (
+                <option key={z} value={z}>{t(zoneKey(z))}</option>
+              ))}
+            </select>
+          </div>
         </div>
-        <div>
-          <label style={labelStyle}>{t("passengerStarport")}</label>
-          <select
-            style={inputStyle}
-            value={world.starport}
-            onChange={e => setWorld({ ...world, starport: e.target.value as PassengerStarport })}
-          >
-            {PASSENGER_STARPORT_OPTIONS.map(s => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label style={labelStyle}>{t("passengerZone")}</label>
-          <select
-            style={inputStyle}
-            value={world.zone}
-            onChange={e => setWorld({ ...world, zone: e.target.value as PassengerZoneTier })}
-          >
-            {PASSENGER_ZONE_OPTIONS.map(z => (
-              <option key={z} value={z}>{t(zoneKey(z))}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-    </Section>
-  );
+      </Section>
+    );
+  };
 
   const renderClassRow = (cls: PassengerClass, classResult: PassengerClassResult) => {
     const color = classColor(cls);
@@ -398,8 +436,8 @@ export const PassengerView: FC<PassengerViewProps> = ({
 
         <div className="two-col-grid">
         <div>
-        {renderWorld(t("passengerOriginSection"), origin, setOrigin, SECTION_COLORS.starport)}
-        {renderWorld(t("passengerDestinationSection"), destination, setDestination, SECTION_COLORS.population)}
+        {renderWorld(t("passengerOriginSection"), origin, setOrigin, originLinkUwp, setOriginLinkUwp, SECTION_COLORS.starport)}
+        {renderWorld(t("passengerDestinationSection"), destination, setDestination, destinationLinkUwp, setDestinationLinkUwp, SECTION_COLORS.population)}
 
         <Section title={t("passengerRouteSection")} color={SECTION_COLORS.size} theme={theme}>
           <div style={fieldGridStyle}>

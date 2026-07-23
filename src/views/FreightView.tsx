@@ -2,6 +2,7 @@ import type { FC, ChangeEvent } from "react";
 import { useMemo, useState } from "react";
 import type { Theme } from "../types/theme";
 import type { Language, TranslationFunction } from "../types/i18n";
+import type { RecentPlanet, TravellerMapWorld, ZoneCode } from "../types/uwp";
 import type {
   FreightInputs,
   FreightResult,
@@ -20,6 +21,7 @@ import { Footer } from "../components/Footer";
 import { Section } from "../components/ui/Section";
 import { Button } from "../components/ui/Button";
 import { JumpCountField, JumpsBreakdown, distributeJumps } from "../components/ui/JumpsEditor";
+import { WorldPicker } from "../components/ui/WorldPicker";
 import { PageHeader } from "../components/ui/PageHeader";
 import { FreightBanner } from "../components/banners";
 import { IconBox, IconMail } from "../components/icons";
@@ -43,6 +45,7 @@ import {
 } from "../constants/mail";
 import { calculateFreight } from "../utils/freight";
 import { calculateMail } from "../utils/mail";
+import { planetToFreightWorld } from "../utils/planetToWorldInputs";
 
 type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent";
 
@@ -55,6 +58,8 @@ interface FreightViewProps {
   menuOpen: boolean;
   setMenuOpen: (open: boolean) => void;
   t: TranslationFunction;
+  recentPlanets: RecentPlanet[];
+  savePlanet: (uwp: string, name: string, zone: ZoneCode, world?: TravellerMapWorld) => void;
 }
 
 const DEFAULT_WORLD: FreightWorldInputs = {
@@ -153,9 +158,24 @@ export const FreightView: FC<FreightViewProps> = ({
   menuOpen,
   setMenuOpen,
   t,
+  recentPlanets,
+  savePlanet,
 }) => {
   const [origin, setOrigin] = useState<FreightWorldInputs>(DEFAULT_WORLD);
   const [destination, setDestination] = useState<FreightWorldInputs>(DEFAULT_WORLD);
+  const [originLinkUwp, setOriginLinkUwp] = useState<string | null>(null);
+  const [destinationLinkUwp, setDestinationLinkUwp] = useState<string | null>(null);
+
+  const applyPlanet = (
+    planet: RecentPlanet,
+    setWorld: (w: FreightWorldInputs) => void,
+    setLink: (uwp: string | null) => void,
+  ): void => {
+    const mapped = planetToFreightWorld(planet);
+    if (!mapped) return;
+    setWorld(mapped);
+    setLink(planet.uwp);
+  };
   const [parsecs, setParsecs] = useState<ParsecDistance>(1);
   const [jumpCount, setJumpCount] = useState<number>(1);
   const jumps = useMemo(() => distributeJumps(parsecs, jumpCount), [parsecs, jumpCount]);
@@ -272,62 +292,80 @@ export const FreightView: FC<FreightViewProps> = ({
   const renderWorld = (
     label: string,
     world: FreightWorldInputs,
-    setWorld: (w: FreightWorldInputs) => void,
+    setWorldRaw: (w: FreightWorldInputs) => void,
+    linkUwp: string | null,
+    setLinkUwp: (uwp: string | null) => void,
     color: string,
-  ) => (
-    <Section title={label} color={color} theme={theme}>
-      <div style={fieldGridStyle}>
-        <div>
-          <label style={labelStyle}>{t("freightPopulation")}</label>
-          <select
-            style={inputStyle}
-            value={world.population}
-            onChange={e => setWorld({ ...world, population: e.target.value as PopulationTier })}
-          >
-            {POPULATION_OPTIONS.map(p => (
-              <option key={p} value={p}>{t(populationKey(p))}</option>
-            ))}
-          </select>
+  ) => {
+    const handleManual = (w: FreightWorldInputs): void => {
+      setWorldRaw(w);
+      setLinkUwp(null);
+    };
+    return (
+      <Section title={label} color={color} theme={theme}>
+        <WorldPicker
+          theme={theme}
+          t={t}
+          recentPlanets={recentPlanets}
+          linkUwp={linkUwp}
+          onPick={planet => applyPlanet(planet, setWorldRaw, setLinkUwp)}
+          onClear={() => setLinkUwp(null)}
+          savePlanet={savePlanet}
+          labelStyle={labelStyle}
+        />
+        <div style={fieldGridStyle}>
+          <div>
+            <label style={labelStyle}>{t("freightPopulation")}</label>
+            <select
+              style={inputStyle}
+              value={world.population}
+              onChange={e => handleManual({ ...world, population: e.target.value as PopulationTier })}
+            >
+              {POPULATION_OPTIONS.map(p => (
+                <option key={p} value={p}>{t(populationKey(p))}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>{t("freightStarport")}</label>
+            <select
+              style={inputStyle}
+              value={world.starport}
+              onChange={e => handleManual({ ...world, starport: e.target.value as FreightStarport })}
+            >
+              {STARPORT_OPTIONS.map(s => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>{t("freightTL")}</label>
+            <select
+              style={inputStyle}
+              value={world.techLevel}
+              onChange={e => handleManual({ ...world, techLevel: e.target.value as TechLevelTier })}
+            >
+              {TECH_LEVEL_OPTIONS.map(tl => (
+                <option key={tl} value={tl}>{t(tlKey(tl))}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>{t("freightZone")}</label>
+            <select
+              style={inputStyle}
+              value={world.zone}
+              onChange={e => handleManual({ ...world, zone: e.target.value as FreightZoneTier })}
+            >
+              {ZONE_OPTIONS.map(z => (
+                <option key={z} value={z}>{t(zoneKey(z))}</option>
+              ))}
+            </select>
+          </div>
         </div>
-        <div>
-          <label style={labelStyle}>{t("freightStarport")}</label>
-          <select
-            style={inputStyle}
-            value={world.starport}
-            onChange={e => setWorld({ ...world, starport: e.target.value as FreightStarport })}
-          >
-            {STARPORT_OPTIONS.map(s => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label style={labelStyle}>{t("freightTL")}</label>
-          <select
-            style={inputStyle}
-            value={world.techLevel}
-            onChange={e => setWorld({ ...world, techLevel: e.target.value as TechLevelTier })}
-          >
-            {TECH_LEVEL_OPTIONS.map(tl => (
-              <option key={tl} value={tl}>{t(tlKey(tl))}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label style={labelStyle}>{t("freightZone")}</label>
-          <select
-            style={inputStyle}
-            value={world.zone}
-            onChange={e => setWorld({ ...world, zone: e.target.value as FreightZoneTier })}
-          >
-            {ZONE_OPTIONS.map(z => (
-              <option key={z} value={z}>{t(zoneKey(z))}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-    </Section>
-  );
+      </Section>
+    );
+  };
 
   const renderLotCard = (type: LotType, lot: LotResult) => {
     const dash = t("freightDash");
@@ -426,8 +464,8 @@ export const FreightView: FC<FreightViewProps> = ({
 
         <div className="two-col-grid">
         <div>
-        {renderWorld(t("freightOriginSection"), origin, setOrigin, SECTION_COLORS.starport)}
-        {renderWorld(t("freightDestinationSection"), destination, setDestination, SECTION_COLORS.population)}
+        {renderWorld(t("freightOriginSection"), origin, setOrigin, originLinkUwp, setOriginLinkUwp, SECTION_COLORS.starport)}
+        {renderWorld(t("freightDestinationSection"), destination, setDestination, destinationLinkUwp, setDestinationLinkUwp, SECTION_COLORS.population)}
 
         <Section title={t("freightRouteSection")} color={SECTION_COLORS.size} theme={theme}>
           <div style={fieldGridStyle}>
