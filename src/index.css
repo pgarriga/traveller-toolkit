@@ -375,6 +375,62 @@ a, button {
   display: inline-block;
 }
 
+/* Subtle "searching..." indicator — soft breathing label + tiny orange dot.
+   Reused wherever the app is waiting on a network response. */
+.searching {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--traveller-orange);
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  animation: searching-breath 1.6s ease-in-out infinite;
+}
+.searching-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--traveller-orange);
+  animation: searching-dot 1.6s ease-in-out infinite;
+}
+@keyframes searching-breath {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 1;   }
+}
+@keyframes searching-dot {
+  0%, 100% { opacity: 0.4; transform: scale(0.85); }
+  50%      { opacity: 1;   transform: scale(1.1);  }
+}
+
+/* WorldPicker: shimmering skeleton rows while awaiting API results. */
+.wp-skeleton-line {
+  display: block;
+  height: 10px;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    rgba(212, 82, 28, 0.04) 0%,
+    rgba(212, 82, 28, 0.16) 50%,
+    rgba(212, 82, 28, 0.04) 100%
+  );
+  background-size: 200% 100%;
+  animation: wp-shimmer 1.8s ease-in-out infinite;
+}
+@keyframes wp-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Respect users who prefer reduced motion — freeze the shimmering. */
+@media (prefers-reduced-motion: reduce) {
+  .searching,
+  .searching-dot,
+  .wp-skeleton-line { animation: none; }
+  .searching       { opacity: 0.8; }
+  .searching-dot   { opacity: 0.7; }
+}
+
 /* Skip link for keyboard users */
 .skip-link {
   position: absolute;

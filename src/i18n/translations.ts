@@ -23,6 +23,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Recent worlds (embedded inside the search view)
     recentPlanets: "Mundos visitados",
     noRecentPlanets: "No hay mundos visitados",
+    emptyRecentHint: "Busca un mundo en el atlas de Traveller Map para tenerlo aquí a mano en tus próximas partidas.",
     delete: "Eliminar",
     clearAll: "Borrar todo",
 
@@ -162,6 +163,7 @@ export const translations: Record<Language, Record<string, string>> = {
     searchOnMap: "Buscar en Traveller Map",
     worldPickerTitle: "Seleccionar mundo",
     worldPickerPlaceholder: "Selecciona un mundo…",
+    worldPickerSearchPrompt: "Buscar mundo en Traveller Map…",
     worldPickerSearchPlaceholder: "Buscar en Traveller Map…",
     worldPickerVisited: "Visitados",
     worldPickerFromMap: "Traveller Map",
@@ -374,6 +376,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Recent worlds (embedded inside the search view)
     recentPlanets: "Visited worlds",
     noRecentPlanets: "No visited worlds",
+    emptyRecentHint: "Search a world on the Traveller Map atlas to keep it here for your next sessions.",
     delete: "Delete",
     clearAll: "Clear all",
 
@@ -513,6 +516,7 @@ export const translations: Record<Language, Record<string, string>> = {
     searchOnMap: "Search on Traveller Map",
     worldPickerTitle: "Select world",
     worldPickerPlaceholder: "Select a world…",
+    worldPickerSearchPrompt: "Search a world on Traveller Map…",
     worldPickerSearchPlaceholder: "Search on Traveller Map…",
     worldPickerVisited: "Visited",
     worldPickerFromMap: "Traveller Map",
@@ -725,6 +729,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Recent worlds (embedded inside the search view)
     recentPlanets: "Mons visitats",
     noRecentPlanets: "No hi ha mons visitats",
+    emptyRecentHint: "Cerca un món a l'atles de Traveller Map per tenir-lo aquí a mà a les properes partides.",
     delete: "Eliminar",
     clearAll: "Esborrar-ho tot",
 
@@ -864,6 +869,7 @@ export const translations: Record<Language, Record<string, string>> = {
     searchOnMap: "Cerca a Traveller Map",
     worldPickerTitle: "Selecciona un món",
     worldPickerPlaceholder: "Selecciona un món…",
+    worldPickerSearchPrompt: "Cerca un món a Traveller Map…",
     worldPickerSearchPlaceholder: "Cerca a Traveller Map…",
     worldPickerVisited: "Visitats",
     worldPickerFromMap: "Traveller Map",

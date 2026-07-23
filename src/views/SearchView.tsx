@@ -129,7 +129,12 @@ export const SearchView: FC<SearchViewProps> = ({
         </form>
 
         <div className="narrow-block" style={{ minHeight: 20, marginBottom: 12, color: theme.textDimmed, fontSize: 13 }}>
-          {loading && t("searchLoading")}
+          {loading && (
+            <span className="searching" style={{ fontSize: 13 }} role="status" aria-live="polite">
+              <span className="searching-dot" aria-hidden="true" />
+              {t("searchLoading")}
+            </span>
+          )}
           {!loading && error && <span style={{ color: COLORS.danger }}>{error}</span>}
           {!loading && !error && results && (
             <span>{results.length} {t("searchResultsCount")}</span>
@@ -138,6 +143,39 @@ export const SearchView: FC<SearchViewProps> = ({
             <span>{t("searchMinChars")}</span>
           )}
         </div>
+
+        {loading && (
+          <div className="card-grid card-grid--two" aria-hidden="true">
+            {[0, 1, 2, 3].map(i => (
+              <div
+                key={`skel-${i}`}
+                style={{
+                  background: theme.bgCard,
+                  border: `1px solid ${theme.border}`,
+                  borderLeft: `3px solid rgba(212, 82, 28, 0.35)`,
+                  borderRadius: 10,
+                  padding: "12px 14px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                }}
+              >
+                <span
+                  className="wp-skeleton-line"
+                  style={{ width: `${72 - (i % 3) * 10}%`, animationDelay: `${i * 0.12}s` }}
+                />
+                <span
+                  className="wp-skeleton-line"
+                  style={{ width: `${44 + (i % 2) * 8}%`, height: 8, animationDelay: `${i * 0.12 + 0.08}s` }}
+                />
+                <span
+                  className="wp-skeleton-line"
+                  style={{ width: `${52 - (i % 2) * 10}%`, height: 8, animationDelay: `${i * 0.12 + 0.16}s` }}
+                />
+              </div>
+            ))}
+          </div>
+        )}
 
         {!loading && !error && results && results.length === 0 && (
           <div style={{ textAlign: "center", padding: 60, color: theme.textDimmed }}>

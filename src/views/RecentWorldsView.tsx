@@ -151,9 +151,61 @@ export const RecentWorldsView: FC<RecentWorldsViewProps> = ({
 
         <section aria-labelledby="recent-heading" style={{ marginTop: 24 }}>
           {recentPlanets.length === 0 ? (
-            <div style={{ textAlign: "center", padding: 40, color: theme.textDimmed, fontSize: 13 }}>
-              <div style={{ marginBottom: 16 }}>{t("noRecentPlanets")}</div>
-              <Button variant="primary" size="md" theme={theme} onClick={() => navigateTo("search")}>
+            <div
+              style={{
+                background: theme.bgCard,
+                border: `1px solid ${theme.border}`,
+                borderLeft: `4px solid ${COLORS.primary}`,
+                borderRadius: 12,
+                padding: "48px 24px",
+                textAlign: "center",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 20,
+              }}
+            >
+              <svg
+                aria-hidden="true"
+                width="56"
+                height="56"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke={COLORS.primary}
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ opacity: 0.85 }}
+              >
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              <div>
+                <div
+                  style={{
+                    fontSize: 14,
+                    color: COLORS.primary,
+                    textTransform: "uppercase",
+                    letterSpacing: 2,
+                    fontWeight: 500,
+                    marginBottom: 10,
+                  }}
+                >
+                  {t("noRecentPlanets")}
+                </div>
+                <div
+                  style={{
+                    fontSize: 13,
+                    color: theme.textDimmed,
+                    maxWidth: 360,
+                    lineHeight: 1.6,
+                    margin: "0 auto",
+                  }}
+                >
+                  {t("emptyRecentHint")}
+                </div>
+              </div>
+              <Button variant="primary" size="lg" theme={theme} onClick={() => navigateTo("search")}>
                 <IconSearch />{t("searchTitle")}
               </Button>
             </div>

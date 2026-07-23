@@ -10,7 +10,6 @@ import { ZONES, getZoneColor } from "../../constants/zones";
 import { searchWorlds, fetchWorldZone, type WorldSearchResult } from "../../utils/travellerMap";
 
 const MIN_QUERY_LENGTH = 3;
-const SEARCH_DEBOUNCE_MS = 350;
 
 interface WorldPickerProps {
   theme: Theme;
@@ -53,36 +52,37 @@ const PickerModal: FC<ModalProps> = ({ theme, t, recentPlanets, onSelectVisited,
   }, [onClose]);
 
   const trimmed = query.trim();
+  const canSearch = trimmed.length >= MIN_QUERY_LENGTH && !loading;
 
-  useEffect(() => {
-    if (trimmed.length < MIN_QUERY_LENGTH) {
-      setResults(null);
-      setError(null);
-      setLoading(false);
-      abortRef.current?.abort();
-      return;
-    }
-    const handle = window.setTimeout(() => {
-      abortRef.current?.abort();
-      const controller = new AbortController();
-      abortRef.current = controller;
-      setLoading(true);
-      setError(null);
-      searchWorlds(trimmed, controller.signal)
-        .then((found) => {
-          if (!controller.signal.aborted) setResults(found);
-        })
-        .catch((err: Error) => {
-          if (err.name === "AbortError") return;
-          console.error("Traveller Map search error:", err);
-          setError(t("searchError"));
-        })
-        .finally(() => {
-          if (!controller.signal.aborted) setLoading(false);
-        });
-    }, SEARCH_DEBOUNCE_MS);
-    return () => window.clearTimeout(handle);
-  }, [trimmed, t]);
+  const runSearch = (): void => {
+    if (trimmed.length < MIN_QUERY_LENGTH || loading) return;
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setLoading(true);
+    setError(null);
+    setResults(null);
+    searchWorlds(trimmed, controller.signal)
+      .then((found) => {
+        if (!controller.signal.aborted) setResults(found);
+      })
+      .catch((err: Error) => {
+        if (err.name === "AbortError") return;
+        console.error("Traveller Map search error:", err);
+        setError(t("searchError"));
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+  };
+
+  const handleQueryChange = (value: string): void => {
+    setQuery(value);
+    if (results !== null) setResults(null);
+    if (error !== null) setError(null);
+    abortRef.current?.abort();
+    setLoading(false);
+  };
 
   const filteredVisited = useMemo(() => {
     if (!trimmed) return recentPlanets;
@@ -202,31 +202,47 @@ const PickerModal: FC<ModalProps> = ({ theme, t, recentPlanets, onSelectVisited,
         </div>
 
         <div style={{ padding: "12px 16px", borderBottom: `1px solid ${theme.border}` }}>
-          <div style={{ position: "relative" }}>
-            <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: theme.textDimmed, display: "flex", alignItems: "center" }}>
-              <IconSearch />
-            </span>
-            <input
-              ref={inputRef}
-              type="text"
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              placeholder={t("worldPickerSearchPlaceholder")}
-              aria-label={t("worldPickerSearchPlaceholder")}
-              style={{
-                width: "100%",
-                padding: "10px 12px 10px 34px",
-                borderRadius: 8,
-                border: `1px solid ${theme.border}`,
-                background: theme.bgCard,
-                color: theme.text,
-                fontFamily: "inherit",
-                fontSize: 14,
-              }}
-            />
+          <div style={{ display: "flex", gap: 8, alignItems: "stretch" }}>
+            <div style={{ position: "relative", flex: 1, minWidth: 0 }}>
+              <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: theme.textDimmed, display: "flex", alignItems: "center" }}>
+                <IconSearch />
+              </span>
+              <input
+                ref={inputRef}
+                type="text"
+                value={query}
+                onChange={e => handleQueryChange(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    runSearch();
+                  }
+                }}
+                placeholder={t("worldPickerSearchPlaceholder")}
+                aria-label={t("worldPickerSearchPlaceholder")}
+                style={{
+                  width: "100%",
+                  padding: "10px 12px 10px 34px",
+                  borderRadius: 8,
+                  border: `1px solid ${theme.border}`,
+                  background: theme.bgCard,
+                  color: theme.text,
+                  fontFamily: "inherit",
+                  fontSize: 14,
+                }}
+              />
+            </div>
+            <Button variant="primary" theme={theme} onClick={runSearch} disabled={!canSearch}>
+              <IconSearch />{t("searchButton")}
+            </Button>
           </div>
-          <div style={{ minHeight: 16, marginTop: 6, fontSize: 11, color: theme.textDimmed }}>
-            {loading && t("searchLoading")}
+          <div style={{ minHeight: 18, marginTop: 6, fontSize: 11, color: theme.textDimmed }}>
+            {loading && (
+              <span className="searching" style={{ fontSize: 11 }} role="status" aria-live="polite">
+                <span className="searching-dot" aria-hidden="true" />
+                {t("searchLoading")}
+              </span>
+            )}
             {!loading && error && <span style={{ color: COLORS.danger }}>{error}</span>}
             {!loading && !error && trimmed.length > 0 && trimmed.length < MIN_QUERY_LENGTH && (
               <span>{t("searchMinChars")}</span>
@@ -260,12 +276,38 @@ const PickerModal: FC<ModalProps> = ({ theme, t, recentPlanets, onSelectVisited,
             ))
           )}
 
-          {trimmed.length >= MIN_QUERY_LENGTH && (
+          {(loading || results !== null) && (
             <>
               <div style={sectionLabel}>{t("worldPickerFromMap")}</div>
               {loading ? (
-                <div style={{ fontSize: 12, color: theme.textDimmed, fontStyle: "italic", padding: "4px 0" }}>
-                  {t("searchLoading")}
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {[0, 1, 2].map(i => (
+                    <div
+                      key={`skel-${i}`}
+                      aria-hidden="true"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        padding: "10px 12px",
+                        background: theme.bgCard,
+                        border: `1px solid ${theme.border}`,
+                        borderLeft: "3px solid rgba(212, 82, 28, 0.35)",
+                        borderRadius: 8,
+                      }}
+                    >
+                      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
+                        <span
+                          className="wp-skeleton-line"
+                          style={{ width: `${72 - i * 12}%`, animationDelay: `${i * 0.15}s` }}
+                        />
+                        <span
+                          className="wp-skeleton-line"
+                          style={{ width: `${48 - i * 8}%`, height: 8, animationDelay: `${i * 0.15 + 0.08}s` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : newResults.length === 0 && results !== null ? (
                 <div style={{ fontSize: 12, color: theme.textDimmed, fontStyle: "italic", padding: "4px 0" }}>
@@ -347,6 +389,9 @@ export const WorldPicker: FC<WorldPickerProps> = ({
       .catch((err: Error) => console.error("Failed to fetch world zone:", err));
   };
 
+  const noVisited = recentPlanets.length === 0;
+  const emptyPromptKey = noVisited ? "worldPickerSearchPrompt" : "worldPickerPlaceholder";
+
   return (
     <div style={{ marginBottom: 12 }}>
       <label style={labelStyle}>{t("fromVisited")}</label>
@@ -358,38 +403,68 @@ export const WorldPicker: FC<WorldPickerProps> = ({
             flex: 1,
             minWidth: 0,
             textAlign: "left",
-            padding: "8px 12px",
+            padding: "10px 12px",
             background: theme.bg,
             border: `1px solid ${theme.border}`,
+            borderLeft: `3px solid ${COLORS.primary}`,
             borderRadius: 8,
             color: linkedPlanet ? theme.text : theme.textDimmed,
             cursor: "pointer",
             fontFamily: "inherit",
             fontSize: 14,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
             display: "flex",
             alignItems: "center",
-            gap: 8,
+            gap: 10,
           }}
         >
-          {linkedPlanet && (
-            <span
-              aria-hidden="true"
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: 5,
-                background: getZoneColor(linkedPlanet.zone),
-                flexShrink: 0,
-              }}
-            />
-          )}
-          <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+          <span
+            aria-hidden="true"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              color: linkedPlanet ? theme.text : COLORS.primary,
+            }}
+          >
+            {linkedPlanet ? (
+              <span
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: 5,
+                  background: getZoneColor(linkedPlanet.zone),
+                }}
+              />
+            ) : (
+              <IconSearch />
+            )}
+          </span>
+          <span
+            style={{
+              flex: 1,
+              minWidth: 0,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
             {linkedPlanet
               ? `${linkedPlanet.name} · ${linkedPlanet.uwp}`
-              : t("worldPickerPlaceholder")}
+              : t(emptyPromptKey)}
+          </span>
+          <span
+            aria-hidden="true"
+            style={{
+              fontSize: 10,
+              color: theme.textDimmed,
+              letterSpacing: 1,
+              textTransform: "uppercase",
+              fontWeight: 500,
+              flexShrink: 0,
+            }}
+          >
+            ▾
           </span>
         </button>
         {linkedPlanet && (
