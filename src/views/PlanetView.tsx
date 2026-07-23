@@ -1,4 +1,4 @@
-import type { FC, ChangeEvent } from "react";
+import type { FC } from "react";
 import type { Theme } from "../types/theme";
 import type { TranslationFunction, Language } from "../types/i18n";
 import type { TravellerMapWorld, ZoneCode, StarportClass } from "../types/uwp";
@@ -37,9 +37,7 @@ interface PlanetViewProps {
   parsed: ParsedUWP | null;
   uwp: string;
   name: string;
-  setName: (name: string) => void;
   zoneInput: ZoneCode;
-  setZoneInput: (zone: ZoneCode) => void;
   world?: TravellerMapWorld;
   view: ViewType;
   goHome: () => void;
@@ -63,9 +61,7 @@ export const PlanetView: FC<PlanetViewProps> = ({
   parsed,
   uwp,
   name,
-  setName,
   zoneInput,
-  setZoneInput,
   world,
   view,
   goHome,
@@ -108,32 +104,25 @@ export const PlanetView: FC<PlanetViewProps> = ({
       <main className="wide-main">
         {/* Planet header */}
         <div style={{ background: theme.bgHeader, borderRadius: 12, padding: 20, marginBottom: 16, textAlign: "center" }}>
-          <label htmlFor="planet-name" className="sr-only">{t("planetName") || "World name"}</label>
-          <input
-            id="planet-name"
+          <h1
             className="planet-name"
-            aria-label={t("planetName") || "World name"}
-            value={name}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
-            placeholder={t("unnamed")}
             style={{
-              background: "transparent",
-              border: "none",
+              margin: 0,
               borderBottom: `2px solid ${COLORS.primary}44`,
               fontWeight: 500,
-              color: theme.text,
+              color: name.trim() ? theme.text : theme.textDimmed,
               textAlign: "center",
               width: "100%",
               marginBottom: 4,
               padding: "4px 0",
-              outline: "none"
             }}
-          />
+          >
+            {name.trim() || t("unnamed")}
+          </h1>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
             <span style={{ fontFamily: "monospace", fontSize: 16, color: theme.textMuted, letterSpacing: 2 }}>{uwp.toUpperCase()}</span>
-            <select
-              value={zoneInput}
-              onChange={(e: ChangeEvent<HTMLSelectElement>) => setZoneInput(e.target.value as ZoneCode)}
+            <span
+              aria-label={t("travelZone")}
               style={{
                 background: getZoneColor(zoneInput) + "33",
                 border: `1px solid ${getZoneColor(zoneInput)}`,
@@ -142,12 +131,12 @@ export const PlanetView: FC<PlanetViewProps> = ({
                 padding: "4px 8px",
                 fontSize: 12,
                 fontWeight: 500,
-                cursor: "pointer"
-              }}>
-              <option value={ZONES.GREEN}>{t("zoneGreen")}</option>
-              <option value={ZONES.AMBER}>{t("zoneAmber")}</option>
-              <option value={ZONES.RED}>{t("zoneRed")}</option>
-            </select>
+                textTransform: "uppercase",
+                letterSpacing: 1,
+              }}
+            >
+              {getZoneName(zoneInput)}
+            </span>
           </div>
         </div>
 

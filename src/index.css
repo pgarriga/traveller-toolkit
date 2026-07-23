@@ -64,9 +64,9 @@ input, select, textarea {
   font-size: var(--font-size-lg) !important;
 }
 
-/* Planet name input - override default size */
-input.planet-name {
-  font-size: var(--font-size-3xl) !important;
+/* Planet name - matches previous input sizing */
+.planet-name {
+  font-size: var(--font-size-3xl);
 }
 
 /* Placeholder opacity */

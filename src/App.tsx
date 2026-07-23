@@ -14,6 +14,7 @@ import { ZONES } from "./constants/zones";
 // Utils
 import { parseUrl, buildUrl } from "./utils/routing";
 import { parseUwp } from "./utils/uwp";
+import { fetchWorldZone } from "./utils/travellerMap";
 
 // Views
 import { SettingsView } from "./views/SettingsView";
@@ -51,6 +52,7 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [view, setView] = useState<ViewType>("home");
   const isInitialLoad = useRef(true);
+  const zoneFetchRef = useRef<AbortController | null>(null);
 
   // Get translated game data
   const STARPORT: Record<StarportClass, StarportData> = useMemo(
@@ -152,13 +154,26 @@ export default function App() {
 
   const loadWorldFromSearch = (worldUwp: string, worldName: string, world: TravellerMapWorld) => {
     const existing = findPlanet(worldUwp);
-    const zone = existing?.zone || (ZONES.GREEN as ZoneCode);
+    const initialZone = existing?.zone || (ZONES.GREEN as ZoneCode);
     const resolvedName = existing?.name || worldName;
     setName(resolvedName);
     setUwp(worldUwp);
-    setZoneInput(zone);
-    savePlanet(worldUwp, resolvedName, zone, world);
+    setZoneInput(initialZone);
+    savePlanet(worldUwp, resolvedName, initialZone, world);
     navigateTo("planet", worldUwp);
+
+    zoneFetchRef.current?.abort();
+    const controller = new AbortController();
+    zoneFetchRef.current = controller;
+    fetchWorldZone(world.sector, world.hexX, world.hexY, controller.signal)
+      .then((zone) => {
+        if (controller.signal.aborted || !zone) return;
+        setZoneInput(zone);
+      })
+      .catch((err) => {
+        if ((err as Error).name === "AbortError") return;
+        console.error("Failed to fetch world zone:", err);
+      });
   };
 
   // Parse UWP
@@ -209,9 +224,7 @@ export default function App() {
         parsed={parsed}
         uwp={uwp}
         name={name}
-        setName={setName}
         zoneInput={zoneInput}
-        setZoneInput={setZoneInput}
         world={findPlanet(uwp)?.world}
         lang={lang}
         STARPORT={STARPORT}
