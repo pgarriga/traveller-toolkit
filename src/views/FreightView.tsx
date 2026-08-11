@@ -24,7 +24,7 @@ import { JumpCountField, JumpsBreakdown, distributeJumps } from "../components/u
 import { WorldPicker } from "../components/ui/WorldPicker";
 import { PageHeader } from "../components/ui/PageHeader";
 import { FreightBanner } from "../components/banners";
-import { IconBox, IconMail } from "../components/icons";
+import { IconBox, IconMail, IconRefresh } from "../components/icons";
 import { COLORS, SECTION_COLORS } from "../constants/colors";
 import {
   FREIGHT_RATES_PER_TON,
@@ -44,6 +44,8 @@ import {
   findMailRank,
   rollD6 as rollMailD6,
 } from "../constants/mail";
+import { STORAGE_KEYS, isFiniteNumber } from "../constants/storage";
+import { usePersistentState } from "../hooks/usePersistentState";
 import { calculateFreight } from "../utils/freight";
 import { calculateMail } from "../utils/mail";
 import { planetToFreightWorld } from "../utils/planetToWorldInputs";
@@ -81,6 +83,17 @@ const DEFAULT_MAIL: MailUserInputs = {
   rank: 0,
   rankId: MAIL_RANK_NONE_ID,
   socDM: 0,
+};
+
+const isMailUserInputs = (raw: unknown): raw is MailUserInputs => {
+  if (typeof raw !== "object" || raw === null) return false;
+  const m = raw as Record<string, unknown>;
+  return (
+    typeof m.armed === "boolean" &&
+    isFiniteNumber(m.rank) &&
+    typeof m.rankId === "string" &&
+    isFiniteNumber(m.socDM)
+  );
 };
 
 const clampInt = (n: number, min: number, max: number): number =>
@@ -185,13 +198,21 @@ export const FreightView: FC<FreightViewProps> = ({
   const [parsecs, setParsecs] = useState<ParsecDistance>(1);
   const [jumpCount, setJumpCount] = useState<number>(1);
   const jumps = useMemo(() => distributeJumps(parsecs, jumpCount), [parsecs, jumpCount]);
-  const [cargoBay, setCargoBay] = useState<number>(0);
-  const [skillEffect, setSkillEffect] = useState<number>(0);
+  // Datos de nave/tripulación: persisten entre sesiones y sobreviven al reset.
+  const [cargoBay, setCargoBay] = usePersistentState<number>(
+    STORAGE_KEYS.freightCargoBay, 0, isFiniteNumber,
+  );
+  const [skillEffect, setSkillEffect] = usePersistentState<number>(
+    STORAGE_KEYS.freightSkillEffect, 0, isFiniteNumber,
+  );
+  const [mailExtras, setMailExtras] = usePersistentState<MailUserInputs>(
+    STORAGE_KEYS.freightMail, DEFAULT_MAIL, isMailUserInputs,
+  );
+
   const [rollMajorRaw, setRollMajorRaw] = useState<string>("");
   const [rollMinorRaw, setRollMinorRaw] = useState<string>("");
   const [rollIncidentalRaw, setRollIncidentalRaw] = useState<string>("");
   const [onTime, setOnTime] = useState<boolean>(true);
-  const [mailExtras, setMailExtras] = useState<MailUserInputs>(DEFAULT_MAIL);
   const [mailRollRaw, setMailRollRaw] = useState<string>("");
 
   const inputs: FreightInputs = useMemo(() => ({
@@ -249,6 +270,27 @@ export const FreightView: FC<FreightViewProps> = ({
     setMailResult(calculateMail(mailInputs, t, { twoD, containerD: rollMailD6() }));
     setSelectedLots(new Set());
     setMailSelected(false);
+  };
+
+  // Limpia la ruta para empezar de cero. NO toca los datos de nave/tripulación
+  // (bodega, efecto de habilidad, rango, SOC, nave armada): son sticky.
+  const handleReset = (): void => {
+    setOrigin(DEFAULT_WORLD);
+    setDestination(DEFAULT_WORLD);
+    setOriginLinkUwp(null);
+    setDestinationLinkUwp(null);
+    setParsecs(1);
+    setJumpCount(1);
+    setRollMajorRaw("");
+    setRollMinorRaw("");
+    setRollIncidentalRaw("");
+    setOnTime(true);
+    setMailRollRaw("");
+    setCalculatedResult(null);
+    setMailResult(null);
+    setSelectedLots(new Set());
+    setMailSelected(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const selection = useMemo(() => {
@@ -940,6 +982,23 @@ export const FreightView: FC<FreightViewProps> = ({
             );
           })()}
         </Section>
+        )}
+
+        {calculatedResult && (
+          <div style={{ margin: "24px 0 8px" }}>
+            <Button
+              variant="secondary"
+              size="lg"
+              theme={theme}
+              onClick={handleReset}
+              fullWidth
+            >
+              <IconRefresh />{t("resetCalculator")}
+            </Button>
+            <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 6, textAlign: "center" }}>
+              {t("resetCalculatorHint")}
+            </div>
+          </div>
         )}
 
         <Footer theme={theme} t={t} />

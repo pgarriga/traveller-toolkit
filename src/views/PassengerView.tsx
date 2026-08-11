@@ -22,7 +22,7 @@ import { JumpCountField, distributeJumps } from "../components/ui/JumpsEditor";
 import { WorldPicker } from "../components/ui/WorldPicker";
 import { PageHeader } from "../components/ui/PageHeader";
 import { PassengerBanner } from "../components/banners";
-import { IconUsers } from "../components/icons";
+import { IconUsers, IconRefresh } from "../components/icons";
 import { COLORS, SECTION_COLORS } from "../constants/colors";
 import {
   BROKER_EFFECT_MAX,
@@ -36,6 +36,8 @@ import {
   STEWARD_SKILL_MAX,
   STEWARD_SKILL_MIN,
 } from "../constants/passenger";
+import { STORAGE_KEYS, isFiniteNumber } from "../constants/storage";
+import { usePersistentState } from "../hooks/usePersistentState";
 import { calculatePassengers } from "../utils/passenger";
 import { planetToPassengerWorld } from "../utils/planetToWorldInputs";
 
@@ -177,8 +179,13 @@ export const PassengerView: FC<PassengerViewProps> = ({
   const [parsecs, setParsecs] = useState<ParsecDistance>(1);
   const [jumpCount, setJumpCount] = useState<number>(1);
   const jumps = useMemo(() => distributeJumps(parsecs, jumpCount), [parsecs, jumpCount]);
-  const [brokerEffect, setBrokerEffect] = useState<number>(0);
-  const [stewardSkill, setStewardSkill] = useState<number>(0);
+  // Datos de tripulación: persisten entre sesiones y sobreviven al reset.
+  const [brokerEffect, setBrokerEffect] = usePersistentState<number>(
+    STORAGE_KEYS.passengerBrokerEffect, 0, isFiniteNumber,
+  );
+  const [stewardSkill, setStewardSkill] = usePersistentState<number>(
+    STORAGE_KEYS.passengerStewardSkill, 0, isFiniteNumber,
+  );
   const [rolls, setRolls] = useState<RollState>(DEFAULT_ROLLS);
   const [calculatedResult, setCalculatedResult] = useState<PassengerResult | null>(null);
   const [rolling, setRolling] = useState<boolean>(false);
@@ -224,6 +231,22 @@ export const PassengerView: FC<PassengerViewProps> = ({
     setSelected(EMPTY_SELECTION);
     setRolling(true);
     window.setTimeout(() => setRolling(false), 500);
+  };
+
+  // Limpia la ruta para empezar de cero. NO toca las habilidades de la
+  // tripulación (efecto broker/carouse/streetwise, steward): son sticky.
+  const handleReset = (): void => {
+    setOrigin(DEFAULT_WORLD);
+    setDestination(DEFAULT_WORLD);
+    setOriginLinkUwp(null);
+    setDestinationLinkUwp(null);
+    setParsecs(1);
+    setJumpCount(1);
+    setRolls(DEFAULT_ROLLS);
+    setCalculatedResult(null);
+    setRolling(false);
+    setSelected(EMPTY_SELECTION);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const adjustSelected = (cls: PassengerClass, delta: number, max: number): void => {
@@ -777,6 +800,23 @@ export const PassengerView: FC<PassengerViewProps> = ({
               </div>
             )}
           </Section>
+        )}
+
+        {calculatedResult && (
+          <div style={{ margin: "24px 0 8px" }}>
+            <Button
+              variant="secondary"
+              size="lg"
+              theme={theme}
+              onClick={handleReset}
+              fullWidth
+            >
+              <IconRefresh />{t("resetCalculator")}
+            </Button>
+            <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 6, textAlign: "center" }}>
+              {t("resetCalculatorHint")}
+            </div>
+          </div>
         )}
 
         <Footer theme={theme} t={t} />

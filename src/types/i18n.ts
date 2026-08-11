@@ -196,6 +196,9 @@ export type TranslationKey =
   | "freightRollsMissing"
   | "freightTrafficNote"
   | "freightDash"
+  // Reset (shared by the freight and passenger calculators)
+  | "resetCalculator"
+  | "resetCalculatorHint"
   // Home (tools list)
   | "homeTitle"
   | "homeSearchDesc"

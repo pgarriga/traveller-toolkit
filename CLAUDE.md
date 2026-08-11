@@ -51,7 +51,7 @@ src/
 │   └── index.ts              # Re-exports all types
 ├── components/
 │   ├── icons/
-│   │   └── index.tsx         # SVG icon components (IconSearch, IconPin, IconBox, IconClock, IconUsers, IconMail, IconSettings, IconTrash, IconMenu, IconClose)
+│   │   └── index.tsx         # SVG icon components (IconSearch, IconPin, IconBox, IconClock, IconUsers, IconMail, IconSettings, IconTrash, IconRefresh, IconMenu, IconClose)
 │   ├── ui/
 │   │   ├── Button.tsx        # Reusable button with variants
 │   │   ├── Section.tsx       # Card section with colored border
@@ -368,6 +368,7 @@ import {
 //   IconMail    → Mail Run section inside FreightView
 //   IconSettings→ Settings (navbar entry, settings view header)
 //   IconTrash   → Delete-world action inside RecentWorldsView edit mode
+//   IconRefresh → "New search" reset button at the bottom of FreightView and PassengerView
 //   IconClock   → Currently unused in the UI; kept exported for future use
 ```
 

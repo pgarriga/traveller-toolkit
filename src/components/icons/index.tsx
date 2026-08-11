@@ -16,6 +16,15 @@ export const IconPin: FC = () => (
   </svg>
 );
 
+export const IconRefresh: FC = () => (
+  <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: "middle", marginRight: 6 }}>
+    <path d="M20 11A8 8 0 0 0 6.3 5.7L3 9"/>
+    <polyline points="3 4 3 9 8 9"/>
+    <path d="M4 13a8 8 0 0 0 13.7 5.3L21 15"/>
+    <polyline points="21 20 21 15 16 15"/>
+  </svg>
+);
+
 export const IconTrash: FC = () => (
   <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: "middle", marginRight: 6 }}>
     <polyline points="3 6 5 6 21 6"/>
