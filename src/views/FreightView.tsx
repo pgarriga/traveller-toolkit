@@ -36,11 +36,12 @@ import {
 } from "../constants/freight";
 import {
   MAIL_PAYMENT_PER_CONTAINER,
-  MAIL_RANK_MAX,
-  MAIL_RANK_MIN,
+  MAIL_RANK_GROUPS,
+  MAIL_RANK_NONE_ID,
   MAIL_SOC_DM_MAX,
   MAIL_SOC_DM_MIN,
   MAIL_TONS_PER_CONTAINER,
+  findMailRank,
   rollD6 as rollMailD6,
 } from "../constants/mail";
 import { calculateFreight } from "../utils/freight";
@@ -69,11 +70,16 @@ const DEFAULT_WORLD: FreightWorldInputs = {
   zone: "green",
 };
 
-type MailUserInputs = Omit<MailInputs, "freightTrafficDM" | "lowTL">;
+// `rankId` sólo existe para el <select>: el DM lo aporta `rank`, pero un mismo
+// número aparece en los tres grupos y hay que recordar cuál eligió el jugador.
+type MailUserInputs = Omit<MailInputs, "freightTrafficDM" | "lowTL"> & {
+  rankId: string;
+};
 
 const DEFAULT_MAIL: MailUserInputs = {
   armed: false,
   rank: 0,
+  rankId: MAIL_RANK_NONE_ID,
   socDM: 0,
 };
 
@@ -612,16 +618,29 @@ export const FreightView: FC<FreightViewProps> = ({
           <div style={fieldGridStyle}>
             <div>
               <label style={labelStyle}>{t("mailRank")}</label>
-              <input
-                type="number"
-                min={MAIL_RANK_MIN}
-                max={MAIL_RANK_MAX}
+              <select
                 style={inputStyle}
-                value={mailExtras.rank}
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  setMailExtras({ ...mailExtras, rank: parseClampedInt(e.target.value, MAIL_RANK_MIN, MAIL_RANK_MAX, 0) })
-                }
-              />
+                value={mailExtras.rankId}
+                onChange={(e: ChangeEvent<HTMLSelectElement>) => {
+                  const picked = findMailRank(e.target.value);
+                  setMailExtras({
+                    ...mailExtras,
+                    rankId: picked ? picked.id : MAIL_RANK_NONE_ID,
+                    rank: picked ? picked.rank : 0,
+                  });
+                }}
+              >
+                <option value={MAIL_RANK_NONE_ID}>{t("mailRankNone")}</option>
+                {MAIL_RANK_GROUPS.map(group => (
+                  <optgroup key={group.service} label={t(group.labelKey)}>
+                    {group.options.map(o => (
+                      <option key={o.id} value={o.id}>
+                        {o.titleKey ? `${o.rank} · ${t(o.titleKey)}` : `${o.rank} · ${t("freightDash")}`}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
               <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 4 }}>{t("mailRankHint")}</div>
             </div>
             <div>
