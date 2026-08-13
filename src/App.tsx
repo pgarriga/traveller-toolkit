@@ -23,9 +23,10 @@ import { FreightView } from "./views/FreightView";
 import { PassengerView } from "./views/PassengerView";
 import { SearchView } from "./views/SearchView";
 import { RecentWorldsView } from "./views/RecentWorldsView";
+import { NearbyView } from "./views/NearbyView";
 import { HomeView } from "./views/HomeView";
 
-type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent";
+type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent" | "nearby";
 
 interface RecentPlanet {
   uwp: string;
@@ -251,6 +252,17 @@ export default function App() {
     return (
       <SearchView
         {...commonProps}
+        onSelectWorld={loadWorldFromSearch}
+      />
+    );
+  }
+
+  if (view === "nearby") {
+    return (
+      <NearbyView
+        {...commonProps}
+        recentPlanets={recentPlanets}
+        savePlanet={savePlanet}
         onSelectWorld={loadWorldFromSearch}
       />
     );

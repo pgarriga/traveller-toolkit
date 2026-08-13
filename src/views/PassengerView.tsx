@@ -41,7 +41,7 @@ import { usePersistentState } from "../hooks/usePersistentState";
 import { calculatePassengers } from "../utils/passenger";
 import { planetToPassengerWorld } from "../utils/planetToWorldInputs";
 
-type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent";
+type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent" | "nearby";
 
 interface PassengerViewProps {
   theme: Theme;

@@ -17,6 +17,7 @@ A modern, browser-based set of tools for the **Mongoose Traveller 2nd Edition** 
 | `/` | **Home** | Lists the available tools as cards. |
 | `/search` | **Search World** | Looks up official Traveller worlds by name via the [Traveller Map](https://travellermap.com) API and jumps into the world detail with a full UWP breakdown. |
 | `/recent` | **Visited Worlds** | Standalone tool listing the worlds you've visited (persisted in `localStorage`). Sortable and editable — see [Visited Worlds](#visited-worlds) below. |
+| `/nearby` | **Worlds Near Me** | Pick the world you are on, describe your ship (jump rating, fuel range, fuel it accepts), set UWP filters, and get the matching worlds ranked by how many jumps away they are — see [Worlds Near Me](#worlds-near-me) below. |
 | `/passengers` | **Passenger Traffic** | Rolls High / Middle / Basic / Low passenger availability with the Mongoose 2e DMs and computes income. |
 | `/freight` | **Freight Calculator** | Computes traffic DMs between two worlds, rolls lots automatically, and lets you pick which lots to take up to your cargo bay's capacity. Shows income live as you toggle lots. |
 | `/settings` | **Settings** | Theme (auto / light / dark) and language (auto / Spanish / English). |
@@ -49,6 +50,22 @@ A modern, browser-based set of tools for the **Mongoose Traveller 2nd Edition** 
 - **Late-delivery payment** — Optional toggle applies the reference −50% modifier to net income.
 - **Gated output** — The "Price per ton", "Available lots" and "Summary" sections only appear after you press "Calculate lots", so the workflow is configure → calculate → pick.
 
+### Worlds Near Me
+- **Standalone tool** at `/nearby`, powered by the Traveller Map [`/api/jumpworlds`](https://travellermap.com/doc/api) endpoint.
+- **Pick your current world** from Visited Worlds or by searching Traveller Map. It needs map coordinates, so a manually typed UWP is not enough.
+- **My ship** — set the jump rating (J-1 to J-6), the fuel range (jumps the ship chains on full tanks, 1 by default) and which fuel it will take on.
+- **Filters**: maximum distance (1–12 parsecs), minimum starport class, minimum tech level, minimum population, and which travel zones to include (Red is off by default).
+- **Results sorted by jumps**, then by parsec distance and name as tie-breakers, with unreachable worlds last. A world 4 parsecs out can be two jumps away while one 3 parsecs out takes three, so route length is the useful ordering. Each row shows parsecs, jumps, world name, sector/hex, UWP and travel zone; tap it to open the full world profile.
+- **Jumps column** — the fewest jumps to that world along a route where the ship never runs dry. It leaves with full tanks and burns one jump of fuel per leg, and a class A–D starport refills them. Excluded travel zones are never used as a fuel stop, and a world with no legal route reads "no route".
+- **Fuel** — where the ship is willing to refuel. Each rung includes the one above it:
+  - *Refined fuel* — class A and B starports only.
+  - *Unrefined fuel* (default) — also class C and D, whose fuel is unrefined.
+  - *Gather my own fuel* — also skims it from a gas giant (PBG) or an ocean (hydrographics 1+), which brings class E and X worlds into play.
+
+  A world the ship cannot refuel at is never a barrier on its own — it is crossed as long as the fuel range covers the next leg.
+- **One request per search** — the radius (max distance + jump rating) is fetched once and the filters and ship settings re-apply instantly as you change them.
+- **Exact parsec distances** computed from the map's world-space coordinates on an odd-q hex grid, validated against the API's own jump results across sector boundaries.
+
 ### Visited Worlds
 - **Standalone tool** at `/recent` (its own card on the home page, its own navbar entry).
 - **Auto-saves** worlds when you visit them; the list survives reloads via `localStorage` (key: `traveller-recent`).
@@ -58,7 +75,7 @@ A modern, browser-based set of tools for the **Mongoose Traveller 2nd Edition** 
 - **Empty state** offers a shortcut back to Search World.
 
 ### General
-- **Bilingual** — Spanish and English with auto-detection (`es`, `ca`, `gl`, `eu` → Spanish; everything else → English). Manual override in Settings.
+- **Trilingual** — Spanish, Catalan and English with auto-detection (`ca` → Catalan; `es`, `gl`, `eu` → Spanish; everything else → English). Manual override in Settings.
 - **Themed** — Auto / light / dark theme. Auto follows your system setting.
 - **Mobile responsive** — Designed mobile-first; the navbar collapses to a hamburger menu, and lot cards reflow on small screens.
 - **Offline ready** — Works entirely in the browser, no server required after first load.

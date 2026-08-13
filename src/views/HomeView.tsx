@@ -4,10 +4,10 @@ import type { TranslationFunction } from "../types/i18n";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { PageHeader } from "../components/ui/PageHeader";
-import { IconBox, IconUsers, IconSearch, IconPin } from "../components/icons";
+import { IconBox, IconUsers, IconSearch, IconPin, IconRadar } from "../components/icons";
 import { COLORS } from "../constants/colors";
 
-type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent";
+type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent" | "nearby";
 
 interface HomeViewProps {
   theme: Theme;
@@ -54,6 +54,14 @@ export const HomeView: FC<HomeViewProps> = ({
       description: t("homeRecentDesc"),
       accent: COLORS.info,
       onClick: () => navigateTo("recent"),
+    },
+    {
+      key: "nearby",
+      icon: <IconRadar />,
+      title: t("nearbyTitle"),
+      description: t("homeNearbyDesc"),
+      accent: COLORS.secondary,
+      onClick: () => navigateTo("nearby"),
     },
     {
       key: "passenger",

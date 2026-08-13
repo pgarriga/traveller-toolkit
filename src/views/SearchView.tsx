@@ -13,7 +13,7 @@ import { COLORS } from "../constants/colors";
 import { ZONES, getZoneColor } from "../constants/zones";
 import { searchWorlds, type WorldSearchResult } from "../utils/travellerMap";
 
-type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent";
+type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent" | "nearby";
 
 const MIN_QUERY_LENGTH = 3;
 

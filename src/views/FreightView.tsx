@@ -50,7 +50,7 @@ import { calculateFreight } from "../utils/freight";
 import { calculateMail } from "../utils/mail";
 import { planetToFreightWorld } from "../utils/planetToWorldInputs";
 
-type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent";
+type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent" | "nearby";
 
 interface FreightViewProps {
   theme: Theme;

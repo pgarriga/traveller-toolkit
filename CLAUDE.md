@@ -5,6 +5,7 @@
 Traveller Toolkit - A multi-tool web app for the Mongoose Traveller 2nd Edition tabletop RPG. The home page lists the available tools and the user navigates between them. Current tools:
 - **Search World** — searches official Traveller worlds by name via the [Traveller Map](https://travellermap.com) API (`/api/search`). Selecting a result jumps to World Detail and auto-saves the world to Visited Worlds.
 - **Visited Worlds** — standalone tool at `/recent` listing the worlds you've visited (persisted in `localStorage`). Sortable dropdown, Edit/Done toggle for per-card deletion, colored tags per UWP attribute.
+- **Worlds Near Me** — standalone tool at `/nearby`. Pick the world you are on, describe your ship (jump rating, fuel range, fuel it accepts), set UWP filters (max distance, minimum starport, TL, population, travel zones) and get the matching worlds, sorted by number of jumps (parsec distance and name break ties, unreachable worlds last). Each result also shows the minimum number of jumps to reach it along a route where the ship never runs out of fuel. `jumpsFromOrigin` searches over `(world, fuel left)` states, not just worlds, so a ship with tankage for several jumps can cross a system with no fuel in it. The `FuelPolicy` (`refined` = starports A/B, `unrefined` = also C/D, `wilderness` = also gas giants and oceans) decides where the ship will refuel; a world it cannot refuel at is still crossed when the fuel range allows. Data comes from the Traveller Map `/api/jumpworlds` endpoint.
 - **Passenger Traffic** — rolls High / Middle / Basic / Low passenger availability with the Mongoose 2e DMs and computes income.
 - **Freight Calculator** — computes traffic DMs, rolls lots, and lets the player pick which lots to buy up to their cargo bay capacity. Includes an integrated Mail Run block.
 
@@ -47,11 +48,14 @@ src/
 │   ├── i18n.ts               # Language, LangMode, TranslationFunction, TranslationKey
 │   ├── game-data.ts          # StarportData, SizeData, AtmosphereData, etc.
 │   ├── freight.ts            # FreightInputs, FreightResult, LotResult, LotType, etc.
+│   ├── nearby.ts             # NearbyWorld, NearbyFilters, NearbyUwpFacts, ShipProfile, FuelPolicy
 │   ├── components.ts         # Component props interfaces
 │   └── index.ts              # Re-exports all types
 ├── components/
 │   ├── icons/
-│   │   └── index.tsx         # SVG icon components (IconSearch, IconPin, IconBox, IconClock, IconUsers, IconMail, IconSettings, IconTrash, IconRefresh, IconMenu, IconClose)
+│   │   └── index.tsx         # SVG icon components (IconSearch, IconPin, IconBox, IconClock, IconUsers, IconMail, IconSettings, IconTrash, IconRefresh, IconRadar, IconMenu, IconClose)
+│   ├── banners/
+│   │   └── index.tsx         # Decorative per-tool SVG headers (SearchBanner, RecentBanner, NearbyBanner, PassengerBanner, FreightBanner)
 │   ├── ui/
 │   │   ├── Button.tsx        # Reusable button with variants
 │   │   ├── Section.tsx       # Card section with colored border
@@ -66,6 +70,7 @@ src/
 │   ├── HomeView.tsx          # Tools list (cards) — landing page at "/"
 │   ├── SearchView.tsx        # World search (Traveller Map) — "/search"
 │   ├── RecentWorldsView.tsx  # Visited Worlds tool (sort + edit mode) — "/recent"
+│   ├── NearbyView.tsx        # Worlds Near Me (jumpworlds + UWP filters) — "/nearby"
 │   ├── PlanetView.tsx        # World detail view — "/planet/{UWP}"
 │   ├── FreightView.tsx       # Freight calculator (+ Mail Run) — "/freight"
 │   ├── PassengerView.tsx     # Passenger traffic calculator — "/passengers"
@@ -76,8 +81,11 @@ src/
 │   ├── gameRules.ts          # SIZE_RULES, ATMO_RULES, LAW_RULES, etc.
 │   ├── freight.ts            # POPULATION_DM, STARPORT_DM, TONS_PER_LOT_DIE, lotsFromTraffic, etc.
 │   ├── mail.ts               # Mail Run constants (rank/soc DMs, container size, etc.)
+│   ├── nearby.ts             # Distance/starport/TL/population filter options, jump + fuel + policy options, DEFAULT_FILTERS, DEFAULT_SHIP
+│   ├── storage.ts            # STORAGE_KEYS for every localStorage key + isFiniteNumber guard
 │   └── passenger.ts          # Passenger DMs, class prices, options
 ├── hooks/
+│   ├── usePersistentState.ts # Generic localStorage-backed state (needs a type guard)
 │   ├── useThemeMode.ts       # Theme management with localStorage
 │   └── useRecentPlanets.ts   # CRUD for recent planets (MAX_RECENT_PLANETS inlined)
 ├── utils/
@@ -85,8 +93,9 @@ src/
 │   ├── uwp.ts                # UWP parsing and validation (`parseUwp`)
 │   ├── freight.ts            # calculateFreight (DM breakdown + lot rolling)
 │   ├── mail.ts               # calculateMail (Mail Run)
+│   ├── nearby.ts             # hexDistance, uwpFacts, withDistance, filterWorlds, canRefuel, jumpsFromOrigin
 │   ├── passenger.ts          # calculatePassengers
-│   ├── travellerMap.ts       # searchWorlds() + fetchWorldZone() → Traveller Map API
+│   ├── travellerMap.ts       # searchWorlds() + fetchWorldZone() + fetchJumpWorlds() → Traveller Map API
 │   ├── planetToWorldInputs.ts # Maps a RecentPlanet to Passenger/Freight world inputs
 │   └── i18n-helpers.ts       # isNoneValue, requiresWarning
 ├── i18n/
@@ -121,6 +130,7 @@ A UWP code is 8 characters: `A123456-7`
 - `/` — Home (tools list, `HomeView`)
 - `/search` — World search (`SearchView`)
 - `/recent` — Visited Worlds (`RecentWorldsView`) — its own view, not an alias
+- `/nearby` — Worlds Near Me (`NearbyView`)
 - `/passengers` — Passenger Traffic (`PassengerView`)
 - `/freight` — Freight Calculator + Mail Run (`FreightView`)
 - `/settings` — Settings (`SettingsView`)
@@ -188,6 +198,7 @@ The whole app must look like an extension of the Mongoose Traveller 2026 Core Ru
 
 ### Iconography
 - Current inline SVG icons (`src/components/icons/index.tsx`) follow a flat, single-stroke industrial look — keep that style. New icons must be flat, monochrome, 16×16 default with `aria-hidden="true"` and `marginRight: 6`.
+- **Tool banners** (`src/components/banners/index.tsx`) are decorative SVG headers, one per tool, rendered above `PageHeader`. Every one shares the same contract: `viewBox="0 0 800 120"`, `aria-hidden="true"`, the `CornerFrame` brackets, a `> TOOL NAME` monospace ticker top-left and a status ticker top-right. `COLORS.primary` is the single accent — everything else is `theme.text` / `theme.textMuted` / `theme.textDimmed` / `theme.border` so the banner flips with the theme. A new tool gets a new banner in this file, drawing whatever that tool actually reasons about.
 - If you need an icon that doesn't exist yet, follow the same outline style (Tabler Icons set is the reference family — replicate that visual language; do not import a heavy icon library).
 
 ### When in doubt
@@ -368,6 +379,7 @@ import {
 //   IconMail    → Mail Run section inside FreightView
 //   IconSettings→ Settings (navbar entry, settings view header)
 //   IconTrash   → Delete-world action inside RecentWorldsView edit mode
+//   IconRadar   → Worlds Near Me (home card, nearby view header, navbar entry, search button)
 //   IconRefresh → "New search" reset button at the bottom of FreightView and PassengerView
 //   IconClock   → Currently unused in the UI; kept exported for future use
 ```

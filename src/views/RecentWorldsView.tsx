@@ -15,7 +15,7 @@ import { getZoneColor } from "../constants/zones";
 import { getTechLevelKey } from "../constants/gameRules";
 import { parseUwp } from "../utils/uwp";
 
-type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent";
+type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent" | "nearby";
 
 // Compact population ranges from the Mongoose Traveller 2e population table.
 // Index = UWP population digit; minimum inhabitants shown Twitter/Instagram style.
