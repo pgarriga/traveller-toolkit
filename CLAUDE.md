@@ -49,8 +49,8 @@ src/
 │   ├── game-data.ts          # StarportData, SizeData, AtmosphereData, etc.
 │   ├── freight.ts            # FreightInputs, FreightResult, LotResult, LotType, etc.
 │   ├── nearby.ts             # NearbyWorld, NearbyFilters, NearbyUwpFacts, ShipProfile, FuelPolicy
-│   ├── components.ts         # Component props interfaces
-│   └── index.ts              # Re-exports all types
+│   ├── mail.ts               # MailInputs, MailResult, MailRank (Mail Run)
+│   └── passenger.ts          # PassengerInputs, PassengerResult, PassengerClass
 ├── components/
 │   ├── icons/
 │   │   └── index.tsx         # SVG icon components (IconSearch, IconPin, IconBox, IconClock, IconUsers, IconMail, IconSettings, IconTrash, IconRefresh, IconRadar, IconMenu, IconClose)
@@ -60,8 +60,8 @@ src/
 │   │   ├── Button.tsx        # Reusable button with variants
 │   │   ├── Section.tsx       # Card section with colored border
 │   │   ├── Row.tsx           # Label-value row for data display
-│   │   ├── Badge.tsx         # Colored badge/tag
 │   │   ├── PageHeader.tsx    # Shared centered gradient h1 + optional icon
+│   │   ├── JumpsEditor.tsx   # JumpCountField + JumpsBreakdown + distributeJumps (Freight/Passenger)
 │   │   └── WorldPicker.tsx   # Visited-worlds dropdown + inline Traveller Map search
 │   ├── NearbyJumpMap.tsx     # Traveller Map jump-map image + filter-match ring overlay
 │   ├── Navbar.tsx            # Navigation bar (desktop + mobile, with a11y)
@@ -114,10 +114,10 @@ src/
 ## Commands
 
 ```bash
-npm run dev      # Start dev server (usually http://localhost:5173)
-npm run build    # Build for production (outputs to dist/)
-npm run preview  # Preview production build
-npx tsc --noEmit # Type check without emitting files
+npm run dev       # Start dev server (usually http://localhost:5173)
+npm run build     # Build for production (outputs to dist/)
+npm run preview   # Preview production build
+npm run typecheck # Type check without emitting files (tsc --noEmit)
 ```
 
 ## Key Concepts
@@ -338,17 +338,21 @@ import { IconSearch } from "../components/icons";
 import { COLORS, SECTION_COLORS, THEMES } from "../constants/colors";
 
 // NEVER hardcode colors like "#3b82f6" - use constants:
-COLORS.primary    // #3b82f6
-COLORS.secondary  // #8b5cf6
-COLORS.warning    // #f59e0b
-COLORS.danger     // #ef4444
-COLORS.success    // #10b981
+COLORS.primary    // #D4521C — Traveller orange
+COLORS.secondary  // #A03B14 — rust
+COLORS.warning    // #E8A23C — industrial amber
+COLORS.danger     // #B43F1C — deep red-rust
+COLORS.success    // #6B8E3D — muted olive
+COLORS.info       // #4A6B7D — steel blue
+COLORS.pink       // #C66E4E — terracotta
+COLORS.indigo     // #3D4E6B — midnight
+COLORS.rose       // #8C4F3B — brick
 
 // Section colors for UWP data
-SECTION_COLORS.starport     // warning
-SECTION_COLORS.size         // primary
+SECTION_COLORS.starport     // primary
+SECTION_COLORS.size         // info
 SECTION_COLORS.atmosphere   // success
-SECTION_COLORS.population   // secondary
+SECTION_COLORS.population   // pink
 ```
 
 ### Zones (`constants/zones.ts`)
@@ -378,12 +382,13 @@ import {
 //   IconPin     → Visited Worlds (home card, recent view header, navbar entry)
 //   IconBox     → Freight Calculator (home card, freight header, navbar entry, calculate button)
 //   IconUsers   → Passenger Traffic (home card, passenger header, navbar entry)
-//   IconMail    → Mail Run section inside FreightView
 //   IconSettings→ Settings (navbar entry, settings view header)
 //   IconTrash   → Delete-world action inside RecentWorldsView edit mode
 //   IconRadar   → Worlds Near Me (home card, nearby view header, navbar entry, search button)
 //   IconRefresh → "New search" reset button at the bottom of FreightView and PassengerView
 //   IconClock   → Currently unused in the UI; kept exported for future use
+//   IconMail    → Currently unused: `Section` takes a plain string title, so the
+//                 Mail Run block inside FreightView carries no icon
 ```
 
 ### Game Rules (`constants/gameRules.ts`)
@@ -499,10 +504,9 @@ import type {
   LotResult, LotType, ParsecDistance, PopulationTier,
   TechLevelTier, FreightStarport, FreightZoneTier,
 } from "../types/freight";
-
-// Or import everything from index
-import type { Theme, ParsedUWP, Language } from "../types";
 ```
+
+There is no `types/index.ts` barrel — always import from the specific module.
 
 ### Freight Constants & Utils
 ```tsx
@@ -553,9 +557,12 @@ import { calculateFreight } from "../utils/freight";
 
 ### After ANY code changes:
 ```bash
-npx tsc --noEmit   # Type check - MUST pass with no errors
+npm run typecheck  # Type check - MUST pass with no errors
 npm run build      # Build check - MUST succeed
 ```
+
+`vite build` does not type-check, so the build succeeding proves nothing about
+types — both commands have to run. CI runs the same pair before deploying.
 
 ### After UI changes:
 - `/check-responsive` - Verify responsive design works on all screen sizes
