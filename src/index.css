@@ -151,6 +151,18 @@ input::placeholder {
   margin-right: auto;
 }
 
+/* Jump map carrying the filter markers. Wider than the PlanetView map above:
+   it is the point of its block rather than a sidebar illustration, and the
+   rings have to stay separable from the hexes they sit on. The overlay is
+   positioned against this box, so it must not shrink-wrap the image. */
+.nearby-jumpmap {
+  position: relative;
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  line-height: 0;
+}
+
 /* Center + cap the jump map image so it never dominates the page on desktop */
 .jumpmap-image {
   display: block;
@@ -164,6 +176,10 @@ input::placeholder {
 @media (min-width: 900px) {
   .wide-main {
     max-width: 1080px;
+  }
+
+  .nearby-jumpmap {
+    max-width: 900px;
   }
 
   .world-profile-grid {

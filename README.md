@@ -63,6 +63,7 @@ A modern, browser-based set of tools for the **Mongoose Traveller 2nd Edition** 
   - *Gather my own fuel* — also skims it from a gas giant (PBG) or an ocean (hydrographics 1+), which brings class E and X worlds into play.
 
   A world the ship cannot refuel at is never a barrier on its own — it is crossed as long as the fuel range covers the next leg.
+- **Jump map** below the results — the official Traveller Map render of the area ([`/api/jumpmap`](https://travellermap.com/doc/api)), with a steel-blue ring drawn on every world that passed the filters — solid and tinted when there is a fuel-safe route to it, dashed and hollow when there is not — plus a dashed orange ring on the world you are on. The image is theirs and shows every world in range; the rings are ours and mark the matches, so the map answers "which of these are the ones I want" at a glance. Markers stay non-interactive on purpose — the results table above is the keyboard-accessible way into each world.
 - **One request per search** — the radius (max distance + jump rating) is fetched once and the filters and ship settings re-apply instantly as you change them.
 - **Exact parsec distances** computed from the map's world-space coordinates on an odd-q hex grid, validated against the API's own jump results across sector boundaries.
 

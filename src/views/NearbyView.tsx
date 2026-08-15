@@ -11,6 +11,7 @@ import { Button } from "../components/ui/Button";
 import { WorldPicker } from "../components/ui/WorldPicker";
 import { PageHeader } from "../components/ui/PageHeader";
 import { NearbyBanner } from "../components/banners";
+import { NearbyJumpMap } from "../components/NearbyJumpMap";
 import { IconRadar } from "../components/icons";
 import { COLORS, SECTION_COLORS } from "../constants/colors";
 import { getZoneColor } from "../constants/zones";
@@ -96,6 +97,14 @@ export const NearbyView: FC<NearbyViewProps> = ({
   const originHex = originWorld
     ? `${String(originWorld.hexX).padStart(2, "0")}${String(originWorld.hexY).padStart(2, "0")}`
     : null;
+
+  // The origin as the map returned it. `originWorld` comes from the saved-world
+  // record and carries no world-space coordinates; the jump map needs those to
+  // place its markers, and only the scan has them.
+  const originScanned = useMemo(() => {
+    if (!scanned || !originWorld || !originHex) return null;
+    return scanned.find(w => w.hex === originHex && w.sector === originWorld.sector) ?? null;
+  }, [scanned, originWorld, originHex]);
 
   // Route lengths are plotted over every scanned world, not just the matches:
   // a world the filters rejected can still be a perfectly good fuel stop.
@@ -484,6 +493,23 @@ export const NearbyView: FC<NearbyViewProps> = ({
                 </div>
               </>
             )}
+          </Section>
+        )}
+
+        {scanned && !loading && originScanned && (
+          <Section title={t("nearbyMapSection")} color={SECTION_COLORS.size} theme={theme}>
+            <NearbyJumpMap
+              // Remounting on a new origin drops the previous image's measured
+              // size, so markers are never placed against stale dimensions.
+              key={worldKey(originScanned)}
+              theme={theme}
+              t={t}
+              origin={originScanned}
+              originHex={originScanned.hex}
+              matches={matches}
+              jumps={jumps}
+              radius={filters.maxDistance}
+            />
           </Section>
         )}
 

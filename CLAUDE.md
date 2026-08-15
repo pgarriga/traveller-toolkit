@@ -5,7 +5,7 @@
 Traveller Toolkit - A multi-tool web app for the Mongoose Traveller 2nd Edition tabletop RPG. The home page lists the available tools and the user navigates between them. Current tools:
 - **Search World** — searches official Traveller worlds by name via the [Traveller Map](https://travellermap.com) API (`/api/search`). Selecting a result jumps to World Detail and auto-saves the world to Visited Worlds.
 - **Visited Worlds** — standalone tool at `/recent` listing the worlds you've visited (persisted in `localStorage`). Sortable dropdown, Edit/Done toggle for per-card deletion, colored tags per UWP attribute.
-- **Worlds Near Me** — standalone tool at `/nearby`. Pick the world you are on, describe your ship (jump rating, fuel range, fuel it accepts), set UWP filters (max distance, minimum starport, TL, population, travel zones) and get the matching worlds, sorted by number of jumps (parsec distance and name break ties, unreachable worlds last). Each result also shows the minimum number of jumps to reach it along a route where the ship never runs out of fuel. `jumpsFromOrigin` searches over `(world, fuel left)` states, not just worlds, so a ship with tankage for several jumps can cross a system with no fuel in it. The `FuelPolicy` (`refined` = starports A/B, `unrefined` = also C/D, `wilderness` = also gas giants and oceans) decides where the ship will refuel; a world it cannot refuel at is still crossed when the fuel range allows. Data comes from the Traveller Map `/api/jumpworlds` endpoint.
+- **Worlds Near Me** — standalone tool at `/nearby`. Pick the world you are on, describe your ship (jump rating, fuel range, fuel it accepts), set UWP filters (max distance, minimum starport, TL, population, travel zones) and get the matching worlds, sorted by number of jumps (parsec distance and name break ties, unreachable worlds last). Each result also shows the minimum number of jumps to reach it along a route where the ship never runs out of fuel. `jumpsFromOrigin` searches over `(world, fuel left)` states, not just worlds, so a ship with tankage for several jumps can cross a system with no fuel in it. The `FuelPolicy` (`refined` = starports A/B, `unrefined` = also C/D, `wilderness` = also gas giants and oceans) decides where the ship will refuel; a world it cannot refuel at is still crossed when the fuel range allows. Data comes from the Traveller Map `/api/jumpworlds` endpoint. Below the results table sits a **jump map**: the official `/api/jumpmap` PNG with an SVG ring overlaid on each world that passed the filters (see `utils/jumpMapImage.ts`).
 - **Passenger Traffic** — rolls High / Middle / Basic / Low passenger availability with the Mongoose 2e DMs and computes income.
 - **Freight Calculator** — computes traffic DMs, rolls lots, and lets the player pick which lots to buy up to their cargo bay capacity. Includes an integrated Mail Run block.
 
@@ -63,6 +63,7 @@ src/
 │   │   ├── Badge.tsx         # Colored badge/tag
 │   │   ├── PageHeader.tsx    # Shared centered gradient h1 + optional icon
 │   │   └── WorldPicker.tsx   # Visited-worlds dropdown + inline Traveller Map search
+│   ├── NearbyJumpMap.tsx     # Traveller Map jump-map image + filter-match ring overlay
 │   ├── Navbar.tsx            # Navigation bar (desktop + mobile, with a11y)
 │   ├── Footer.tsx            # Disclaimer footer
 │   └── ErrorBoundary.tsx     # Error boundary with fallback UI
@@ -96,6 +97,7 @@ src/
 │   ├── nearby.ts             # hexDistance, uwpFacts, withDistance, filterWorlds, canRefuel, jumpsFromOrigin
 │   ├── passenger.ts          # calculatePassengers
 │   ├── travellerMap.ts       # searchWorlds() + fetchWorldZone() + fetchJumpWorlds() → Traveller Map API
+│   ├── jumpMapImage.ts       # jumpMapUrl() + jumpMapScale() + projectOnJumpMap() → /api/jumpmap image geometry
 │   ├── planetToWorldInputs.ts # Maps a RecentPlanet to Passenger/Freight world inputs
 │   └── i18n-helpers.ts       # isNoneValue, requiresWarning
 ├── i18n/
@@ -423,6 +425,32 @@ import { searchWorlds, type WorldSearchResult } from "../utils/travellerMap";
 const results: WorldSearchResult[] = await searchWorlds("Regi", abortSignal);
 ```
 
+### Jump Map Images (`utils/jumpMapImage.ts`)
+```tsx
+import { jumpMapUrl, jumpMapScale, projectOnJumpMap } from "../utils/jumpMapImage";
+
+// Builds https://travellermap.com/api/jumpmap URLs. Used by PlanetView (plain
+// image) and NearbyJumpMap (image + marker overlay). NEVER hand-build this URL.
+const src = jumpMapUrl({ sector, hex, jump: 4, scale: 48, style: "print" });
+
+// Pixels per parsec for a given radius. The endpoint takes a hex size, not an
+// image size, so this inverts its output-size behaviour to keep every radius
+// near 1000 px wide — and below ~1200x1330, past which the server answers
+// `500 Failed to allocate bitmap`.
+const scale = jumpMapScale(radius);
+
+// Which pixel of the returned image a world falls on, so markers can be drawn
+// over it. Pass the image's *measured* naturalWidth/naturalHeight, not a
+// predicted size. Origin-relative, so the map's absolute translation drops out.
+const { x, y } = projectOnJumpMap(world, origin, scale, width, height);
+```
+
+The projection was recovered from the SVG rendering of the same URL and verified
+against `/api/jumpworlds` across jumps 1–12, scales 24–200, even/odd origin
+columns and sector-crossing maps — every world within half a pixel. It is *not*
+a documented contract; if Traveller Map changes its renderer the markers drift,
+so keep the derivation comment in that file intact.
+
 ### Custom Hooks (`hooks/`)
 ```tsx
 import type { Theme, ThemeMode } from "../types/theme";
@@ -503,7 +531,7 @@ import { calculateFreight } from "../utils/freight";
 5. **NO duplicate Navbar props** - Pass via `commonProps` spread in App.tsx (must include `goHome`)
 6. **NO hardcoded game thresholds** - Use `SIZE_RULES`, `LAW_RULES`, etc.
 7. **NO multi-language string comparisons** - Use `requiresWarning(value, t)`
-8. **NO ad-hoc Traveller Map calls** - Use `searchWorlds()` from `utils/travellerMap.ts` (handles URL, `AbortController`, and Sector/Subsector filtering)
+8. **NO ad-hoc Traveller Map calls** - Use `searchWorlds()` from `utils/travellerMap.ts` (handles URL, `AbortController`, and Sector/Subsector filtering), and `jumpMapUrl()` from `utils/jumpMapImage.ts` for `/api/jumpmap` image URLs
 9. **NO duplicating theme/localStorage logic** - Use `useThemeMode` and `useRecentPlanets` hooks
 10. **NO missing ErrorBoundary** - App must be wrapped in ErrorBoundary in main.tsx
 11. **NO ad-hoc page titles** - Use `<PageHeader title=... icon=... />` so every page shares the same gradient h1 (PlanetView is the only exception — it has an editable name input header)
