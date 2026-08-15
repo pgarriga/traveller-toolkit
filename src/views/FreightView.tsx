@@ -24,7 +24,7 @@ import { JumpCountField, JumpsBreakdown, distributeJumps } from "../components/u
 import { WorldPicker } from "../components/ui/WorldPicker";
 import { PageHeader } from "../components/ui/PageHeader";
 import { FreightBanner } from "../components/banners";
-import { IconBox, IconMail, IconRefresh } from "../components/icons";
+import { IconBox, IconRefresh } from "../components/icons";
 import { COLORS, SECTION_COLORS } from "../constants/colors";
 import {
   FREIGHT_RATES_PER_TON,
