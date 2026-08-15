@@ -60,6 +60,7 @@ src/
 │   │   ├── Button.tsx        # Reusable button with variants
 │   │   ├── Section.tsx       # Card section with colored border
 │   │   ├── Row.tsx           # Label-value row for data display
+│   │   ├── Field.tsx         # Labelled form control (useId → label htmlFor) + fieldLabelStyle
 │   │   ├── PageHeader.tsx    # Shared centered gradient h1 + optional icon
 │   │   ├── JumpsEditor.tsx   # JumpCountField + JumpsBreakdown + distributeJumps (Freight/Passenger)
 │   │   └── WorldPicker.tsx   # Visited-worlds dropdown + inline Traveller Map search
@@ -322,6 +323,33 @@ import { SECTION_COLORS } from "../constants/colors";
 </Section>
 ```
 
+### Field (`components/ui/Field.tsx`)
+```tsx
+import { Field, fieldLabelStyle } from "../components/ui/Field";
+
+// EVERY form control gets its caption through Field. It generates an id with
+// useId() and puts it on the <label htmlFor>, so the control has an accessible
+// name and clicking the caption focuses it.
+<Field label={t("freightCargoBay")} theme={theme}>
+  {id => <input id={id} type="number" style={inputStyle} value={cargoBay} onChange={...} />}
+</Field>
+
+// `label` is a ReactNode, so a caption can carry a live badge:
+<Field theme={theme} label={<>{field.label}<span>({n}D6)</span></>}>
+  {id => <input id={id} ... />}
+</Field>
+
+// Inside a .map(), pass key to the Field — useId keeps each id unique:
+{OPTIONS.map(o => <Field key={o} label={o} theme={theme}>{id => ...}</Field>)}
+
+// fieldLabelStyle(theme) is for captions that head something that is NOT a
+// single labelable control — a button that opens a dialog, a checkbox group.
+// Those use a <span> plus aria-describedby / aria-label, never a bare <label>.
+```
+
+A `<label>` is only correct without Field when it *wraps* its control, which is
+how the checkbox rows are written (`<label><input type="checkbox" /><span>…</span></label>`).
+
 ### PageHeader (`components/ui/PageHeader.tsx`)
 ```tsx
 import { PageHeader } from "../components/ui/PageHeader";
@@ -541,6 +569,7 @@ import { calculateFreight } from "../utils/freight";
 11. **NO ad-hoc page titles** - Use `<PageHeader title=... icon=... />` so every page shares the same gradient h1 (PlanetView is the only exception — it has an editable name input header)
 12. **NO hardcoded freight tables** - Use `TONS_PER_LOT_DIE`, `POPULATION_DM`, `lotsFromTraffic`, etc. from `constants/freight.ts`
 13. **NO live re-rolling of dice during render** - The freight lot d6 are rolled once inside `handleCalculate` on button click; do not call `Math.random` inside `useMemo` or render
+14. **NO `<label>` next to its control** - A `<label>` that neither wraps its control nor carries `htmlFor` leaves the control with no accessible name. Use `<Field>`; wrap the control only for checkboxes
 
 ### TypeScript-Specific
 11. **NO `.js` or `.jsx` files** - ALL code must be TypeScript (`.ts` or `.tsx`)

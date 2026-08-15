@@ -1,9 +1,10 @@
 import type { CSSProperties, FC } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { Theme } from "../../types/theme";
 import type { TranslationFunction } from "../../types/i18n";
 import type { RecentPlanet, TravellerMapWorld, ZoneCode } from "../../types/uwp";
 import { Button } from "./Button";
+import { fieldLabelStyle } from "./Field";
 import { IconSearch, IconClose } from "../icons";
 import { COLORS } from "../../constants/colors";
 import { ZONES, getZoneColor } from "../../constants/zones";
@@ -19,7 +20,6 @@ interface WorldPickerProps {
   onPick: (planet: RecentPlanet) => void;
   onClear: () => void;
   savePlanet: (uwp: string, name: string, zone: ZoneCode, world?: TravellerMapWorld) => void;
-  labelStyle: CSSProperties;
 }
 
 interface ModalProps {
@@ -348,8 +348,9 @@ export const WorldPicker: FC<WorldPickerProps> = ({
   onPick,
   onClear,
   savePlanet,
-  labelStyle,
 }) => {
+  const captionId = useId();
+  const labelStyle = fieldLabelStyle(theme);
   const [open, setOpen] = useState(false);
   const linkedPlanet = linkUwp
     ? recentPlanets.find(p => p.uwp.toUpperCase() === linkUwp.toUpperCase()) ?? null
@@ -394,10 +395,18 @@ export const WorldPicker: FC<WorldPickerProps> = ({
 
   return (
     <div style={{ marginBottom: 12 }}>
-      <label style={labelStyle}>{t("fromVisited")}</label>
+      {/*
+        A caption, not a <label>: this heads a button that opens a dialog, and
+        pointing a label at it would replace the button's own name — the picked
+        world — with "From visited". Wired as a description instead, so a screen
+        reader reads the world first and the caption as context.
+      */}
+      <span id={captionId} style={labelStyle}>{t("fromVisited")}</span>
       <div style={{ display: "flex", gap: 8, alignItems: "stretch" }}>
         <button
           type="button"
+          aria-describedby={captionId}
+          aria-haspopup="dialog"
           onClick={() => setOpen(true)}
           style={{
             flex: 1,

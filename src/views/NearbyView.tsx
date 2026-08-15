@@ -9,6 +9,7 @@ import { Footer } from "../components/Footer";
 import { Section } from "../components/ui/Section";
 import { Button } from "../components/ui/Button";
 import { WorldPicker } from "../components/ui/WorldPicker";
+import { Field, fieldLabelStyle } from "../components/ui/Field";
 import { PageHeader } from "../components/ui/PageHeader";
 import { NearbyBanner } from "../components/banners";
 import { NearbyJumpMap } from "../components/NearbyJumpMap";
@@ -198,13 +199,7 @@ export const NearbyView: FC<NearbyViewProps> = ({
     fontFamily: "inherit",
   } as const;
 
-  const labelStyle = {
-    display: "block",
-    fontSize: 12,
-    color: theme.textDimmed,
-    marginBottom: 4,
-    fontWeight: 500,
-  } as const;
+  const labelStyle = fieldLabelStyle(theme);
 
   const fieldGridStyle = {
     display: "grid",
@@ -239,7 +234,6 @@ export const NearbyView: FC<NearbyViewProps> = ({
             onPick={(p: RecentPlanet) => { setOriginUwp(p.uwp); setScanned(null); }}
             onClear={() => { setOriginUwp(null); setScanned(null); }}
             savePlanet={savePlanet}
-            labelStyle={labelStyle}
           />
           {origin && !originWorld && (
             <div style={{ fontSize: 12, color: COLORS.warning, marginTop: 8 }}>
@@ -258,42 +252,48 @@ export const NearbyView: FC<NearbyViewProps> = ({
             {t("nearbyShipHint")}
           </div>
           <div className="ship-grid">
-            <div>
-              <label style={labelStyle}>{t("nearbyJumpRating")}</label>
-              <select
-                style={inputStyle}
-                value={ship.jump}
-                onChange={e => setShip({ ...ship, jump: parseInt(e.target.value, 10) })}
-              >
-                {JUMP_OPTIONS.map(j => (
-                  <option key={j} value={j}>J-{j} · {j} {t("nearbyParsecsShort")}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label style={labelStyle}>{t("nearbyFuelRange")}</label>
-              <select
-                style={inputStyle}
-                value={ship.fuelRange}
-                onChange={e => setShip({ ...ship, fuelRange: parseInt(e.target.value, 10) })}
-              >
-                {FUEL_RANGE_OPTIONS.map(f => (
-                  <option key={f} value={f}>{jumpUnit(f)}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label style={labelStyle}>{t("nearbyFuelPolicy")}</label>
-              <select
-                style={inputStyle}
-                value={ship.fuelPolicy}
-                onChange={e => setShip({ ...ship, fuelPolicy: e.target.value as FuelPolicy })}
-              >
-                {FUEL_POLICY_OPTIONS.map(p => (
-                  <option key={p} value={p}>{t(policyKey(p))}</option>
-                ))}
-              </select>
-            </div>
+            <Field label={t("nearbyJumpRating")} theme={theme}>
+              {id => (
+                <select
+                  id={id}
+                  style={inputStyle}
+                  value={ship.jump}
+                  onChange={e => setShip({ ...ship, jump: parseInt(e.target.value, 10) })}
+                >
+                  {JUMP_OPTIONS.map(j => (
+                    <option key={j} value={j}>J-{j} · {j} {t("nearbyParsecsShort")}</option>
+                  ))}
+                </select>
+              )}
+            </Field>
+            <Field label={t("nearbyFuelRange")} theme={theme}>
+              {id => (
+                <select
+                  id={id}
+                  style={inputStyle}
+                  value={ship.fuelRange}
+                  onChange={e => setShip({ ...ship, fuelRange: parseInt(e.target.value, 10) })}
+                >
+                  {FUEL_RANGE_OPTIONS.map(f => (
+                    <option key={f} value={f}>{jumpUnit(f)}</option>
+                  ))}
+                </select>
+              )}
+            </Field>
+            <Field label={t("nearbyFuelPolicy")} theme={theme}>
+              {id => (
+                <select
+                  id={id}
+                  style={inputStyle}
+                  value={ship.fuelPolicy}
+                  onChange={e => setShip({ ...ship, fuelPolicy: e.target.value as FuelPolicy })}
+                >
+                  {FUEL_POLICY_OPTIONS.map(p => (
+                    <option key={p} value={p}>{t(policyKey(p))}</option>
+                  ))}
+                </select>
+              )}
+            </Field>
           </div>
           <div style={{ fontSize: 12, color: theme.textDimmed, marginTop: 10, lineHeight: 1.5 }}>
             {t("nearbyFuelRangeHint")}
@@ -304,66 +304,74 @@ export const NearbyView: FC<NearbyViewProps> = ({
 
         <Section title={t("nearbyFiltersSection")} color={SECTION_COLORS.starport} theme={theme}>
           <div style={fieldGridStyle}>
-            <div>
-              <label style={labelStyle}>{t("nearbyMaxDistance")}</label>
-              <select
-                style={inputStyle}
-                value={filters.maxDistance}
-                onChange={e => setFilters({ ...filters, maxDistance: parseInt(e.target.value, 10) })}
-              >
-                {DISTANCE_OPTIONS.map(d => (
-                  <option key={d} value={d}>{d} {t("nearbyParsecsShort")}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label style={labelStyle}>{t("nearbyMinStarport")}</label>
-              <select
-                style={inputStyle}
-                value={filters.minStarport ?? ""}
-                onChange={e => setFilters({
-                  ...filters,
-                  minStarport: e.target.value === "" ? null : (e.target.value as StarportClass),
-                })}
-              >
-                <option value="">{t("nearbyAny")}</option>
-                {STARPORT_RANK.map(sp => (
-                  <option key={sp} value={sp}>{sp} {t("nearbyOrBetter")}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label style={labelStyle}>{t("nearbyMinTechLevel")}</label>
-              <select
-                style={inputStyle}
-                value={filters.minTechLevel ?? ""}
-                onChange={e => setFilters({
-                  ...filters,
-                  minTechLevel: e.target.value === "" ? null : parseInt(e.target.value, 10),
-                })}
-              >
-                <option value="">{t("nearbyAny")}</option>
-                {TECH_LEVEL_OPTIONS.map(tl => (
-                  <option key={tl} value={tl}>{tl}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label style={labelStyle}>{t("nearbyMinPopulation")}</label>
-              <select
-                style={inputStyle}
-                value={filters.minPopulation ?? ""}
-                onChange={e => setFilters({
-                  ...filters,
-                  minPopulation: e.target.value === "" ? null : parseInt(e.target.value, 10),
-                })}
-              >
-                <option value="">{t("nearbyAny")}</option>
-                {POPULATION_OPTIONS.map(p => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
-              </select>
-            </div>
+            <Field label={t("nearbyMaxDistance")} theme={theme}>
+              {id => (
+                <select
+                  id={id}
+                  style={inputStyle}
+                  value={filters.maxDistance}
+                  onChange={e => setFilters({ ...filters, maxDistance: parseInt(e.target.value, 10) })}
+                >
+                  {DISTANCE_OPTIONS.map(d => (
+                    <option key={d} value={d}>{d} {t("nearbyParsecsShort")}</option>
+                  ))}
+                </select>
+              )}
+            </Field>
+            <Field label={t("nearbyMinStarport")} theme={theme}>
+              {id => (
+                <select
+                  id={id}
+                  style={inputStyle}
+                  value={filters.minStarport ?? ""}
+                  onChange={e => setFilters({
+                    ...filters,
+                    minStarport: e.target.value === "" ? null : (e.target.value as StarportClass),
+                  })}
+                >
+                  <option value="">{t("nearbyAny")}</option>
+                  {STARPORT_RANK.map(sp => (
+                    <option key={sp} value={sp}>{sp} {t("nearbyOrBetter")}</option>
+                  ))}
+                </select>
+              )}
+            </Field>
+            <Field label={t("nearbyMinTechLevel")} theme={theme}>
+              {id => (
+                <select
+                  id={id}
+                  style={inputStyle}
+                  value={filters.minTechLevel ?? ""}
+                  onChange={e => setFilters({
+                    ...filters,
+                    minTechLevel: e.target.value === "" ? null : parseInt(e.target.value, 10),
+                  })}
+                >
+                  <option value="">{t("nearbyAny")}</option>
+                  {TECH_LEVEL_OPTIONS.map(tl => (
+                    <option key={tl} value={tl}>{tl}</option>
+                  ))}
+                </select>
+              )}
+            </Field>
+            <Field label={t("nearbyMinPopulation")} theme={theme}>
+              {id => (
+                <select
+                  id={id}
+                  style={inputStyle}
+                  value={filters.minPopulation ?? ""}
+                  onChange={e => setFilters({
+                    ...filters,
+                    minPopulation: e.target.value === "" ? null : parseInt(e.target.value, 10),
+                  })}
+                >
+                  <option value="">{t("nearbyAny")}</option>
+                  {POPULATION_OPTIONS.map(p => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+              )}
+            </Field>
           </div>
 
           <div style={{ marginTop: 14 }}>
