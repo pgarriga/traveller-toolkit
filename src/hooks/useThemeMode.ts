@@ -15,13 +15,12 @@ const getSystemTheme = (): "dark" | "light" => {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 };
 
-const getTheme = (mode: ThemeMode): Theme => {
-  const actualTheme = mode === "auto" ? getSystemTheme() : mode;
-  return THEMES[actualTheme];
-};
-
 export const useThemeMode = (): UseThemeModeReturn => {
   const [themeMode, setThemeMode] = useState<ThemeMode>("auto");
+  // The OS preference has to live in state, not just be read at render time:
+  // every view paints its own full-height `theme.bg` over the body, so nudging
+  // document.body alone left "auto" showing the old theme until a reload.
+  const [systemTheme, setSystemTheme] = useState<"dark" | "light">(getSystemTheme);
 
   // Load theme from localStorage on mount
   useEffect(() => {
@@ -31,27 +30,25 @@ export const useThemeMode = (): UseThemeModeReturn => {
     }
   }, []);
 
-  // Sync theme to localStorage and update body background
+  // Listen for system theme changes. Registered whatever the mode, so switching
+  // back to "auto" already knows the current preference.
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, themeMode);
-    const theme = getTheme(themeMode);
-    document.body.style.background = theme.bg;
-  }, [themeMode]);
-
-  // Listen for system theme changes when in auto mode
-  useEffect(() => {
-    if (themeMode !== "auto") return;
-
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handler = () => {
-      // Force re-render by updating body background
-      const theme = getTheme("auto");
-      document.body.style.background = theme.bg;
+    const handler = (e: MediaQueryListEvent): void => {
+      setSystemTheme(e.matches ? "dark" : "light");
     };
-
     mediaQuery.addEventListener("change", handler);
     return () => mediaQuery.removeEventListener("change", handler);
-  }, [themeMode]);
+  }, []);
 
-  return { themeMode, setThemeMode, theme: getTheme(themeMode) };
+  const theme = themeMode === "auto" ? THEMES[systemTheme] : THEMES[themeMode];
+
+  // Sync to localStorage and keep the body behind the app on the same surface,
+  // so overscroll and the browser chrome do not flash the other theme.
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, themeMode);
+    document.body.style.background = theme.bg;
+  }, [themeMode, theme.bg]);
+
+  return { themeMode, setThemeMode, theme };
 };
