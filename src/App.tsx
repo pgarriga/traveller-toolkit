@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import type { TravellerMapWorld, ZoneCode, StarportClass } from "./types/uwp";
-import type { Language } from "./types/i18n";
+import type { RecentPlanet, TravellerMapWorld, ZoneCode, StarportClass } from "./types/uwp";
 import type { StarportData, SizeData, AtmosphereData, GovernmentData } from "./types/game-data";
 import { useTranslation, getSTARPORT, getSIZE, getATMO, getHYDRO, getPOP, getGOV, getLAW_WEAPONS, getLAW_ARMOR } from "./i18n";
 
@@ -23,16 +22,10 @@ import { FreightView } from "./views/FreightView";
 import { PassengerView } from "./views/PassengerView";
 import { SearchView } from "./views/SearchView";
 import { RecentWorldsView } from "./views/RecentWorldsView";
+import { NearbyView } from "./views/NearbyView";
 import { HomeView } from "./views/HomeView";
 
-type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent";
-
-interface RecentPlanet {
-  uwp: string;
-  name: string;
-  zone: ZoneCode;
-  timestamp: number;
-}
+type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent" | "nearby";
 
 export default function App() {
   const { t, lang, langMode, setLangMode } = useTranslation();
@@ -75,54 +68,42 @@ export default function App() {
 
     if (urlView === "planet" && urlUwp) {
       const planet = findPlanet(urlUwp);
-      if (planet) {
-        setName(planet.name);
-        setUwp(planet.uwp);
-        setZoneInput(planet.zone || (ZONES.GREEN as ZoneCode));
-        setView("planet");
-      } else {
-        setUwp(urlUwp);
-        setName("");
-        setZoneInput(ZONES.GREEN as ZoneCode);
-        setView("planet");
-      }
+      setName(planet?.name ?? "");
+      setUwp(planet?.uwp ?? urlUwp);
+      setZoneInput(planet?.zone || (ZONES.GREEN as ZoneCode));
+      setView("planet");
     } else {
-      setView(urlView as ViewType);
+      setView(urlView);
     }
     isInitialLoad.current = false;
   }, [dataLoaded, findPlanet]);
 
-  // Handle browser back/forward buttons
+  // Handle browser back/forward buttons.
+  //
+  // Every route the router can parse is applied straight through, rather than
+  // enumerated here: an if/else per view silently sent any unlisted route home
+  // while the URL still read /recent or /nearby.
   useEffect(() => {
     const handlePopState = () => {
       const { view: urlView, uwp: urlUwp } = parseUrl();
 
       if (urlView === "planet" && urlUwp) {
         const planet = findPlanet(urlUwp);
-        if (planet) {
-          setName(planet.name);
-          setUwp(planet.uwp);
-          setZoneInput(planet.zone || (ZONES.GREEN as ZoneCode));
-        } else {
-          setUwp(urlUwp);
-          setName("");
-          setZoneInput(ZONES.GREEN as ZoneCode);
-        }
+        setName(planet?.name ?? "");
+        setUwp(planet?.uwp ?? urlUwp);
+        setZoneInput(planet?.zone || (ZONES.GREEN as ZoneCode));
         setView("planet");
-      } else if (urlView === "settings") {
-        setView("settings");
-      } else if (urlView === "freight") {
-        setView("freight");
-      } else if (urlView === "passenger") {
-        setView("passenger");
-      } else if (urlView === "search") {
-        setView("search");
-      } else {
+        return;
+      }
+
+      // Landing on home drops the working world, the way goHome does; the other
+      // tools do not read it, so they are a plain view swap.
+      if (urlView === "home") {
         setName("");
         setUwp("");
         setZoneInput(ZONES.GREEN as ZoneCode);
-        setView("home");
       }
+      setView(urlView);
     };
 
     window.addEventListener("popstate", handlePopState);
@@ -251,6 +232,17 @@ export default function App() {
     return (
       <SearchView
         {...commonProps}
+        onSelectWorld={loadWorldFromSearch}
+      />
+    );
+  }
+
+  if (view === "nearby") {
+    return (
+      <NearbyView
+        {...commonProps}
+        recentPlanets={recentPlanets}
+        savePlanet={savePlanet}
         onSelectWorld={loadWorldFromSearch}
       />
     );

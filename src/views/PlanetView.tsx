@@ -18,8 +18,9 @@ import {
   getTechLevelKey
 } from "../constants/gameRules";
 import { requiresWarning } from "../utils/i18n-helpers";
+import { jumpMapUrl } from "../utils/jumpMapImage";
 
-type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent";
+type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent" | "nearby";
 
 interface ParsedUWP {
   sp: StarportClass;
@@ -143,7 +144,9 @@ export const PlanetView: FC<PlanetViewProps> = ({
         {/* Location / jump map */}
         {world && (() => {
           const hex = `${String(world.hexX).padStart(2, "0")}${String(world.hexY).padStart(2, "0")}`;
-          const jumpMapUrl = `https://travellermap.com/api/jumpmap?sector=${encodeURIComponent(world.sector)}&hex=${hex}&jump=4&scale=48&style=print`;
+          const mapSrc = jumpMapUrl({
+            sector: world.sector, hex, jump: 4, scale: 48, style: "print",
+          });
           const travellerMapUrl = `https://travellermap.com/?sector=${encodeURIComponent(world.sector)}&hex=${hex}`;
           return (
             <section
@@ -210,7 +213,7 @@ export const PlanetView: FC<PlanetViewProps> = ({
                 <span>{t("hexLabel")}: <strong style={{ color: theme.text, fontWeight: 500, fontFamily: "monospace", letterSpacing: 1 }}>{hex}</strong></span>
               </div>
               <img
-                src={jumpMapUrl}
+                src={mapSrc}
                 alt={t("jumpMapAlt")}
                 loading="lazy"
                 className="jumpmap-image"

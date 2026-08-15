@@ -20,6 +20,7 @@ import { Section } from "../components/ui/Section";
 import { Button } from "../components/ui/Button";
 import { JumpCountField, distributeJumps } from "../components/ui/JumpsEditor";
 import { WorldPicker } from "../components/ui/WorldPicker";
+import { Field } from "../components/ui/Field";
 import { PageHeader } from "../components/ui/PageHeader";
 import { PassengerBanner } from "../components/banners";
 import { IconUsers, IconRefresh } from "../components/icons";
@@ -41,7 +42,7 @@ import { usePersistentState } from "../hooks/usePersistentState";
 import { calculatePassengers } from "../utils/passenger";
 import { planetToPassengerWorld } from "../utils/planetToWorldInputs";
 
-type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent";
+type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent" | "nearby";
 
 interface PassengerViewProps {
   theme: Theme;
@@ -276,13 +277,6 @@ export const PassengerView: FC<PassengerViewProps> = ({
     fontFamily: "inherit",
   } as const;
 
-  const labelStyle = {
-    display: "block",
-    fontSize: 12,
-    color: theme.textDimmed,
-    marginBottom: 4,
-    fontWeight: 500,
-  } as const;
 
   const fieldGridStyle = {
     display: "grid",
@@ -312,45 +306,50 @@ export const PassengerView: FC<PassengerViewProps> = ({
           onPick={planet => applyPlanet(planet, setWorldRaw, setLinkUwp)}
           onClear={() => setLinkUwp(null)}
           savePlanet={savePlanet}
-          labelStyle={labelStyle}
         />
         <div style={fieldGridStyle}>
-          <div>
-            <label style={labelStyle}>{t("passengerPopulation")}</label>
-            <select
-              style={inputStyle}
-              value={world.population}
-              onChange={e => handleManual({ ...world, population: e.target.value as PassengerPopTier })}
-            >
-              {PASSENGER_POP_OPTIONS.map(p => (
-                <option key={p} value={p}>{t(popKey(p))}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label style={labelStyle}>{t("passengerStarport")}</label>
-            <select
-              style={inputStyle}
-              value={world.starport}
-              onChange={e => handleManual({ ...world, starport: e.target.value as PassengerStarport })}
-            >
-              {PASSENGER_STARPORT_OPTIONS.map(s => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label style={labelStyle}>{t("passengerZone")}</label>
-            <select
-              style={inputStyle}
-              value={world.zone}
-              onChange={e => handleManual({ ...world, zone: e.target.value as PassengerZoneTier })}
-            >
-              {PASSENGER_ZONE_OPTIONS.map(z => (
-                <option key={z} value={z}>{t(zoneKey(z))}</option>
-              ))}
-            </select>
-          </div>
+          <Field label={t("passengerPopulation")} theme={theme}>
+            {id => (
+              <select
+                id={id}
+                style={inputStyle}
+                value={world.population}
+                onChange={e => handleManual({ ...world, population: e.target.value as PassengerPopTier })}
+              >
+                {PASSENGER_POP_OPTIONS.map(p => (
+                  <option key={p} value={p}>{t(popKey(p))}</option>
+                ))}
+              </select>
+            )}
+          </Field>
+          <Field label={t("passengerStarport")} theme={theme}>
+            {id => (
+              <select
+                id={id}
+                style={inputStyle}
+                value={world.starport}
+                onChange={e => handleManual({ ...world, starport: e.target.value as PassengerStarport })}
+              >
+                {PASSENGER_STARPORT_OPTIONS.map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            )}
+          </Field>
+          <Field label={t("passengerZone")} theme={theme}>
+            {id => (
+              <select
+                id={id}
+                style={inputStyle}
+                value={world.zone}
+                onChange={e => handleManual({ ...world, zone: e.target.value as PassengerZoneTier })}
+              >
+                {PASSENGER_ZONE_OPTIONS.map(z => (
+                  <option key={z} value={z}>{t(zoneKey(z))}</option>
+                ))}
+              </select>
+            )}
+          </Field>
         </div>
       </Section>
     );
@@ -464,18 +463,20 @@ export const PassengerView: FC<PassengerViewProps> = ({
 
         <Section title={t("passengerRouteSection")} color={SECTION_COLORS.size} theme={theme}>
           <div style={fieldGridStyle}>
-            <div>
-              <label style={labelStyle}>{t("passengerParsecs")}</label>
-              <select
-                style={inputStyle}
-                value={parsecs}
-                onChange={e => setParsecs(parseInt(e.target.value, 10) as ParsecDistance)}
-              >
-                {PARSEC_OPTIONS.map(p => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
-              </select>
-            </div>
+            <Field label={t("passengerParsecs")} theme={theme}>
+              {id => (
+                <select
+                  id={id}
+                  style={inputStyle}
+                  value={parsecs}
+                  onChange={e => setParsecs(parseInt(e.target.value, 10) as ParsecDistance)}
+                >
+                  {PARSEC_OPTIONS.map(p => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+              )}
+            </Field>
             <JumpCountField
               parsecs={parsecs}
               jumpCount={jumpCount}
@@ -560,38 +561,46 @@ export const PassengerView: FC<PassengerViewProps> = ({
 
         <Section title={t("passengerSkillsSection")} color={SECTION_COLORS.atmosphere} theme={theme}>
           <div style={fieldGridStyle}>
-            <div>
-              <label style={labelStyle}>{t("passengerBrokerEffect")}</label>
-              <input
-                type="number"
-                min={BROKER_EFFECT_MIN}
-                max={BROKER_EFFECT_MAX}
-                style={inputStyle}
-                value={brokerEffect}
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  setBrokerEffect(parseClampedInt(e.target.value, BROKER_EFFECT_MIN, BROKER_EFFECT_MAX, 0))
-                }
-              />
-              <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 4 }}>
-                {t("passengerBrokerNote")}
-              </div>
-            </div>
-            <div>
-              <label style={labelStyle}>{t("passengerStewardSkill")}</label>
-              <input
-                type="number"
-                min={STEWARD_SKILL_MIN}
-                max={STEWARD_SKILL_MAX}
-                style={inputStyle}
-                value={stewardSkill}
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  setStewardSkill(parseClampedInt(e.target.value, STEWARD_SKILL_MIN, STEWARD_SKILL_MAX, 0))
-                }
-              />
-              <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 4 }}>
-                {t("passengerStewardNote")}
-              </div>
-            </div>
+            <Field label={t("passengerBrokerEffect")} theme={theme}>
+              {id => (
+                <>
+                  <input
+                    id={id}
+                    type="number"
+                    min={BROKER_EFFECT_MIN}
+                    max={BROKER_EFFECT_MAX}
+                    style={inputStyle}
+                    value={brokerEffect}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      setBrokerEffect(parseClampedInt(e.target.value, BROKER_EFFECT_MIN, BROKER_EFFECT_MAX, 0))
+                    }
+                  />
+                  <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 4 }}>
+                    {t("passengerBrokerNote")}
+                  </div>
+                </>
+              )}
+            </Field>
+            <Field label={t("passengerStewardSkill")} theme={theme}>
+              {id => (
+                <>
+                  <input
+                    id={id}
+                    type="number"
+                    min={STEWARD_SKILL_MIN}
+                    max={STEWARD_SKILL_MAX}
+                    style={inputStyle}
+                    value={stewardSkill}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      setStewardSkill(parseClampedInt(e.target.value, STEWARD_SKILL_MIN, STEWARD_SKILL_MAX, 0))
+                    }
+                  />
+                  <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 4 }}>
+                    {t("passengerStewardNote")}
+                  </div>
+                </>
+              )}
+            </Field>
           </div>
         </Section>
         </div>
@@ -629,25 +638,33 @@ export const PassengerView: FC<PassengerViewProps> = ({
             {PASSENGER_CLASS_OPTIONS.map(cls => {
               const liveDM = liveResult.classes[cls].dm;
               return (
-                <div key={cls}>
-                  <label style={labelStyle}>
-                    {t(classRollKey(cls))}
-                    <span style={{ color: classColor(cls), marginLeft: 6, fontWeight: 500, fontFamily: "monospace" }}>
-                      (DM {formatSigned(liveDM)})
-                    </span>
-                  </label>
-                  <input
-                    type="number"
-                    min={2}
-                    max={12}
-                    placeholder={t("passengerRollPlaceholder")}
-                    style={inputStyle}
-                    value={rolls[cls]}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                      setRolls({ ...rolls, [cls]: e.target.value })
-                    }
-                  />
-                </div>
+                <Field
+                  key={cls}
+                  theme={theme}
+                  label={
+                    <>
+                      {t(classRollKey(cls))}
+                      <span style={{ color: classColor(cls), marginLeft: 6, fontWeight: 500, fontFamily: "monospace" }}>
+                        (DM {formatSigned(liveDM)})
+                      </span>
+                    </>
+                  }
+                >
+                  {id => (
+                    <input
+                      id={id}
+                      type="number"
+                      min={2}
+                      max={12}
+                      placeholder={t("passengerRollPlaceholder")}
+                      style={inputStyle}
+                      value={rolls[cls]}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        setRolls({ ...rolls, [cls]: e.target.value })
+                      }
+                    />
+                  )}
+                </Field>
               );
             })}
           </div>

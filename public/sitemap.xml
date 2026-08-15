@@ -21,6 +21,22 @@
     <priority>0.9</priority>
   </url>
 
+  <!-- Visited Worlds tool (locally stored world history) -->
+  <url>
+    <loc>https://pgarriga.github.io/traveller-toolkit/recent</loc>
+    <lastmod>2026-08-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Worlds Near Me tool (jump range + UWP filters) -->
+  <url>
+    <loc>https://pgarriga.github.io/traveller-toolkit/nearby</loc>
+    <lastmod>2026-08-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
   <!-- Freight Calculator tool -->
   <url>
     <loc>https://pgarriga.github.io/traveller-toolkit/freight</loc>

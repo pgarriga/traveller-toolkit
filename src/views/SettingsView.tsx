@@ -7,7 +7,7 @@ import { Button } from "../components/ui/Button";
 import { PageHeader } from "../components/ui/PageHeader";
 import { IconSettings } from "../components/icons";
 
-type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent";
+type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent" | "nearby";
 
 interface SettingsViewProps {
   theme: Theme;

@@ -5,6 +5,7 @@
 Traveller Toolkit - A multi-tool web app for the Mongoose Traveller 2nd Edition tabletop RPG. The home page lists the available tools and the user navigates between them. Current tools:
 - **Search World** — searches official Traveller worlds by name via the [Traveller Map](https://travellermap.com) API (`/api/search`). Selecting a result jumps to World Detail and auto-saves the world to Visited Worlds.
 - **Visited Worlds** — standalone tool at `/recent` listing the worlds you've visited (persisted in `localStorage`). Sortable dropdown, Edit/Done toggle for per-card deletion, colored tags per UWP attribute.
+- **Worlds Near Me** — standalone tool at `/nearby`. Pick the world you are on, describe your ship (jump rating, fuel range, fuel it accepts), set UWP filters (max distance, minimum starport, TL, population, travel zones) and get the matching worlds, sorted by number of jumps (parsec distance and name break ties, unreachable worlds last). Each result also shows the minimum number of jumps to reach it along a route where the ship never runs out of fuel. `jumpsFromOrigin` searches over `(world, fuel left)` states, not just worlds, so a ship with tankage for several jumps can cross a system with no fuel in it. The `FuelPolicy` (`refined` = starports A/B, `unrefined` = also C/D, `wilderness` = also gas giants and oceans) decides where the ship will refuel; a world it cannot refuel at is still crossed when the fuel range allows. Data comes from the Traveller Map `/api/jumpworlds` endpoint. Below the results table sits a **jump map**: the official `/api/jumpmap` PNG with an SVG ring overlaid on each world that passed the filters (see `utils/jumpMapImage.ts`).
 - **Passenger Traffic** — rolls High / Middle / Basic / Low passenger availability with the Mongoose 2e DMs and computes income.
 - **Freight Calculator** — computes traffic DMs, rolls lots, and lets the player pick which lots to buy up to their cargo bay capacity. Includes an integrated Mail Run block.
 
@@ -47,18 +48,23 @@ src/
 │   ├── i18n.ts               # Language, LangMode, TranslationFunction, TranslationKey
 │   ├── game-data.ts          # StarportData, SizeData, AtmosphereData, etc.
 │   ├── freight.ts            # FreightInputs, FreightResult, LotResult, LotType, etc.
-│   ├── components.ts         # Component props interfaces
-│   └── index.ts              # Re-exports all types
+│   ├── nearby.ts             # NearbyWorld, NearbyFilters, NearbyUwpFacts, ShipProfile, FuelPolicy
+│   ├── mail.ts               # MailInputs, MailResult, MailRank (Mail Run)
+│   └── passenger.ts          # PassengerInputs, PassengerResult, PassengerClass
 ├── components/
 │   ├── icons/
-│   │   └── index.tsx         # SVG icon components (IconSearch, IconPin, IconBox, IconClock, IconUsers, IconMail, IconSettings, IconTrash, IconRefresh, IconMenu, IconClose)
+│   │   └── index.tsx         # SVG icon components (IconSearch, IconPin, IconBox, IconClock, IconUsers, IconMail, IconSettings, IconTrash, IconRefresh, IconRadar, IconMenu, IconClose)
+│   ├── banners/
+│   │   └── index.tsx         # Decorative per-tool SVG headers (SearchBanner, RecentBanner, NearbyBanner, PassengerBanner, FreightBanner)
 │   ├── ui/
 │   │   ├── Button.tsx        # Reusable button with variants
 │   │   ├── Section.tsx       # Card section with colored border
 │   │   ├── Row.tsx           # Label-value row for data display
-│   │   ├── Badge.tsx         # Colored badge/tag
+│   │   ├── Field.tsx         # Labelled form control (useId → label htmlFor) + fieldLabelStyle
 │   │   ├── PageHeader.tsx    # Shared centered gradient h1 + optional icon
+│   │   ├── JumpsEditor.tsx   # JumpCountField + JumpsBreakdown + distributeJumps (Freight/Passenger)
 │   │   └── WorldPicker.tsx   # Visited-worlds dropdown + inline Traveller Map search
+│   ├── NearbyJumpMap.tsx     # Traveller Map jump-map image + filter-match ring overlay
 │   ├── Navbar.tsx            # Navigation bar (desktop + mobile, with a11y)
 │   ├── Footer.tsx            # Disclaimer footer
 │   └── ErrorBoundary.tsx     # Error boundary with fallback UI
@@ -66,6 +72,7 @@ src/
 │   ├── HomeView.tsx          # Tools list (cards) — landing page at "/"
 │   ├── SearchView.tsx        # World search (Traveller Map) — "/search"
 │   ├── RecentWorldsView.tsx  # Visited Worlds tool (sort + edit mode) — "/recent"
+│   ├── NearbyView.tsx        # Worlds Near Me (jumpworlds + UWP filters) — "/nearby"
 │   ├── PlanetView.tsx        # World detail view — "/planet/{UWP}"
 │   ├── FreightView.tsx       # Freight calculator (+ Mail Run) — "/freight"
 │   ├── PassengerView.tsx     # Passenger traffic calculator — "/passengers"
@@ -76,8 +83,11 @@ src/
 │   ├── gameRules.ts          # SIZE_RULES, ATMO_RULES, LAW_RULES, etc.
 │   ├── freight.ts            # POPULATION_DM, STARPORT_DM, TONS_PER_LOT_DIE, lotsFromTraffic, etc.
 │   ├── mail.ts               # Mail Run constants (rank/soc DMs, container size, etc.)
+│   ├── nearby.ts             # Distance/starport/TL/population filter options, jump + fuel + policy options, DEFAULT_FILTERS, DEFAULT_SHIP
+│   ├── storage.ts            # STORAGE_KEYS for every localStorage key + isFiniteNumber guard
 │   └── passenger.ts          # Passenger DMs, class prices, options
 ├── hooks/
+│   ├── usePersistentState.ts # Generic localStorage-backed state (needs a type guard)
 │   ├── useThemeMode.ts       # Theme management with localStorage
 │   └── useRecentPlanets.ts   # CRUD for recent planets (MAX_RECENT_PLANETS inlined)
 ├── utils/
@@ -85,8 +95,10 @@ src/
 │   ├── uwp.ts                # UWP parsing and validation (`parseUwp`)
 │   ├── freight.ts            # calculateFreight (DM breakdown + lot rolling)
 │   ├── mail.ts               # calculateMail (Mail Run)
+│   ├── nearby.ts             # hexDistance, uwpFacts, withDistance, filterWorlds, canRefuel, jumpsFromOrigin
 │   ├── passenger.ts          # calculatePassengers
-│   ├── travellerMap.ts       # searchWorlds() + fetchWorldZone() → Traveller Map API
+│   ├── travellerMap.ts       # searchWorlds() + fetchWorldZone() + fetchJumpWorlds() → Traveller Map API
+│   ├── jumpMapImage.ts       # jumpMapUrl() + jumpMapScale() + projectOnJumpMap() → /api/jumpmap image geometry
 │   ├── planetToWorldInputs.ts # Maps a RecentPlanet to Passenger/Freight world inputs
 │   └── i18n-helpers.ts       # isNoneValue, requiresWarning
 ├── i18n/
@@ -103,10 +115,10 @@ src/
 ## Commands
 
 ```bash
-npm run dev      # Start dev server (usually http://localhost:5173)
-npm run build    # Build for production (outputs to dist/)
-npm run preview  # Preview production build
-npx tsc --noEmit # Type check without emitting files
+npm run dev       # Start dev server (usually http://localhost:5173)
+npm run build     # Build for production (outputs to dist/)
+npm run preview   # Preview production build
+npm run typecheck # Type check without emitting files (tsc --noEmit)
 ```
 
 ## Key Concepts
@@ -121,6 +133,7 @@ A UWP code is 8 characters: `A123456-7`
 - `/` — Home (tools list, `HomeView`)
 - `/search` — World search (`SearchView`)
 - `/recent` — Visited Worlds (`RecentWorldsView`) — its own view, not an alias
+- `/nearby` — Worlds Near Me (`NearbyView`)
 - `/passengers` — Passenger Traffic (`PassengerView`)
 - `/freight` — Freight Calculator + Mail Run (`FreightView`)
 - `/settings` — Settings (`SettingsView`)
@@ -188,6 +201,7 @@ The whole app must look like an extension of the Mongoose Traveller 2026 Core Ru
 
 ### Iconography
 - Current inline SVG icons (`src/components/icons/index.tsx`) follow a flat, single-stroke industrial look — keep that style. New icons must be flat, monochrome, 16×16 default with `aria-hidden="true"` and `marginRight: 6`.
+- **Tool banners** (`src/components/banners/index.tsx`) are decorative SVG headers, one per tool, rendered above `PageHeader`. Every one shares the same contract: `viewBox="0 0 800 120"`, `aria-hidden="true"`, the `CornerFrame` brackets, a `> TOOL NAME` monospace ticker top-left and a status ticker top-right. `COLORS.primary` is the single accent — everything else is `theme.text` / `theme.textMuted` / `theme.textDimmed` / `theme.border` so the banner flips with the theme. A new tool gets a new banner in this file, drawing whatever that tool actually reasons about.
 - If you need an icon that doesn't exist yet, follow the same outline style (Tabler Icons set is the reference family — replicate that visual language; do not import a heavy icon library).
 
 ### When in doubt
@@ -309,6 +323,33 @@ import { SECTION_COLORS } from "../constants/colors";
 </Section>
 ```
 
+### Field (`components/ui/Field.tsx`)
+```tsx
+import { Field, fieldLabelStyle } from "../components/ui/Field";
+
+// EVERY form control gets its caption through Field. It generates an id with
+// useId() and puts it on the <label htmlFor>, so the control has an accessible
+// name and clicking the caption focuses it.
+<Field label={t("freightCargoBay")} theme={theme}>
+  {id => <input id={id} type="number" style={inputStyle} value={cargoBay} onChange={...} />}
+</Field>
+
+// `label` is a ReactNode, so a caption can carry a live badge:
+<Field theme={theme} label={<>{field.label}<span>({n}D6)</span></>}>
+  {id => <input id={id} ... />}
+</Field>
+
+// Inside a .map(), pass key to the Field — useId keeps each id unique:
+{OPTIONS.map(o => <Field key={o} label={o} theme={theme}>{id => ...}</Field>)}
+
+// fieldLabelStyle(theme) is for captions that head something that is NOT a
+// single labelable control — a button that opens a dialog, a checkbox group.
+// Those use a <span> plus aria-describedby / aria-label, never a bare <label>.
+```
+
+A `<label>` is only correct without Field when it *wraps* its control, which is
+how the checkbox rows are written (`<label><input type="checkbox" /><span>…</span></label>`).
+
 ### PageHeader (`components/ui/PageHeader.tsx`)
 ```tsx
 import { PageHeader } from "../components/ui/PageHeader";
@@ -325,17 +366,21 @@ import { IconSearch } from "../components/icons";
 import { COLORS, SECTION_COLORS, THEMES } from "../constants/colors";
 
 // NEVER hardcode colors like "#3b82f6" - use constants:
-COLORS.primary    // #3b82f6
-COLORS.secondary  // #8b5cf6
-COLORS.warning    // #f59e0b
-COLORS.danger     // #ef4444
-COLORS.success    // #10b981
+COLORS.primary    // #D4521C — Traveller orange
+COLORS.secondary  // #A03B14 — rust
+COLORS.warning    // #E8A23C — industrial amber
+COLORS.danger     // #B43F1C — deep red-rust
+COLORS.success    // #6B8E3D — muted olive
+COLORS.info       // #4A6B7D — steel blue
+COLORS.pink       // #C66E4E — terracotta
+COLORS.indigo     // #3D4E6B — midnight
+COLORS.rose       // #8C4F3B — brick
 
 // Section colors for UWP data
-SECTION_COLORS.starport     // warning
-SECTION_COLORS.size         // primary
+SECTION_COLORS.starport     // primary
+SECTION_COLORS.size         // info
 SECTION_COLORS.atmosphere   // success
-SECTION_COLORS.population   // secondary
+SECTION_COLORS.population   // pink
 ```
 
 ### Zones (`constants/zones.ts`)
@@ -365,11 +410,13 @@ import {
 //   IconPin     → Visited Worlds (home card, recent view header, navbar entry)
 //   IconBox     → Freight Calculator (home card, freight header, navbar entry, calculate button)
 //   IconUsers   → Passenger Traffic (home card, passenger header, navbar entry)
-//   IconMail    → Mail Run section inside FreightView
 //   IconSettings→ Settings (navbar entry, settings view header)
 //   IconTrash   → Delete-world action inside RecentWorldsView edit mode
+//   IconRadar   → Worlds Near Me (home card, nearby view header, navbar entry, search button)
 //   IconRefresh → "New search" reset button at the bottom of FreightView and PassengerView
 //   IconClock   → Currently unused in the UI; kept exported for future use
+//   IconMail    → Currently unused: `Section` takes a plain string title, so the
+//                 Mail Run block inside FreightView carries no icon
 ```
 
 ### Game Rules (`constants/gameRules.ts`)
@@ -410,6 +457,32 @@ import { searchWorlds, type WorldSearchResult } from "../utils/travellerMap";
 // Hex is formatted as HexX+HexY zero-padded to 2 digits each ("1910").
 const results: WorldSearchResult[] = await searchWorlds("Regi", abortSignal);
 ```
+
+### Jump Map Images (`utils/jumpMapImage.ts`)
+```tsx
+import { jumpMapUrl, jumpMapScale, projectOnJumpMap } from "../utils/jumpMapImage";
+
+// Builds https://travellermap.com/api/jumpmap URLs. Used by PlanetView (plain
+// image) and NearbyJumpMap (image + marker overlay). NEVER hand-build this URL.
+const src = jumpMapUrl({ sector, hex, jump: 4, scale: 48, style: "print" });
+
+// Pixels per parsec for a given radius. The endpoint takes a hex size, not an
+// image size, so this inverts its output-size behaviour to keep every radius
+// near 1000 px wide — and below ~1200x1330, past which the server answers
+// `500 Failed to allocate bitmap`.
+const scale = jumpMapScale(radius);
+
+// Which pixel of the returned image a world falls on, so markers can be drawn
+// over it. Pass the image's *measured* naturalWidth/naturalHeight, not a
+// predicted size. Origin-relative, so the map's absolute translation drops out.
+const { x, y } = projectOnJumpMap(world, origin, scale, width, height);
+```
+
+The projection was recovered from the SVG rendering of the same URL and verified
+against `/api/jumpworlds` across jumps 1–12, scales 24–200, even/odd origin
+columns and sector-crossing maps — every world within half a pixel. It is *not*
+a documented contract; if Traveller Map changes its renderer the markers drift,
+so keep the derivation comment in that file intact.
 
 ### Custom Hooks (`hooks/`)
 ```tsx
@@ -459,10 +532,9 @@ import type {
   LotResult, LotType, ParsecDistance, PopulationTier,
   TechLevelTier, FreightStarport, FreightZoneTier,
 } from "../types/freight";
-
-// Or import everything from index
-import type { Theme, ParsedUWP, Language } from "../types";
 ```
+
+There is no `types/index.ts` barrel — always import from the specific module.
 
 ### Freight Constants & Utils
 ```tsx
@@ -491,12 +563,13 @@ import { calculateFreight } from "../utils/freight";
 5. **NO duplicate Navbar props** - Pass via `commonProps` spread in App.tsx (must include `goHome`)
 6. **NO hardcoded game thresholds** - Use `SIZE_RULES`, `LAW_RULES`, etc.
 7. **NO multi-language string comparisons** - Use `requiresWarning(value, t)`
-8. **NO ad-hoc Traveller Map calls** - Use `searchWorlds()` from `utils/travellerMap.ts` (handles URL, `AbortController`, and Sector/Subsector filtering)
+8. **NO ad-hoc Traveller Map calls** - Use `searchWorlds()` from `utils/travellerMap.ts` (handles URL, `AbortController`, and Sector/Subsector filtering), and `jumpMapUrl()` from `utils/jumpMapImage.ts` for `/api/jumpmap` image URLs
 9. **NO duplicating theme/localStorage logic** - Use `useThemeMode` and `useRecentPlanets` hooks
 10. **NO missing ErrorBoundary** - App must be wrapped in ErrorBoundary in main.tsx
 11. **NO ad-hoc page titles** - Use `<PageHeader title=... icon=... />` so every page shares the same gradient h1 (PlanetView is the only exception — it has an editable name input header)
 12. **NO hardcoded freight tables** - Use `TONS_PER_LOT_DIE`, `POPULATION_DM`, `lotsFromTraffic`, etc. from `constants/freight.ts`
 13. **NO live re-rolling of dice during render** - The freight lot d6 are rolled once inside `handleCalculate` on button click; do not call `Math.random` inside `useMemo` or render
+14. **NO `<label>` next to its control** - A `<label>` that neither wraps its control nor carries `htmlFor` leaves the control with no accessible name. Use `<Field>`; wrap the control only for checkboxes
 
 ### TypeScript-Specific
 11. **NO `.js` or `.jsx` files** - ALL code must be TypeScript (`.ts` or `.tsx`)
@@ -513,9 +586,12 @@ import { calculateFreight } from "../utils/freight";
 
 ### After ANY code changes:
 ```bash
-npx tsc --noEmit   # Type check - MUST pass with no errors
+npm run typecheck  # Type check - MUST pass with no errors
 npm run build      # Build check - MUST succeed
 ```
+
+`vite build` does not type-check, so the build succeeding proves nothing about
+types — both commands have to run. CI runs the same pair before deploying.
 
 ### After UI changes:
 - `/check-responsive` - Verify responsive design works on all screen sizes

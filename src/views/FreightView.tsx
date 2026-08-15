@@ -22,9 +22,10 @@ import { Section } from "../components/ui/Section";
 import { Button } from "../components/ui/Button";
 import { JumpCountField, JumpsBreakdown, distributeJumps } from "../components/ui/JumpsEditor";
 import { WorldPicker } from "../components/ui/WorldPicker";
+import { Field } from "../components/ui/Field";
 import { PageHeader } from "../components/ui/PageHeader";
 import { FreightBanner } from "../components/banners";
-import { IconBox, IconMail, IconRefresh } from "../components/icons";
+import { IconBox, IconRefresh } from "../components/icons";
 import { COLORS, SECTION_COLORS } from "../constants/colors";
 import {
   FREIGHT_RATES_PER_TON,
@@ -50,7 +51,7 @@ import { calculateFreight } from "../utils/freight";
 import { calculateMail } from "../utils/mail";
 import { planetToFreightWorld } from "../utils/planetToWorldInputs";
 
-type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent";
+type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent" | "nearby";
 
 interface FreightViewProps {
   theme: Theme;
@@ -323,13 +324,6 @@ export const FreightView: FC<FreightViewProps> = ({
     fontFamily: "inherit",
   } as const;
 
-  const labelStyle = {
-    display: "block",
-    fontSize: 12,
-    color: theme.textDimmed,
-    marginBottom: 4,
-    fontWeight: 500,
-  } as const;
 
   const fieldGridStyle = {
     display: "grid",
@@ -359,57 +353,64 @@ export const FreightView: FC<FreightViewProps> = ({
           onPick={planet => applyPlanet(planet, setWorldRaw, setLinkUwp)}
           onClear={() => setLinkUwp(null)}
           savePlanet={savePlanet}
-          labelStyle={labelStyle}
         />
         <div style={fieldGridStyle}>
-          <div>
-            <label style={labelStyle}>{t("freightPopulation")}</label>
-            <select
-              style={inputStyle}
-              value={world.population}
-              onChange={e => handleManual({ ...world, population: e.target.value as PopulationTier })}
-            >
-              {POPULATION_OPTIONS.map(p => (
-                <option key={p} value={p}>{t(populationKey(p))}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label style={labelStyle}>{t("freightStarport")}</label>
-            <select
-              style={inputStyle}
-              value={world.starport}
-              onChange={e => handleManual({ ...world, starport: e.target.value as FreightStarport })}
-            >
-              {STARPORT_OPTIONS.map(s => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label style={labelStyle}>{t("freightTL")}</label>
-            <select
-              style={inputStyle}
-              value={world.techLevel}
-              onChange={e => handleManual({ ...world, techLevel: e.target.value as TechLevelTier })}
-            >
-              {TECH_LEVEL_OPTIONS.map(tl => (
-                <option key={tl} value={tl}>{t(tlKey(tl))}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label style={labelStyle}>{t("freightZone")}</label>
-            <select
-              style={inputStyle}
-              value={world.zone}
-              onChange={e => handleManual({ ...world, zone: e.target.value as FreightZoneTier })}
-            >
-              {ZONE_OPTIONS.map(z => (
-                <option key={z} value={z}>{t(zoneKey(z))}</option>
-              ))}
-            </select>
-          </div>
+          <Field label={t("freightPopulation")} theme={theme}>
+            {id => (
+              <select
+                id={id}
+                style={inputStyle}
+                value={world.population}
+                onChange={e => handleManual({ ...world, population: e.target.value as PopulationTier })}
+              >
+                {POPULATION_OPTIONS.map(p => (
+                  <option key={p} value={p}>{t(populationKey(p))}</option>
+                ))}
+              </select>
+            )}
+          </Field>
+          <Field label={t("freightStarport")} theme={theme}>
+            {id => (
+              <select
+                id={id}
+                style={inputStyle}
+                value={world.starport}
+                onChange={e => handleManual({ ...world, starport: e.target.value as FreightStarport })}
+              >
+                {STARPORT_OPTIONS.map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            )}
+          </Field>
+          <Field label={t("freightTL")} theme={theme}>
+            {id => (
+              <select
+                id={id}
+                style={inputStyle}
+                value={world.techLevel}
+                onChange={e => handleManual({ ...world, techLevel: e.target.value as TechLevelTier })}
+              >
+                {TECH_LEVEL_OPTIONS.map(tl => (
+                  <option key={tl} value={tl}>{t(tlKey(tl))}</option>
+                ))}
+              </select>
+            )}
+          </Field>
+          <Field label={t("freightZone")} theme={theme}>
+            {id => (
+              <select
+                id={id}
+                style={inputStyle}
+                value={world.zone}
+                onChange={e => handleManual({ ...world, zone: e.target.value as FreightZoneTier })}
+              >
+                {ZONE_OPTIONS.map(z => (
+                  <option key={z} value={z}>{t(zoneKey(z))}</option>
+                ))}
+              </select>
+            )}
+          </Field>
         </div>
       </Section>
     );
@@ -517,18 +518,20 @@ export const FreightView: FC<FreightViewProps> = ({
 
         <Section title={t("freightRouteSection")} color={SECTION_COLORS.size} theme={theme}>
           <div style={fieldGridStyle}>
-            <div>
-              <label style={labelStyle}>{t("freightParsecs")}</label>
-              <select
-                style={inputStyle}
-                value={parsecs}
-                onChange={e => setParsecs(parseInt(e.target.value, 10) as ParsecDistance)}
-              >
-                {PARSEC_OPTIONS.map(p => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
-              </select>
-            </div>
+            <Field label={t("freightParsecs")} theme={theme}>
+              {id => (
+                <select
+                  id={id}
+                  style={inputStyle}
+                  value={parsecs}
+                  onChange={e => setParsecs(parseInt(e.target.value, 10) as ParsecDistance)}
+                >
+                  {PARSEC_OPTIONS.map(p => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+              )}
+            </Field>
             <JumpCountField
               parsecs={parsecs}
               jumpCount={jumpCount}
@@ -536,16 +539,18 @@ export const FreightView: FC<FreightViewProps> = ({
               theme={theme}
               t={t}
             />
-            <div>
-              <label style={labelStyle}>{t("freightCargoBay")}</label>
-              <input
-                type="number"
-                min={0}
-                style={inputStyle}
-                value={cargoBay}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setCargoBay(Math.max(0, parseInt(e.target.value, 10) || 0))}
-              />
-            </div>
+            <Field label={t("freightCargoBay")} theme={theme}>
+              {id => (
+                <input
+                  id={id}
+                  type="number"
+                  min={0}
+                  style={inputStyle}
+                  value={cargoBay}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setCargoBay(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                />
+              )}
+            </Field>
           </div>
           <JumpsBreakdown
             parsecs={parsecs}
@@ -559,21 +564,25 @@ export const FreightView: FC<FreightViewProps> = ({
         </Section>
 
         <Section title={t("freightSkillsSection")} color={SECTION_COLORS.atmosphere} theme={theme}>
-          <div>
-            <label style={labelStyle}>{t("freightSkillEffect")}</label>
-            <input
-              type="number"
-              style={inputStyle}
-              value={skillEffect}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                const n = parseInt(e.target.value, 10);
-                setSkillEffect(Number.isNaN(n) ? 0 : n);
-              }}
-            />
-            <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 4 }}>
-              {t("freightSkillNote")}
-            </div>
-          </div>
+          <Field label={t("freightSkillEffect")} theme={theme}>
+            {id => (
+              <>
+                <input
+                  id={id}
+                  type="number"
+                  style={inputStyle}
+                  value={skillEffect}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                    const n = parseInt(e.target.value, 10);
+                    setSkillEffect(Number.isNaN(n) ? 0 : n);
+                  }}
+                />
+                <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 4 }}>
+                  {t("freightSkillNote")}
+                </div>
+              </>
+            )}
+          </Field>
         </Section>
         </div>
 
@@ -613,25 +622,33 @@ export const FreightView: FC<FreightViewProps> = ({
               { type: "minor" as const, label: t("freightRollMinor"), expected: liveResult.lots.minor.lots, rollValue: rollMinorRaw, setRoll: setRollMinorRaw },
               { type: "incidental" as const, label: t("freightRollIncidental"), expected: liveResult.lots.incidental.lots, rollValue: rollIncidentalRaw, setRoll: setRollIncidentalRaw },
             ].map(field => (
-              <div key={field.type}>
-                <label style={labelStyle}>
-                  {field.label}
-                  {field.expected !== null && (
-                    <span style={{ color: COLORS.primary, marginLeft: 6, fontWeight: 500 }}>
-                      ({field.expected}D6)
-                    </span>
-                  )}
-                </label>
-                <input
-                  type="number"
-                  min={2}
-                  max={12}
-                  placeholder={t("freightRollPlaceholder")}
-                  style={inputStyle}
-                  value={field.rollValue}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => field.setRoll(e.target.value)}
-                />
-              </div>
+              <Field
+                key={field.type}
+                theme={theme}
+                label={
+                  <>
+                    {field.label}
+                    {field.expected !== null && (
+                      <span style={{ color: COLORS.primary, marginLeft: 6, fontWeight: 500 }}>
+                        ({field.expected}D6)
+                      </span>
+                    )}
+                  </>
+                }
+              >
+                {id => (
+                  <input
+                    id={id}
+                    type="number"
+                    min={2}
+                    max={12}
+                    placeholder={t("freightRollPlaceholder")}
+                    style={inputStyle}
+                    value={field.rollValue}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => field.setRoll(e.target.value)}
+                  />
+                )}
+              </Field>
             ))}
           </div>
           <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 8 }}>
@@ -658,47 +675,55 @@ export const FreightView: FC<FreightViewProps> = ({
             {t("mailSectionIntro")}
           </div>
           <div style={fieldGridStyle}>
-            <div>
-              <label style={labelStyle}>{t("mailRank")}</label>
-              <select
-                style={inputStyle}
-                value={mailExtras.rankId}
-                onChange={(e: ChangeEvent<HTMLSelectElement>) => {
-                  const picked = findMailRank(e.target.value);
-                  setMailExtras({
-                    ...mailExtras,
-                    rankId: picked ? picked.id : MAIL_RANK_NONE_ID,
-                    rank: picked ? picked.rank : 0,
-                  });
-                }}
-              >
-                <option value={MAIL_RANK_NONE_ID}>{t("mailRankNone")}</option>
-                {MAIL_RANK_GROUPS.map(group => (
-                  <optgroup key={group.service} label={t(group.labelKey)}>
-                    {group.options.map(o => (
-                      <option key={o.id} value={o.id}>
-                        {o.titleKey ? `${o.rank} · ${t(o.titleKey)}` : `${o.rank} · ${t("freightDash")}`}
-                      </option>
+            <Field label={t("mailRank")} theme={theme}>
+              {id => (
+                <>
+                  <select
+                    id={id}
+                    style={inputStyle}
+                    value={mailExtras.rankId}
+                    onChange={(e: ChangeEvent<HTMLSelectElement>) => {
+                      const picked = findMailRank(e.target.value);
+                      setMailExtras({
+                        ...mailExtras,
+                        rankId: picked ? picked.id : MAIL_RANK_NONE_ID,
+                        rank: picked ? picked.rank : 0,
+                      });
+                    }}
+                  >
+                    <option value={MAIL_RANK_NONE_ID}>{t("mailRankNone")}</option>
+                    {MAIL_RANK_GROUPS.map(group => (
+                      <optgroup key={group.service} label={t(group.labelKey)}>
+                        {group.options.map(o => (
+                          <option key={o.id} value={o.id}>
+                            {o.titleKey ? `${o.rank} · ${t(o.titleKey)}` : `${o.rank} · ${t("freightDash")}`}
+                          </option>
+                        ))}
+                      </optgroup>
                     ))}
-                  </optgroup>
-                ))}
-              </select>
-              <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 4 }}>{t("mailRankHint")}</div>
-            </div>
-            <div>
-              <label style={labelStyle}>{t("mailSoc")}</label>
-              <input
-                type="number"
-                min={MAIL_SOC_DM_MIN}
-                max={MAIL_SOC_DM_MAX}
-                style={inputStyle}
-                value={mailExtras.socDM}
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  setMailExtras({ ...mailExtras, socDM: parseClampedInt(e.target.value, MAIL_SOC_DM_MIN, MAIL_SOC_DM_MAX, 0) })
-                }
-              />
-              <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 4 }}>{t("mailSocHint")}</div>
-            </div>
+                  </select>
+                  <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 4 }}>{t("mailRankHint")}</div>
+                </>
+              )}
+            </Field>
+            <Field label={t("mailSoc")} theme={theme}>
+              {id => (
+                <>
+                  <input
+                    id={id}
+                    type="number"
+                    min={MAIL_SOC_DM_MIN}
+                    max={MAIL_SOC_DM_MAX}
+                    style={inputStyle}
+                    value={mailExtras.socDM}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      setMailExtras({ ...mailExtras, socDM: parseClampedInt(e.target.value, MAIL_SOC_DM_MIN, MAIL_SOC_DM_MAX, 0) })
+                    }
+                  />
+                  <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 4 }}>{t("mailSocHint")}</div>
+                </>
+              )}
+            </Field>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginTop: 14 }}>
             <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
@@ -716,19 +741,23 @@ export const FreightView: FC<FreightViewProps> = ({
               {t("mailLowTLAutoNote")}
             </div>
           )}
-          <div style={{ marginTop: 16 }}>
-            <label style={labelStyle}>{t("mailRollLabel")}</label>
-            <input
-              type="number"
-              min={2}
-              max={12}
-              placeholder={t("freightRollPlaceholder")}
-              style={inputStyle}
-              value={mailRollRaw}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setMailRollRaw(e.target.value)}
-            />
-            <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 4 }}>{t("mailRollHelp")}</div>
-          </div>
+          <Field label={t("mailRollLabel")} theme={theme} style={{ marginTop: 16 }}>
+            {id => (
+              <>
+                <input
+                  id={id}
+                  type="number"
+                  min={2}
+                  max={12}
+                  placeholder={t("freightRollPlaceholder")}
+                  style={inputStyle}
+                  value={mailRollRaw}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setMailRollRaw(e.target.value)}
+                />
+                <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 4 }}>{t("mailRollHelp")}</div>
+              </>
+            )}
+          </Field>
           <div style={{ marginTop: 16, paddingTop: 12, borderTop: `1px dashed ${theme.border}` }}>
             {liveMail.breakdown.length === 0 ? (
               <div style={{ fontSize: 12, color: theme.textDimmed }}>{t("freightNoFactors")}</div>

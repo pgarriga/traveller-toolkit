@@ -2,11 +2,11 @@ import type { FC } from "react";
 import { useEffect, useRef } from "react";
 import type { Theme } from "../types/theme";
 import type { TranslationFunction } from "../types/i18n";
-import { IconSettings, IconBox, IconMenu, IconClose, IconUsers, IconSearch, IconPin } from "./icons";
+import { IconSettings, IconBox, IconMenu, IconClose, IconUsers, IconSearch, IconPin, IconRadar } from "./icons";
 import { Button } from "./ui/Button";
 import { COLORS } from "../constants/colors";
 
-type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent";
+type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent" | "nearby";
 
 interface NavbarProps {
   theme: Theme;
@@ -172,6 +172,18 @@ export const Navbar: FC<NavbarProps> = ({ theme, view, goHome, navigateTo, menuO
             role="menuitem"
           >
             <IconPin />{t("recentWorldsTitle")}
+          </Button>
+          <Button
+            variant="nav-mobile"
+            size="lg"
+            active={view === "nearby"}
+            theme={theme}
+            onClick={() => navigateTo("nearby")}
+            fullWidth
+            style={{ justifyContent: "flex-start" }}
+            role="menuitem"
+          >
+            <IconRadar />{t("nearbyTitle")}
           </Button>
           <Button
             variant="nav-mobile"

@@ -6,6 +6,32 @@ import { STORAGE_KEYS } from "../constants/storage";
 const STORAGE_KEY = STORAGE_KEYS.recentPlanets;
 const MAX_RECENT_PLANETS = 20;
 
+const ZONE_CODES: readonly string[] = [ZONES.GREEN, ZONES.AMBER, ZONES.RED];
+
+/**
+ * Whether one stored entry is still shaped like a `RecentPlanet`.
+ *
+ * `JSON.parse` succeeding says nothing about the shape, and this key survives
+ * app upgrades and anything the user pastes into devtools. Without the check a
+ * single malformed entry reaches `p.uwp.toUpperCase()` and takes the app down
+ * on load, with the bad value still in storage to do it again on every reload.
+ *
+ * `world` is optional and only read for the jump map, so it is not validated
+ * past being an object — a bad one costs a missing map, not a crash.
+ */
+const isRecentPlanet = (raw: unknown): raw is RecentPlanet => {
+  if (typeof raw !== "object" || raw === null) return false;
+  const p = raw as Record<string, unknown>;
+  return (
+    typeof p.uwp === "string" &&
+    typeof p.name === "string" &&
+    typeof p.zone === "string" &&
+    ZONE_CODES.includes(p.zone) &&
+    typeof p.timestamp === "number" &&
+    Number.isFinite(p.timestamp)
+  );
+};
+
 interface UseRecentPlanetsReturn {
   recentPlanets: RecentPlanet[];
   dataLoaded: boolean;
@@ -20,12 +46,14 @@ export const useRecentPlanets = (): UseRecentPlanetsReturn => {
   const [recentPlanets, setRecentPlanets] = useState<RecentPlanet[]>([]);
   const [dataLoaded, setDataLoaded] = useState(false);
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount. Bad entries are dropped rather than the
+  // whole history: one unreadable world should not cost the player the rest.
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        setRecentPlanets(JSON.parse(stored));
+        const parsed: unknown = JSON.parse(stored);
+        setRecentPlanets(Array.isArray(parsed) ? parsed.filter(isRecentPlanet) : []);
       }
     } catch (e) {
       console.error("Failed to load recent planets:", e);

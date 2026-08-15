@@ -2,7 +2,11 @@
 // Docs: https://travellermap.com/doc/api
 
 import type { TravellerMapWorld, ZoneCode } from "../types/uwp";
+import type { NearbyWorld } from "../types/nearby";
 import { ZONES } from "../constants/zones";
+
+// A world straight from the map, before its distance to the origin is known.
+export type RawNearbyWorld = Omit<NearbyWorld, "distance">;
 
 export interface WorldSearchResult extends TravellerMapWorld {
   hex: string;
@@ -27,6 +31,26 @@ interface RawSearchResponse {
 
 interface RawJumpworldsResponse {
   Worlds?: Array<{ Zone?: string }>;
+}
+
+interface RawJumpWorld {
+  Name?: string;
+  UWP?: string;
+  Hex?: string;
+  PBG?: string;
+  Sector?: string;
+  SubsectorName?: string;
+  Zone?: string;
+  Allegiance?: string;
+  AllegianceName?: string;
+  Stellar?: string;
+  Remarks?: string;
+  WorldX?: number;
+  WorldY?: number;
+}
+
+interface RawJumpWorldsFullResponse {
+  Worlds?: RawJumpWorld[];
 }
 
 const SEARCH_ENDPOINT = "https://travellermap.com/api/search";
@@ -82,8 +106,59 @@ export const fetchWorldZone = async (
   const data = (await res.json()) as RawJumpworldsResponse;
   const world = data.Worlds?.[0];
   if (!world) return null;
-  const raw = (world.Zone ?? "").trim().toUpperCase();
-  if (raw === "A") return ZONES.AMBER as ZoneCode;
-  if (raw === "R") return ZONES.RED as ZoneCode;
+  return toZone(world.Zone);
+};
+
+const toZone = (raw: string | undefined): ZoneCode => {
+  const z = (raw ?? "").trim().toUpperCase();
+  if (z === "A") return ZONES.AMBER as ZoneCode;
+  if (z === "R") return ZONES.RED as ZoneCode;
   return ZONES.GREEN as ZoneCode;
+};
+
+// PBG packs Population multiplier / Belts / Gas giants into three digits; the
+// last one is the gas giant count. Unsurveyed worlds use "?" placeholders, and
+// an unknown count is treated as none so no route relies on it.
+const gasGiantCount = (pbg: string | undefined): number => {
+  const digit = parseInt((pbg ?? "").trim()[2] ?? "", 16);
+  return Number.isNaN(digit) ? 0 : digit;
+};
+
+// Every world within `jump` parsecs of a location, straight from the map data.
+// The endpoint caps `jump` at 12 and the result includes the origin world itself.
+export const fetchJumpWorlds = async (
+  sector: string,
+  hex: string,
+  jump: number,
+  signal?: AbortSignal,
+): Promise<RawNearbyWorld[]> => {
+  const params = new URLSearchParams({ sector, hex, jump: String(jump) });
+  const res = await fetch(`${JUMPWORLDS_ENDPOINT}?${params.toString()}`, {
+    headers: { Accept: "application/json" },
+    signal,
+  });
+  if (!res.ok) {
+    throw new Error(`Traveller Map jumpworlds failed: ${res.status}`);
+  }
+  const data = (await res.json()) as RawJumpWorldsFullResponse;
+  const worlds: RawNearbyWorld[] = [];
+  for (const w of data.Worlds ?? []) {
+    // Without coordinates the world cannot be placed, so it is unusable here.
+    if (typeof w.WorldX !== "number" || typeof w.WorldY !== "number") continue;
+    worlds.push({
+      name: w.Name?.trim() || "",
+      uwp: (w.UWP ?? "").toUpperCase(),
+      sector: w.Sector ?? "",
+      hex: w.Hex ?? "",
+      subsector: w.SubsectorName ?? "",
+      zone: toZone(w.Zone),
+      allegiance: w.AllegianceName?.trim() || w.Allegiance?.trim() || "",
+      stellar: w.Stellar?.trim() || "",
+      remarks: w.Remarks?.trim() || "",
+      gasGiants: gasGiantCount(w.PBG),
+      worldX: w.WorldX,
+      worldY: w.WorldY,
+    });
+  }
+  return worlds;
 };

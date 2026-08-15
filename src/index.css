@@ -122,6 +122,21 @@ input::placeholder {
   align-items: start;
 }
 
+/* "My ship" controls in Worlds Near Me: stacked on mobile, one row from 560px
+   up. The fuel picker takes the extra width — its option labels are the longest
+   of the three, and a truncated one reads as a different setting. */
+.ship-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 560px) {
+  .ship-grid {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 0.85fr) minmax(0, 1.3fr);
+  }
+}
+
 /* Container that widens on desktop but keeps mobile layout untouched */
 .wide-main {
   max-width: 720px;
@@ -134,6 +149,18 @@ input::placeholder {
   max-width: 720px;
   margin-left: auto;
   margin-right: auto;
+}
+
+/* Jump map carrying the filter markers. Wider than the PlanetView map above:
+   it is the point of its block rather than a sidebar illustration, and the
+   rings have to stay separable from the hexes they sit on. The overlay is
+   positioned against this box, so it must not shrink-wrap the image. */
+.nearby-jumpmap {
+  position: relative;
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  line-height: 0;
 }
 
 /* Center + cap the jump map image so it never dominates the page on desktop */
@@ -149,6 +176,10 @@ input::placeholder {
 @media (min-width: 900px) {
   .wide-main {
     max-width: 1080px;
+  }
+
+  .nearby-jumpmap {
+    max-width: 900px;
   }
 
   .world-profile-grid {

@@ -30,6 +30,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # vite build does not type-check, so a type error would ship silently.
+      - name: Type check
+        run: npm run typecheck
+
       - name: Build
         run: npm run build
 

@@ -16,6 +16,15 @@ export const IconPin: FC = () => (
   </svg>
 );
 
+export const IconRadar: FC = () => (
+  <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: "middle", marginRight: 6 }}>
+    <circle cx="12" cy="12" r="2"/>
+    <path d="M12 5a7 7 0 1 0 7 7"/>
+    <path d="M12 2a10 10 0 1 0 10 10"/>
+    <line x1="12" y1="12" x2="20" y2="4"/>
+  </svg>
+);
+
 export const IconRefresh: FC = () => (
   <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: "middle", marginRight: 6 }}>
     <path d="M20 11A8 8 0 0 0 6.3 5.7L3 9"/>

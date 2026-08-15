@@ -21,9 +21,11 @@ export interface TravellerMapWorld {
   sector: string;
   hexX: number;
   hexY: number;
-  sectorX: number;
-  sectorY: number;
-  sectorTags: string;
+  // Only /api/search reports these; jumpworlds does not. Nothing reads them
+  // today, so they stay optional rather than being filled with placeholders.
+  sectorX?: number;
+  sectorY?: number;
+  sectorTags?: string;
 }
 
 export interface RecentPlanet {

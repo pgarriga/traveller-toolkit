@@ -382,6 +382,156 @@ export const PassengerBanner: FC<BannerProps> = ({ theme }) => {
   );
 };
 
+// ---------- Nearby Banner ----------
+// A proximity plot: range arcs every two parsecs around the ship, with the
+// shortest refuelling route drawn out to a target world. The two ideas the tool
+// trades in — distance in parsecs, length in jumps — are the same picture here.
+
+const NEARBY_ORIGIN = { x: 60, y: 68 };
+const PC_SCALE = 65; // svg units per parsec
+const NEARBY_RANGES: readonly number[] = [2, 4, 6, 8, 10];
+const ARC_HALF_HEIGHT = 42; // how much of each arc stays inside the viewBox
+
+// Worlds in range the route does not use — context, not waypoints.
+const NEARBY_FIELD: ReadonlyArray<readonly [number, number]> = [
+  [128, 42], [150, 96], [205, 34], [270, 102], [300, 88],
+  [345, 46], [395, 102], [420, 32], [510, 58], [545, 98],
+  [578, 34], [598, 100], [700, 92], [712, 36], [740, 66],
+];
+
+// Origin, two fuel stops, target: three jumps.
+const NEARBY_ROUTE: ReadonlyArray<{ x: number; y: number }> = [
+  NEARBY_ORIGIN,
+  { x: 250, y: 44 },
+  { x: 455, y: 88 },
+  { x: 645, y: 55 },
+];
+
+// The visible slice of a range circle, drawn from its top edge round to the
+// bottom one. Wide radii barely bow, which is what makes it read as a scope.
+const arcPath = (r: number): string => {
+  const x = (NEARBY_ORIGIN.x + Math.sqrt(r * r - ARC_HALF_HEIGHT ** 2)).toFixed(1);
+  return `M ${x} ${NEARBY_ORIGIN.y - ARC_HALF_HEIGHT} `
+    + `A ${r} ${r} 0 0 1 ${x} ${NEARBY_ORIGIN.y + ARC_HALF_HEIGHT}`;
+};
+
+export const NearbyBanner: FC<BannerProps> = ({ theme }) => {
+  const target = NEARBY_ROUTE[NEARBY_ROUTE.length - 1];
+  const stops = NEARBY_ROUTE.slice(1, -1);
+
+  return (
+    <svg aria-hidden="true" viewBox="0 0 800 120" style={svgStyle} preserveAspectRatio="xMidYMid meet">
+      <CornerFrame color={theme.textDimmed} />
+      <text x="30" y="22" fill={theme.textDimmed} fontSize="10" fontFamily="monospace" letterSpacing="1.5">
+        {"> PROXIMITY SCAN"}
+      </text>
+      <text
+        x="770"
+        y="22"
+        fill={theme.textDimmed}
+        fontSize="10"
+        fontFamily="monospace"
+        letterSpacing="1.5"
+        textAnchor="end"
+      >
+        J-2 · 10 PC · 3 JUMPS
+      </text>
+
+      {/* Range arcs and their parsec ticks */}
+      {NEARBY_RANGES.map(pc => (
+        <path
+          key={pc}
+          d={arcPath(pc * PC_SCALE)}
+          fill="none"
+          stroke={theme.border}
+          strokeWidth={1}
+          strokeDasharray="2 5"
+        />
+      ))}
+      {NEARBY_RANGES.map(pc => (
+        <text
+          key={pc}
+          x={NEARBY_ORIGIN.x + pc * PC_SCALE}
+          y={116}
+          fill={theme.textDimmed}
+          fontSize="9"
+          fontFamily="monospace"
+          textAnchor="middle"
+          letterSpacing="1.5"
+        >
+          {pc}
+        </text>
+      ))}
+      <text x="30" y="116" fill={theme.textDimmed} fontSize="9" fontFamily="monospace" letterSpacing="1.5">
+        ORIGIN
+      </text>
+
+      {/* Worlds the scan picked up but the route passes by */}
+      {NEARBY_FIELD.map(([x, y], i) => (
+        <circle key={i} cx={x} cy={y} r={2} fill="none" stroke={theme.textDimmed} strokeWidth={1} />
+      ))}
+
+      {/* One dashed leg per jump */}
+      {NEARBY_ROUTE.slice(0, -1).map((a, i) => {
+        const b = NEARBY_ROUTE[i + 1];
+        return (
+          <line
+            key={i}
+            x1={a.x}
+            y1={a.y}
+            x2={b.x}
+            y2={b.y}
+            stroke={COLORS.primary}
+            strokeWidth={1.2}
+            strokeDasharray="4 3"
+          />
+        );
+      })}
+
+      {/* Ship at the origin */}
+      <circle
+        cx={NEARBY_ORIGIN.x}
+        cy={NEARBY_ORIGIN.y}
+        r={7}
+        fill={`${COLORS.primary}1F`}
+        stroke={COLORS.primary}
+        strokeWidth={1.5}
+      />
+      <circle cx={NEARBY_ORIGIN.x} cy={NEARBY_ORIGIN.y} r={2.5} fill={COLORS.primary} />
+
+      {/* Refuelling stops along the way */}
+      {stops.map((s, i) => (
+        <g key={i}>
+          <circle cx={s.x} cy={s.y} r={5} fill={`${COLORS.primary}22`} stroke={COLORS.primary} strokeWidth={1.2} />
+          <circle cx={s.x} cy={s.y} r={1.8} fill={COLORS.primary} />
+        </g>
+      ))}
+
+      {/* Target under the reticle */}
+      <circle cx={target.x} cy={target.y} r={6} fill={`${COLORS.primary}1F`} stroke={COLORS.primary} strokeWidth={1.5} />
+      <circle cx={target.x} cy={target.y} r={2.5} fill={COLORS.primary} />
+      <g stroke={COLORS.primary} strokeWidth={1.4} strokeLinecap="round">
+        <line x1={target.x - 22} y1={target.y} x2={target.x - 12} y2={target.y} />
+        <line x1={target.x + 12} y1={target.y} x2={target.x + 22} y2={target.y} />
+        <line x1={target.x} y1={target.y - 22} x2={target.x} y2={target.y - 12} />
+        <line x1={target.x} y1={target.y + 12} x2={target.x} y2={target.y + 22} />
+      </g>
+      <text
+        x={target.x}
+        y={90}
+        fill={COLORS.primary}
+        fontSize="10"
+        fontFamily="monospace"
+        textAnchor="middle"
+        letterSpacing="1.5"
+        fontWeight={500}
+      >
+        TARGET
+      </text>
+    </svg>
+  );
+};
+
 // ---------- Freight Banner ----------
 // Stacked cargo containers on the loading deck, sized by lot type.
 

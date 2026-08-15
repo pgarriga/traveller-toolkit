@@ -3,6 +3,7 @@ import type { Theme } from "../../types/theme";
 import type { ParsecDistance } from "../../types/freight";
 import type { TranslationFunction } from "../../types/i18n";
 import { COLORS } from "../../constants/colors";
+import { Field } from "./Field";
 
 const MAX_JUMP_COUNT = 5;
 
@@ -38,14 +39,6 @@ export const JumpCountField: FC<JumpCountFieldProps> = ({
   const maxCount = Math.min(MAX_JUMP_COUNT, parsecs);
   const effectiveCount = clampJumpCount(parsecs, jumpCount);
 
-  const labelStyle = {
-    display: "block",
-    fontSize: 12,
-    color: theme.textDimmed,
-    marginBottom: 4,
-    fontWeight: 500,
-  } as const;
-
   const inputStyle = {
     background: theme.bg,
     border: `1px solid ${theme.border}`,
@@ -58,18 +51,20 @@ export const JumpCountField: FC<JumpCountFieldProps> = ({
   } as const;
 
   return (
-    <div>
-      <label style={labelStyle}>{t("routeJumpsLabel")}</label>
-      <select
-        style={inputStyle}
-        value={effectiveCount}
-        onChange={e => setJumpCount(parseInt(e.target.value, 10))}
-      >
-        {Array.from({ length: maxCount }, (_, i) => i + 1).map(n => (
-          <option key={n} value={n}>{n}</option>
-        ))}
-      </select>
-    </div>
+    <Field label={t("routeJumpsLabel")} theme={theme}>
+      {id => (
+        <select
+          id={id}
+          style={inputStyle}
+          value={effectiveCount}
+          onChange={e => setJumpCount(parseInt(e.target.value, 10))}
+        >
+          {Array.from({ length: maxCount }, (_, i) => i + 1).map(n => (
+            <option key={n} value={n}>{n}</option>
+          ))}
+        </select>
+      )}
+    </Field>
   );
 };
 
