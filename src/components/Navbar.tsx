@@ -164,18 +164,6 @@ export const Navbar: FC<NavbarProps> = ({ theme, view, goHome, navigateTo, menuO
           <Button
             variant="nav-mobile"
             size="lg"
-            active={view === "recent"}
-            theme={theme}
-            onClick={() => navigateTo("recent")}
-            fullWidth
-            style={{ justifyContent: "flex-start" }}
-            role="menuitem"
-          >
-            <IconPin />{t("recentWorldsTitle")}
-          </Button>
-          <Button
-            variant="nav-mobile"
-            size="lg"
             active={view === "nearby"}
             theme={theme}
             onClick={() => navigateTo("nearby")}
@@ -208,6 +196,18 @@ export const Navbar: FC<NavbarProps> = ({ theme, view, goHome, navigateTo, menuO
             role="menuitem"
           >
             <IconBox />{t("freightTitle")}
+          </Button>
+          <Button
+            variant="nav-mobile"
+            size="lg"
+            active={view === "recent"}
+            theme={theme}
+            onClick={() => navigateTo("recent")}
+            fullWidth
+            style={{ justifyContent: "flex-start" }}
+            role="menuitem"
+          >
+            <IconPin />{t("recentWorldsTitle")}
           </Button>
           <Button
             variant="nav-mobile"

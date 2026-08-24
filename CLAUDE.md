@@ -6,8 +6,8 @@ Traveller Toolkit - A multi-tool web app for the Mongoose Traveller 2nd Edition 
 - **Search World** — searches official Traveller worlds by name via the [Traveller Map](https://travellermap.com) API (`/api/search`). Selecting a result jumps to World Detail and auto-saves the world to Visited Worlds.
 - **Visited Worlds** — standalone tool at `/recent` listing the worlds you've visited (persisted in `localStorage`). Sortable dropdown, Edit/Done toggle for per-card deletion, colored tags per UWP attribute.
 - **Worlds Near Me** — standalone tool at `/nearby`. Pick the world you are on, describe your ship (jump rating, fuel range, fuel it accepts), set UWP filters (max distance, minimum starport, TL, population, travel zones) and get the matching worlds, sorted by number of jumps (parsec distance and name break ties, unreachable worlds last). Each result also shows the minimum number of jumps to reach it along a route where the ship never runs out of fuel. `jumpsFromOrigin` searches over `(world, fuel left)` states, not just worlds, so a ship with tankage for several jumps can cross a system with no fuel in it. The `FuelPolicy` (`refined` = starports A/B, `unrefined` = also C/D, `wilderness` = also gas giants and oceans) decides where the ship will refuel; a world it cannot refuel at is still crossed when the fuel range allows. Data comes from the Traveller Map `/api/jumpworlds` endpoint. Below the results table sits a **jump map**: the official `/api/jumpmap` PNG with an SVG ring overlaid on each world that passed the filters (see `utils/jumpMapImage.ts`).
-- **Passenger Traffic** — rolls High / Middle / Basic / Low passenger availability with the Mongoose 2e DMs and computes income.
-- **Freight Calculator** — computes traffic DMs, rolls lots, and lets the player pick which lots to buy up to their cargo bay capacity. Includes an integrated Mail Run block.
+- **Passenger Traffic** — rolls High / Middle / Basic / Low passenger availability with the Mongoose 2e DMs and computes income. The **Nave** section (first on the page) names the ship and declares how many berths it sells of each class; that count caps the seat selection, and 0 means the class cannot be taken at all. An **Export contract** button opens a passage contract listing every booked seat, headed by the ship's name.
+- **Freight Calculator** — computes traffic DMs, rolls lots, and lets the player pick which lots to buy up to their cargo bay capacity. Includes an integrated Mail Run block. An **Export contract** button opens an invoice with the accepted lots and mail containers, headed by the ship's name.
 
 **UI terminology**: user-facing copy uses "world" (Traveller-native term). Code identifiers (`RecentPlanet`, `useRecentPlanets`, `planet` route, `planetName` translation key, `PlanetView`) keep the "planet" naming to avoid a cross-file rename — this asymmetry is intentional.
 
@@ -50,20 +50,23 @@ src/
 │   ├── freight.ts            # FreightInputs, FreightResult, LotResult, LotType, etc.
 │   ├── nearby.ts             # NearbyWorld, NearbyFilters, NearbyUwpFacts, ShipProfile, FuelPolicy
 │   ├── mail.ts               # MailInputs, MailResult, MailRank (Mail Run)
-│   └── passenger.ts          # PassengerInputs, PassengerResult, PassengerClass
+│   ├── contract.ts           # ContractData, ContractLine, ContractParty, ContractTotal
+│   └── passenger.ts          # PassengerInputs, PassengerResult, PassengerClass, ShipBerths
 ├── components/
 │   ├── icons/
-│   │   └── index.tsx         # SVG icon components (IconSearch, IconPin, IconBox, IconClock, IconUsers, IconMail, IconSettings, IconTrash, IconRefresh, IconRadar, IconMenu, IconClose)
+│   │   └── index.tsx         # SVG icon components (IconSearch, IconPin, IconBox, IconClock, IconUsers, IconMail, IconSettings, IconTrash, IconRefresh, IconRadar, IconMenu, IconClose, IconFileText, IconPrinter, IconCopy, IconShare)
 │   ├── banners/
 │   │   └── index.tsx         # Decorative per-tool SVG headers (SearchBanner, RecentBanner, NearbyBanner, PassengerBanner, FreightBanner)
 │   ├── ui/
 │   │   ├── Button.tsx        # Reusable button with variants
+│   │   ├── Modal.tsx         # Overlay dialog (Escape + backdrop close, focused panel)
 │   │   ├── Section.tsx       # Card section with colored border
 │   │   ├── Row.tsx           # Label-value row for data display
 │   │   ├── Field.tsx         # Labelled form control (useId → label htmlFor) + fieldLabelStyle
 │   │   ├── PageHeader.tsx    # Shared centered gradient h1 + optional icon
 │   │   ├── JumpsEditor.tsx   # JumpCountField + JumpsBreakdown + distributeJumps (Freight/Passenger)
 │   │   └── WorldPicker.tsx   # Visited-worlds dropdown + inline Traveller Map search
+│   ├── ContractModal.tsx     # Printable contract/invoice sheet built from a ContractData
 │   ├── NearbyJumpMap.tsx     # Traveller Map jump-map image + filter-match ring overlay
 │   ├── Navbar.tsx            # Navigation bar (desktop + mobile, with a11y)
 │   ├── Footer.tsx            # Disclaimer footer
@@ -84,7 +87,7 @@ src/
 │   ├── freight.ts            # POPULATION_DM, STARPORT_DM, TONS_PER_LOT_DIE, lotsFromTraffic, etc.
 │   ├── mail.ts               # Mail Run constants (rank/soc DMs, container size, etc.)
 │   ├── nearby.ts             # Distance/starport/TL/population filter options, jump + fuel + policy options, DEFAULT_FILTERS, DEFAULT_SHIP
-│   ├── storage.ts            # STORAGE_KEYS for every localStorage key + isFiniteNumber guard
+│   ├── storage.ts            # STORAGE_KEYS for every localStorage key + isFiniteNumber / isString guards
 │   └── passenger.ts          # Passenger DMs, class prices, options
 ├── hooks/
 │   ├── usePersistentState.ts # Generic localStorage-backed state (needs a type guard)
@@ -99,6 +102,8 @@ src/
 │   ├── passenger.ts          # calculatePassengers
 │   ├── travellerMap.ts       # searchWorlds() + fetchWorldZone() + fetchJumpWorlds() → Traveller Map API
 │   ├── jumpMapImage.ts       # jumpMapUrl() + jumpMapScale() + projectOnJumpMap() → /api/jumpmap image geometry
+│   ├── contractImage.ts      # renderContractImage() → paints a ContractData onto a canvas, returns a PNG blob
+│   ├── format.ts             # localeFor() + formatCredits() + formatTons() — the only number formatting in the app
 │   ├── planetToWorldInputs.ts # Maps a RecentPlanet to Passenger/Freight world inputs
 │   └── i18n-helpers.ts       # isNoneValue, requiresWarning
 ├── i18n/
@@ -146,7 +151,7 @@ The router is hand-rolled (no library) in `utils/routing.ts` and `App.tsx` manag
 Lives in `src/views/FreightView.tsx`, `src/utils/freight.ts`, `src/constants/freight.ts`, `src/types/freight.ts`.
 
 Flow:
-1. User picks origin/destination world properties (population, starport, TL, zone), parsec distance, cargo bay, broker skill effect, on-time delivery.
+1. User names the ship and declares its cargo bay (**Nave** section, first on the page), then picks origin/destination world properties (population, starport, TL, zone), parsec distance, broker skill effect, on-time delivery.
 2. **Modificadores (DM)** section updates live — sums per-attribute DMs and shows the base DM.
 3. **Cantidad de lotes** section: one 2D traffic roll per lot type (Major / Minor / Incidental). As the user types the 2D, an `(NDg)` badge next to the label shows how many d6 the program will roll.
 4. **Calculate lots** button triggers `handleCalculate`:
@@ -350,6 +355,38 @@ import { Field, fieldLabelStyle } from "../components/ui/Field";
 A `<label>` is only correct without Field when it *wraps* its control, which is
 how the checkbox rows are written (`<label><input type="checkbox" /><span>…</span></label>`).
 
+### Modal (`components/ui/Modal.tsx`) & ContractModal (`components/ContractModal.tsx`)
+```tsx
+import { Modal } from "../components/ui/Modal";
+import { ContractModal } from "../components/ContractModal";
+
+// Modal is the generic overlay dialog: Escape and backdrop clicks close it, the
+// panel takes focus on mount. Use it for any new dialog instead of rolling a new
+// fixed-position overlay. `panelClassName` exists so print rules can target it.
+<Modal theme={theme} title={t("...")} closeLabel={t("close")} onClose={close} footer={<Button …/>}>
+  …
+</Modal>
+
+// ContractModal renders the exportable contract/invoice shared by the Freight
+// and Passenger calculators. It is presentation only: each view builds a
+// `ContractData` (types/contract.ts) with every number ALREADY formatted for the
+// current language, so `formatCredits`/`formatTons` stay in the views.
+<ContractModal theme={theme} lang={lang} t={t} data={contractData} onClose={close} />
+```
+
+Sharing as an image goes through `utils/contractImage.ts`, which paints the same
+`ContractData` onto a canvas by hand and returns a PNG blob. It does NOT
+rasterise the DOM — the SVG `<foreignObject>` trick drops the Inter webfont and
+everything in `index.css`. The sheet is always painted light, since a shared
+image has no theme to follow. `ContractModal` then hands the blob to
+`navigator.share({ files })` where the browser supports it, and falls back to
+downloading the PNG.
+
+Printing is handled by the `@media print` block at the bottom of `src/index.css`:
+it hides everything except `.contract-sheet` (the modal panel) and repaints it
+light, since the dark theme would print unreadable. Anything inside a contract
+that must not reach paper gets `className="contract-no-print"`.
+
 ### PageHeader (`components/ui/PageHeader.tsx`)
 ```tsx
 import { PageHeader } from "../components/ui/PageHeader";
@@ -417,6 +454,10 @@ import {
 //   IconClock   → Currently unused in the UI; kept exported for future use
 //   IconMail    → Currently unused: `Section` takes a plain string title, so the
 //                 Mail Run block inside FreightView carries no icon
+//   IconFileText→ "Export contract" button at the bottom of FreightView and PassengerView
+//   IconPrinter → Print action inside ContractModal
+//   IconCopy    → Copy-as-text action inside ContractModal
+//   IconShare   → Share-as-image action inside ContractModal
 ```
 
 ### Game Rules (`constants/gameRules.ts`)
@@ -434,6 +475,26 @@ LAW_RULES.MARTIAL_LAW_MIN    // 9 (law 9+ = martial law)
 const key: TechLevelKey = getTechLevelKey(parsed.tl);
 t(key)  // Translates the key
 ```
+
+### Number formatting (`utils/format.ts`)
+```tsx
+import { formatCredits, formatTons, localeFor } from "../utils/format";
+
+// NEVER call toLocaleString directly and NEVER write `lang === "es" ? "es-ES" : "en-US"`
+// — that mapping sends Catalan to the English format (comma thousands separator).
+formatCredits(25000, lang)  // "Cr 25.000" (es/ca) · "Cr 25,000" (en)
+formatTons(12.5, lang)      // "12,5" (es/ca) · "12.5" (en)
+```
+
+Both helpers pass `useGrouping: "always"`. Without it, `es-ES` and `ca-ES` carry
+`minimumGroupingDigits: 2` from CLDR and only group from five digits up, so
+`9000` printed as "9000" right next to `14000` printed as "14.000". That option
+is Intl.NumberFormat V3, which is why `tsconfig.json` includes `ES2023.Intl` in
+`lib`; browsers without V3 read it as `true` and fall back to the old behaviour
+instead of breaking.
+
+Amounts written into `i18n/translations.ts` by hand (the Mail Run notes) must
+match what `formatCredits` produces for that language.
 
 ### i18n Helpers (`utils/i18n-helpers.ts`)
 ```tsx
@@ -497,6 +558,10 @@ const { themeMode, setThemeMode, theme }: {
   setThemeMode: (mode: ThemeMode) => void;
   theme: Theme;
 } = useThemeMode();
+
+// The ship name lives in STORAGE_KEYS.shipName and is SHARED by the freight and
+// passenger calculators — it is the same ship, so naming it in one names it in
+// the other. Like the rest of the ship/crew data it survives the reset button.
 
 // Recent planets CRUD - persists to localStorage
 const {
@@ -569,7 +634,8 @@ import { calculateFreight } from "../utils/freight";
 11. **NO ad-hoc page titles** - Use `<PageHeader title=... icon=... />` so every page shares the same gradient h1 (PlanetView is the only exception — it has an editable name input header)
 12. **NO hardcoded freight tables** - Use `TONS_PER_LOT_DIE`, `POPULATION_DM`, `lotsFromTraffic`, etc. from `constants/freight.ts`
 13. **NO live re-rolling of dice during render** - The freight lot d6 are rolled once inside `handleCalculate` on button click; do not call `Math.random` inside `useMemo` or render
-14. **NO `<label>` next to its control** - A `<label>` that neither wraps its control nor carries `htmlFor` leaves the control with no accessible name. Use `<Field>`; wrap the control only for checkboxes
+14. **NO ad-hoc number formatting** - Use `formatCredits`/`formatTons` from `utils/format.ts`; never call `toLocaleString` in a view
+15. **NO `<label>` next to its control** - A `<label>` that neither wraps its control nor carries `htmlFor` leaves the control with no accessible name. Use `<Field>`; wrap the control only for checkboxes
 
 ### TypeScript-Specific
 11. **NO `.js` or `.jsx` files** - ALL code must be TypeScript (`.ts` or `.tsx`)

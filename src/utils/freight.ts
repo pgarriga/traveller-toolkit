@@ -48,8 +48,10 @@ export const calculateFreight = (
   } = inputs;
 
   const breakdown: DMBreakdownItem[] = [];
+  // Todos los factores, también los que suman 0: el bloque de DM ocupa así
+  // su altura definitiva desde el principio y no salta al cambiar un select.
   const push = (label: string, value: number): void => {
-    if (value !== 0) breakdown.push({ label, value });
+    breakdown.push({ label, value });
   };
 
   push(t("freightOriginPop"), POPULATION_DM[origin.population]);

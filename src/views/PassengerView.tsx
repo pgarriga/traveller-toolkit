@@ -13,9 +13,12 @@ import type {
   PassengerStarport,
   PassengerWorldInputs,
   PassengerZoneTier,
+  ShipBerths,
 } from "../types/passenger";
+import type { ContractData, ContractLine, ContractParty, ContractTotal } from "../types/contract";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
+import { ContractModal } from "../components/ContractModal";
 import { Section } from "../components/ui/Section";
 import { Button } from "../components/ui/Button";
 import { JumpCountField, distributeJumps } from "../components/ui/JumpsEditor";
@@ -23,7 +26,7 @@ import { WorldPicker } from "../components/ui/WorldPicker";
 import { Field } from "../components/ui/Field";
 import { PageHeader } from "../components/ui/PageHeader";
 import { PassengerBanner } from "../components/banners";
-import { IconUsers, IconRefresh } from "../components/icons";
+import { IconUsers, IconFileText, IconRefresh } from "../components/icons";
 import { COLORS, SECTION_COLORS } from "../constants/colors";
 import {
   BROKER_EFFECT_MAX,
@@ -37,10 +40,11 @@ import {
   STEWARD_SKILL_MAX,
   STEWARD_SKILL_MIN,
 } from "../constants/passenger";
-import { STORAGE_KEYS, isFiniteNumber } from "../constants/storage";
+import { STORAGE_KEYS, isFiniteNumber, isString } from "../constants/storage";
 import { usePersistentState } from "../hooks/usePersistentState";
 import { calculatePassengers } from "../utils/passenger";
 import { planetToPassengerWorld } from "../utils/planetToWorldInputs";
+import { formatCredits } from "../utils/format";
 
 type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent" | "nearby";
 
@@ -89,6 +93,15 @@ const classKey = (c: PassengerClass): string => {
   }
 };
 
+const berthHintKey = (c: PassengerClass): string => {
+  switch (c) {
+    case "high": return "shipBerthHighHint";
+    case "middle": return "shipBerthMiddleHint";
+    case "basic": return "shipBerthBasicHint";
+    case "low": return "shipBerthLowHint";
+  }
+};
+
 const classRollKey = (c: PassengerClass): string => {
   switch (c) {
     case "high": return "passengerRollHigh";
@@ -109,8 +122,9 @@ const classColor = (c: PassengerClass): string => {
 
 const formatSigned = (n: number): string => (n > 0 ? `+${n}` : `${n}`);
 
-const formatCredits = (n: number, lang: Language): string =>
-  `Cr ${n.toLocaleString(lang === "es" ? "es-ES" : "en-US")}`;
+// Un DM de 0 no es favorable: se muestra neutro, no en verde.
+const dmColor = (value: number, theme: Theme): string =>
+  value === 0 ? theme.textDimmed : value < 0 ? COLORS.warning : COLORS.success;
 
 const parseRollInput = (raw: string): number | null => {
   if (raw.trim() === "") return null;
@@ -150,6 +164,14 @@ const EMPTY_SELECTION: Record<PassengerClass, number> = {
   low: 0,
 };
 
+const NO_BERTHS: ShipBerths = { high: 0, middle: 0, basic: 0, low: 0 };
+
+const isShipBerths = (raw: unknown): raw is ShipBerths => {
+  if (typeof raw !== "object" || raw === null) return false;
+  const b = raw as Record<string, unknown>;
+  return PASSENGER_CLASS_OPTIONS.every(cls => isFiniteNumber(b[cls]));
+};
+
 export const PassengerView: FC<PassengerViewProps> = ({
   theme,
   lang,
@@ -180,7 +202,13 @@ export const PassengerView: FC<PassengerViewProps> = ({
   const [parsecs, setParsecs] = useState<ParsecDistance>(1);
   const [jumpCount, setJumpCount] = useState<number>(1);
   const jumps = useMemo(() => distributeJumps(parsecs, jumpCount), [parsecs, jumpCount]);
-  // Datos de tripulación: persisten entre sesiones y sobreviven al reset.
+  // Datos de nave/tripulación: persisten entre sesiones y sobreviven al reset.
+  const [shipName, setShipName] = usePersistentState<string>(
+    STORAGE_KEYS.shipName, "", isString,
+  );
+  const [berths, setBerths] = usePersistentState<ShipBerths>(
+    STORAGE_KEYS.passengerBerths, NO_BERTHS, isShipBerths,
+  );
   const [brokerEffect, setBrokerEffect] = usePersistentState<number>(
     STORAGE_KEYS.passengerBrokerEffect, 0, isFiniteNumber,
   );
@@ -188,6 +216,7 @@ export const PassengerView: FC<PassengerViewProps> = ({
     STORAGE_KEYS.passengerStewardSkill, 0, isFiniteNumber,
   );
   const [rolls, setRolls] = useState<RollState>(DEFAULT_ROLLS);
+  const [contractOpen, setContractOpen] = useState<boolean>(false);
   const [calculatedResult, setCalculatedResult] = useState<PassengerResult | null>(null);
   const [rolling, setRolling] = useState<boolean>(false);
   const [selected, setSelected] = useState<Record<PassengerClass, number>>(EMPTY_SELECTION);
@@ -247,24 +276,119 @@ export const PassengerView: FC<PassengerViewProps> = ({
     setCalculatedResult(null);
     setRolling(false);
     setSelected(EMPTY_SELECTION);
+    setContractOpen(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const adjustSelected = (cls: PassengerClass, delta: number, max: number): void => {
-    setSelected(prev => ({ ...prev, [cls]: clampInt(prev[cls] + delta, 0, max) }));
+    // Se parte del valor ya recortado al tope: si el jugador baja las plazas
+    // después de reservar, el "-" tiene que responder al primer clic.
+    setSelected(prev => ({ ...prev, [cls]: clampInt(clampInt(prev[cls], 0, max) + delta, 0, max) }));
   };
+
+  // Tope real por clase: lo que ha salido en la tirada y lo que cabe a bordo.
+  // Sin plazas de una clase no se puede aceptar a nadie de ella.
+  const maxSeats = useMemo<Record<PassengerClass, number>>(() => {
+    const out = { ...EMPTY_SELECTION };
+    PASSENGER_CLASS_OPTIONS.forEach(cls => {
+      const available = calculatedResult?.classes[cls].passengers ?? 0;
+      out[cls] = Math.min(available, berths[cls]);
+    });
+    return out;
+  }, [calculatedResult, berths]);
+
+  // Reserva efectiva. Se deriva en vez de guardarse para que bajar las plazas
+  // después de haber reservado no deje una venta imposible en pie.
+  const booked = useMemo<Record<PassengerClass, number>>(() => {
+    const out = { ...EMPTY_SELECTION };
+    PASSENGER_CLASS_OPTIONS.forEach(cls => {
+      out[cls] = clampInt(selected[cls], 0, maxSeats[cls]);
+    });
+    return out;
+  }, [selected, maxSeats]);
 
   const selectionTotals = useMemo(() => {
     if (!calculatedResult) return { count: 0, revenue: 0 };
     let count = 0;
     let revenue = 0;
     PASSENGER_CLASS_OPTIONS.forEach(cls => {
-      const n = selected[cls];
+      const n = booked[cls];
       count += n;
       revenue += n * calculatedResult.classes[cls].pricePerSeat;
     });
     return { count, revenue };
-  }, [calculatedResult, selected]);
+  }, [calculatedResult, booked]);
+
+  // Factura del pasaje: una línea por cada clase reservada.
+  const contractData: ContractData | null = useMemo(() => {
+    if (!calculatedResult) return null;
+
+    const party = (role: string, world: PassengerWorldInputs, linkUwp: string | null): ContractParty => {
+      const planet = linkUwp ? recentPlanets.find(p => p.uwp === linkUwp) : undefined;
+      if (planet) {
+        const sector = planet.world?.sector;
+        return {
+          role,
+          name: planet.name || t("unnamed"),
+          detail: sector ? `${planet.uwp} · ${sector}` : planet.uwp,
+        };
+      }
+      return {
+        role,
+        name: t("contractUnlinkedWorld"),
+        detail: [world.starport, t(popKey(world.population)), t(zoneKey(world.zone))].join(" · "),
+      };
+    };
+
+    const lines: ContractLine[] = [];
+    PASSENGER_CLASS_OPTIONS.forEach(cls => {
+      const seats = booked[cls];
+      if (seats === 0) return;
+      const price = calculatedResult.classes[cls].pricePerSeat;
+      lines.push({
+        id: cls,
+        label: t(classKey(cls)),
+        detail: null,
+        qty: `× ${seats}`,
+        rate: formatCredits(price, lang),
+        amount: formatCredits(seats * price, lang),
+        accent: classColor(cls),
+      });
+    });
+
+    const totals: ContractTotal[] = [
+      {
+        label: t("passengerTotalSeats"),
+        value: `${selectionTotals.count} ${t("passengerSeatsLabel")}`,
+      },
+      {
+        label: t("passengerTotalRevenue"),
+        value: formatCredits(selectionTotals.revenue, lang),
+        strong: true,
+      },
+    ];
+
+    return {
+      kind: "passenger",
+      title: t("contractPassengerTitle"),
+      ship: shipName.trim() || null,
+      parties: [
+        party(t("contractOrigin"), origin, originLinkUwp),
+        party(t("contractDestination"), destination, destinationLinkUwp),
+      ],
+      meta: [
+        { label: t("passengerParsecs"), value: String(parsecs) },
+        { label: t("routeJumpsLabel"), value: String(jumps.length) },
+        { label: t("contractJumpPlan"), value: jumps.map(j => `J-${j}`).join(" + ") },
+      ],
+      lines,
+      totals,
+      notes: [t("passengerHelpHint")],
+    };
+  }, [
+    calculatedResult, booked, selectionTotals, lang, t, parsecs, jumps, shipName,
+    origin, destination, originLinkUwp, destinationLinkUwp, recentPlanets,
+  ]);
 
   const inputStyle = {
     background: theme.bg,
@@ -458,9 +582,99 @@ export const PassengerView: FC<PassengerViewProps> = ({
 
         <div className="two-col-grid">
         <div>
+        <Section title={t("shipSection")} color={SECTION_COLORS.techLevel} theme={theme}>
+          <Field label={t("shipNameLabel")} theme={theme}>
+            {id => (
+              <input
+                id={id}
+                type="text"
+                style={inputStyle}
+                placeholder={t("shipNamePlaceholder")}
+                value={shipName}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setShipName(e.target.value)}
+              />
+            )}
+          </Field>
+          {/* Dos por línea: minmax(0, 1fr) para que el texto largo de las
+              pistas no ensanche la columna en pantallas estrechas. */}
+          <div style={{ ...fieldGridStyle, gridTemplateColumns: "repeat(2, minmax(0, 1fr))", marginTop: 12 }}>
+            {PASSENGER_CLASS_OPTIONS.map(cls => (
+              <Field key={cls} label={t(classKey(cls))} theme={theme}>
+                {id => (
+                  <>
+                    <input
+                      id={id}
+                      type="number"
+                      min={0}
+                      style={{ ...inputStyle, borderLeft: `3px solid ${classColor(cls)}` }}
+                      value={berths[cls]}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        setBerths({ ...berths, [cls]: Math.max(0, parseInt(e.target.value, 10) || 0) })
+                      }
+                    />
+                    <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 4 }}>
+                      {t(berthHintKey(cls))}
+                    </div>
+                  </>
+                )}
+              </Field>
+            ))}
+          </div>
+          <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 10 }}>
+            {t("shipBerthsNote")}
+          </div>
+        </Section>
+        <Section title={t("passengerSkillsSection")} color={SECTION_COLORS.atmosphere} theme={theme}>
+          <div style={fieldGridStyle}>
+            <Field label={t("passengerBrokerEffect")} theme={theme}>
+              {id => (
+                <>
+                  <input
+                    id={id}
+                    type="number"
+                    min={BROKER_EFFECT_MIN}
+                    max={BROKER_EFFECT_MAX}
+                    style={inputStyle}
+                    value={brokerEffect}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      setBrokerEffect(parseClampedInt(e.target.value, BROKER_EFFECT_MIN, BROKER_EFFECT_MAX, 0))
+                    }
+                  />
+                  <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 4 }}>
+                    {t("passengerBrokerNote")}
+                  </div>
+                </>
+              )}
+            </Field>
+            <Field label={t("passengerStewardSkill")} theme={theme}>
+              {id => (
+                <>
+                  <input
+                    id={id}
+                    type="number"
+                    min={STEWARD_SKILL_MIN}
+                    max={STEWARD_SKILL_MAX}
+                    style={inputStyle}
+                    value={stewardSkill}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      setStewardSkill(parseClampedInt(e.target.value, STEWARD_SKILL_MIN, STEWARD_SKILL_MAX, 0))
+                    }
+                  />
+                  <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 4 }}>
+                    {t("passengerStewardNote")}
+                  </div>
+                </>
+              )}
+            </Field>
+          </div>
+        </Section>
+
         {renderWorld(t("passengerOriginSection"), origin, setOrigin, originLinkUwp, setOriginLinkUwp, SECTION_COLORS.starport)}
         {renderWorld(t("passengerDestinationSection"), destination, setDestination, destinationLinkUwp, setDestinationLinkUwp, SECTION_COLORS.population)}
 
+        </div>
+
+        <div>
         <Section title={t("passengerRouteSection")} color={SECTION_COLORS.size} theme={theme}>
           <div style={fieldGridStyle}>
             <Field label={t("passengerParsecs")} theme={theme}>
@@ -559,68 +773,30 @@ export const PassengerView: FC<PassengerViewProps> = ({
           </div>
         </Section>
 
-        <Section title={t("passengerSkillsSection")} color={SECTION_COLORS.atmosphere} theme={theme}>
-          <div style={fieldGridStyle}>
-            <Field label={t("passengerBrokerEffect")} theme={theme}>
-              {id => (
-                <>
-                  <input
-                    id={id}
-                    type="number"
-                    min={BROKER_EFFECT_MIN}
-                    max={BROKER_EFFECT_MAX}
-                    style={inputStyle}
-                    value={brokerEffect}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                      setBrokerEffect(parseClampedInt(e.target.value, BROKER_EFFECT_MIN, BROKER_EFFECT_MAX, 0))
-                    }
-                  />
-                  <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 4 }}>
-                    {t("passengerBrokerNote")}
-                  </div>
-                </>
-              )}
-            </Field>
-            <Field label={t("passengerStewardSkill")} theme={theme}>
-              {id => (
-                <>
-                  <input
-                    id={id}
-                    type="number"
-                    min={STEWARD_SKILL_MIN}
-                    max={STEWARD_SKILL_MAX}
-                    style={inputStyle}
-                    value={stewardSkill}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                      setStewardSkill(parseClampedInt(e.target.value, STEWARD_SKILL_MIN, STEWARD_SKILL_MAX, 0))
-                    }
-                  />
-                  <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 4 }}>
-                    {t("passengerStewardNote")}
-                  </div>
-                </>
-              )}
-            </Field>
-          </div>
-        </Section>
-        </div>
-
-        <div>
         <Section title={t("passengerDMsSection")} color={COLORS.primary} theme={theme}>
-          {liveResult.breakdown.length === 0 ? (
-            <div style={{ fontSize: 13, color: theme.textDimmed }}>{t("passengerNoFactors")}</div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              {liveResult.breakdown.map((item, idx) => (
-                <div key={idx} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "4px 0", borderBottom: `1px dashed ${theme.border}` }}>
-                  <span style={{ color: theme.text }}>{item.label}</span>
-                  <span style={{ fontFamily: "monospace", fontWeight: 500, color: item.value < 0 ? COLORS.warning : COLORS.success }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {liveResult.breakdown.map((item, idx) => {
+              const zero = item.value === 0;
+              return (
+                <div
+                  key={idx}
+                  className={zero ? "dm-zero-row" : undefined}
+                  style={{
+                    display: zero ? undefined : "flex",
+                    justifyContent: "space-between",
+                    fontSize: 13,
+                    padding: "4px 0",
+                    borderBottom: `1px dashed ${theme.border}`,
+                  }}
+                >
+                  <span style={{ color: zero ? theme.textDimmed : theme.text }}>{item.label}</span>
+                  <span style={{ fontFamily: "monospace", fontWeight: 500, color: dmColor(item.value, theme) }}>
                     {formatSigned(item.value)}
                   </span>
                 </div>
-              ))}
-            </div>
-          )}
+              );
+            })}
+          </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12, paddingTop: 12, borderTop: `2px solid ${theme.border}`, fontWeight: 500 }}>
             <span>{t("passengerBaseDM")}</span>
             <span style={{ fontFamily: "monospace", color: liveResult.baseDM < 0 ? COLORS.warning : COLORS.success }}>
@@ -703,17 +879,21 @@ export const PassengerView: FC<PassengerViewProps> = ({
             <div style={{ fontSize: 13, color: theme.textDimmed, marginBottom: 12, lineHeight: 1.5 }}>
               {t("passengerSelectIntro")}
             </div>
-            {PASSENGER_CLASS_OPTIONS.every(cls => (calculatedResult.classes[cls].passengers ?? 0) === 0) ? (
+            {PASSENGER_CLASS_OPTIONS.every(cls => maxSeats[cls] === 0) ? (
               <div style={{ fontSize: 13, color: theme.textDimmed, fontStyle: "italic" }}>
-                {t("passengerNoSeats")}
+                {/* Distingue "no hay pasaje" de "no tienes dónde meterlo". */}
+                {PASSENGER_CLASS_OPTIONS.every(cls => (calculatedResult.classes[cls].passengers ?? 0) === 0)
+                  ? t("passengerNoSeats")
+                  : t("passengerNoBerths")}
               </div>
             ) : (
               PASSENGER_CLASS_OPTIONS.map(cls => {
                 const c = calculatedResult.classes[cls];
-                const max = c.passengers ?? 0;
+                const available = c.passengers ?? 0;
+                const max = maxSeats[cls];
                 if (max === 0) return null;
                 const color = classColor(cls);
-                const current = selected[cls];
+                const current = booked[cls];
                 const counterBtn = {
                   width: 32,
                   height: 32,
@@ -739,7 +919,8 @@ export const PassengerView: FC<PassengerViewProps> = ({
                         {t(classKey(cls))}
                       </span>
                       <span style={{ fontSize: 11, color: theme.textDimmed, fontFamily: "monospace" }}>
-                        {max} {t("passengerAvailable")} · {formatCredits(c.pricePerSeat, lang)}
+                        {available} {t("passengerAvailable")} · {formatCredits(c.pricePerSeat, lang)}
+                        {max < available && ` · ${max} (${t("passengerBerthLimited")})`}
                       </span>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -781,7 +962,7 @@ export const PassengerView: FC<PassengerViewProps> = ({
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {PASSENGER_CLASS_OPTIONS.map(cls => {
-                  const n = selected[cls];
+                  const n = booked[cls];
                   if (n === 0) return null;
                   const c = calculatedResult.classes[cls];
                   return (
@@ -819,6 +1000,23 @@ export const PassengerView: FC<PassengerViewProps> = ({
           </Section>
         )}
 
+        {calculatedResult && calculatedResult.hasRolls && (
+          <div style={{ margin: "20px 0 0" }}>
+            <Button
+              variant="primary"
+              size="lg"
+              theme={theme}
+              onClick={() => setContractOpen(true)}
+              fullWidth
+            >
+              <IconFileText />{t("exportContract")}
+            </Button>
+            <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 6, textAlign: "center" }}>
+              {t("exportContractHint")}
+            </div>
+          </div>
+        )}
+
         {calculatedResult && (
           <div style={{ margin: "24px 0 8px" }}>
             <Button
@@ -834,6 +1032,16 @@ export const PassengerView: FC<PassengerViewProps> = ({
               {t("resetCalculatorHint")}
             </div>
           </div>
+        )}
+
+        {contractOpen && contractData && (
+          <ContractModal
+            theme={theme}
+            lang={lang}
+            t={t}
+            data={contractData}
+            onClose={() => setContractOpen(false)}
+          />
         )}
 
         <Footer theme={theme} t={t} />

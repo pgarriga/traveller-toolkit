@@ -4,12 +4,17 @@
 
 export const STORAGE_KEYS = {
   recentPlanets: "traveller-recent",
+  // La nave es la misma en las dos calculadoras, así que comparten clave.
+  shipName: "traveller-ship-name",
   freightSkillEffect: "traveller-freight-skill-effect",
   freightCargoBay: "traveller-freight-cargo-bay",
   freightMail: "traveller-freight-mail",
   passengerBrokerEffect: "traveller-passenger-broker-effect",
   passengerStewardSkill: "traveller-passenger-steward-skill",
+  passengerBerths: "traveller-passenger-berths",
 } as const;
 
 export const isFiniteNumber = (raw: unknown): raw is number =>
   typeof raw === "number" && Number.isFinite(raw);
+
+export const isString = (raw: unknown): raw is string => typeof raw === "string";
