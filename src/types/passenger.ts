@@ -29,6 +29,10 @@ export interface PassengerInputs {
   diceLow: number[];
 }
 
+// Plazas que la nave puede vender de cada clase. 0 significa que no hay: esa
+// clase no se puede aceptar, por muchos pasajeros que ofrezca el mercado.
+export type ShipBerths = Record<PassengerClass, number>;
+
 export interface PassengerDMBreakdownItem {
   label: string;
   value: number;

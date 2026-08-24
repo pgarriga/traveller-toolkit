@@ -122,6 +122,21 @@ input::placeholder {
   align-items: start;
 }
 
+/* Zero-valued rows of the DM breakdown. They exist only so the block takes its
+   final height and does not jump when a select changes, and that only matters in
+   the two-column layout — with a single column nothing sits beside it to shift.
+   `display` lives here rather than inline because an inline style would win
+   against `display: none`. */
+.dm-zero-row {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .dm-zero-row {
+    display: flex;
+  }
+}
+
 /* "My ship" controls in Worlds Near Me: stacked on mobile, one row from 560px
    up. The fuel picker takes the extra width — its option labels are the longest
    of the three, and a truncated one reads as a different setting. */

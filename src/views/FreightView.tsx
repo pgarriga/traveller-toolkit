@@ -16,8 +16,10 @@ import type {
   TechLevelTier,
 } from "../types/freight";
 import type { MailInputs, MailResult } from "../types/mail";
+import type { ContractData, ContractLine, ContractParty, ContractTotal } from "../types/contract";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
+import { ContractModal } from "../components/ContractModal";
 import { Section } from "../components/ui/Section";
 import { Button } from "../components/ui/Button";
 import { JumpCountField, JumpsBreakdown, distributeJumps } from "../components/ui/JumpsEditor";
@@ -25,7 +27,7 @@ import { WorldPicker } from "../components/ui/WorldPicker";
 import { Field } from "../components/ui/Field";
 import { PageHeader } from "../components/ui/PageHeader";
 import { FreightBanner } from "../components/banners";
-import { IconBox, IconRefresh } from "../components/icons";
+import { IconBox, IconFileText, IconRefresh } from "../components/icons";
 import { COLORS, SECTION_COLORS } from "../constants/colors";
 import {
   FREIGHT_RATES_PER_TON,
@@ -45,11 +47,12 @@ import {
   findMailRank,
   rollD6 as rollMailD6,
 } from "../constants/mail";
-import { STORAGE_KEYS, isFiniteNumber } from "../constants/storage";
+import { STORAGE_KEYS, isFiniteNumber, isString } from "../constants/storage";
 import { usePersistentState } from "../hooks/usePersistentState";
 import { calculateFreight } from "../utils/freight";
 import { calculateMail } from "../utils/mail";
 import { planetToFreightWorld } from "../utils/planetToWorldInputs";
+import { formatCredits, formatTons } from "../utils/format";
 
 type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent" | "nearby";
 
@@ -150,14 +153,9 @@ const lotDescKey = (type: LotType): string => {
 
 const formatSigned = (n: number): string => (n > 0 ? `+${n}` : `${n}`);
 
-const formatCredits = (n: number, lang: Language): string =>
-  `Cr ${n.toLocaleString(lang === "es" ? "es-ES" : "en-US")}`;
-
-const formatTons = (n: number, lang: Language): string =>
-  n.toLocaleString(lang === "es" ? "es-ES" : "en-US", {
-    minimumFractionDigits: n % 1 === 0 ? 0 : 1,
-    maximumFractionDigits: 1,
-  });
+// Un DM de 0 no es favorable: se muestra neutro, no en verde.
+const dmColor = (value: number, theme: Theme): string =>
+  value === 0 ? theme.textDimmed : value < 0 ? COLORS.warning : COLORS.success;
 
 const parseRollInput = (raw: string): number | null => {
   if (raw.trim() === "") return null;
@@ -200,6 +198,9 @@ export const FreightView: FC<FreightViewProps> = ({
   const [jumpCount, setJumpCount] = useState<number>(1);
   const jumps = useMemo(() => distributeJumps(parsecs, jumpCount), [parsecs, jumpCount]);
   // Datos de nave/tripulación: persisten entre sesiones y sobreviven al reset.
+  const [shipName, setShipName] = usePersistentState<string>(
+    STORAGE_KEYS.shipName, "", isString,
+  );
   const [cargoBay, setCargoBay] = usePersistentState<number>(
     STORAGE_KEYS.freightCargoBay, 0, isFiniteNumber,
   );
@@ -241,6 +242,7 @@ export const FreightView: FC<FreightViewProps> = ({
   );
   const liveMail = useMemo(() => calculateMail(mailInputs, t), [mailInputs, t]);
 
+  const [contractOpen, setContractOpen] = useState<boolean>(false);
   const [calculatedResult, setCalculatedResult] = useState<FreightResult | null>(null);
   const [mailResult, setMailResult] = useState<MailResult | null>(null);
   const [selectedLots, setSelectedLots] = useState<Set<string>>(new Set());
@@ -291,6 +293,7 @@ export const FreightView: FC<FreightViewProps> = ({
     setMailResult(null);
     setSelectedLots(new Set());
     setMailSelected(false);
+    setContractOpen(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -312,6 +315,133 @@ export const FreightView: FC<FreightViewProps> = ({
     });
     return { tons, count, totalTons };
   }, [calculatedResult, selectedLots]);
+
+  // Cifras finales de la ruta. Viven fuera del render del Resumen porque el
+  // contrato exportable factura exactamente lo mismo que muestra el Resumen.
+  const summary = useMemo(() => {
+    if (!calculatedResult) return null;
+    const cargoRate = calculatedResult.ratePerTon;
+    const cargoGross = Math.round(selection.tons * cargoRate);
+    const cargoNet = Math.round(cargoGross * calculatedResult.latePaymentMultiplier);
+    const mailAccepted = mailSelected && mailResult?.available === true;
+    const mailTons = mailAccepted ? mailResult?.cargoTons ?? 0 : 0;
+    const mailIncome = mailAccepted ? mailResult?.payment ?? 0 : 0;
+    const mailContainers = mailAccepted ? mailResult?.containers ?? 0 : 0;
+    const mailRate = MAIL_PAYMENT_PER_CONTAINER / MAIL_TONS_PER_CONTAINER; // Cr 5,000 / t fijo
+    const totalTons = selection.tons + mailTons;
+    const totalGross = cargoGross + mailIncome;
+    const totalNet = cargoNet + mailIncome; // el correo no se ve afectado por la entrega tardía
+    const excessTons = Math.max(0, totalTons - calculatedResult.cargoBay);
+    return {
+      cargoRate, cargoGross, mailAccepted, mailTons, mailIncome, mailContainers,
+      mailRate, totalTons, totalGross, totalNet, excessTons,
+      fitsInBay: excessTons === 0,
+    };
+  }, [calculatedResult, selection, mailSelected, mailResult]);
+
+  // Factura de la ruta: cada lote seleccionado es una línea, y el correo entra
+  // como una línea más con todos sus contenedores.
+  const contractData: ContractData | null = useMemo(() => {
+    if (!calculatedResult || !summary) return null;
+
+    const party = (role: string, world: FreightWorldInputs, linkUwp: string | null): ContractParty => {
+      const planet = linkUwp ? recentPlanets.find(p => p.uwp === linkUwp) : undefined;
+      if (planet) {
+        const sector = planet.world?.sector;
+        return {
+          role,
+          name: planet.name || t("unnamed"),
+          detail: sector ? `${planet.uwp} · ${sector}` : planet.uwp,
+        };
+      }
+      return {
+        role,
+        name: t("contractUnlinkedWorld"),
+        detail: [
+          world.starport,
+          t(populationKey(world.population)),
+          t(tlKey(world.techLevel)),
+          t(zoneKey(world.zone)),
+        ].join(" · "),
+      };
+    };
+
+    const lines: ContractLine[] = [];
+    (["major", "minor", "incidental"] as LotType[]).forEach(type => {
+      calculatedResult.lots[type].perLotTons?.forEach((tonsOfLot, idx) => {
+        if (!selectedLots.has(lotId(type, idx))) return;
+        const label = `${t(lotKey(type))} #${idx + 1}`;
+        lines.push({
+          id: lotId(type, idx),
+          label,
+          detail: t(lotDescKey(type)),
+          qty: `${formatTons(tonsOfLot, lang)} t`,
+          rate: `${formatCredits(summary.cargoRate, lang)} /t`,
+          amount: formatCredits(Math.round(tonsOfLot * summary.cargoRate), lang),
+          accent: COLORS.primary,
+        });
+      });
+    });
+
+    if (summary.mailAccepted) {
+      lines.push({
+        id: "mail",
+        label: t("summaryMail"),
+        detail: `${summary.mailContainers} × ${formatTons(MAIL_TONS_PER_CONTAINER, lang)} t`,
+        qty: `${formatTons(summary.mailTons, lang)} t`,
+        rate: `${formatCredits(summary.mailRate, lang)} /t`,
+        amount: formatCredits(summary.mailIncome, lang),
+        accent: COLORS.success,
+      });
+    }
+
+    const totals: ContractTotal[] = [
+      {
+        // Sin la capacidad de la bodega: es un dato de la nave, no del trato.
+        label: t("contractTotalTons"),
+        value: `${formatTons(summary.totalTons, lang)} t`,
+        warn: !summary.fitsInBay,
+      },
+      {
+        label: t("summaryTotalGross"),
+        value: formatCredits(summary.totalGross, lang),
+        strong: calculatedResult.onTime,
+      },
+    ];
+    if (!calculatedResult.onTime) {
+      totals.push({
+        label: t("summaryTotalNet"),
+        value: formatCredits(summary.totalNet, lang),
+        strong: true,
+        warn: true,
+      });
+    }
+
+    const notes: string[] = [];
+    if (!calculatedResult.onTime) notes.push(t("contractNoteLate"));
+    if (!summary.fitsInBay) notes.push(t("contractNoteExcess"));
+
+    return {
+      kind: "freight",
+      title: t("contractFreightTitle"),
+      ship: shipName.trim() || null,
+      parties: [
+        party(t("contractOrigin"), origin, originLinkUwp),
+        party(t("contractDestination"), destination, destinationLinkUwp),
+      ],
+      meta: [
+        { label: t("freightParsecs"), value: String(parsecs) },
+        { label: t("routeJumpsLabel"), value: String(jumps.length) },
+        { label: t("contractJumpPlan"), value: jumps.map(j => `J-${j}`).join(" + ") },
+      ],
+      lines,
+      totals,
+      notes,
+    };
+  }, [
+    calculatedResult, summary, selectedLots, lang, t, parsecs, jumps, shipName,
+    origin, destination, originLinkUwp, destinationLinkUwp, recentPlanets,
+  ]);
 
   const inputStyle = {
     background: theme.bg,
@@ -513,6 +643,119 @@ export const FreightView: FC<FreightViewProps> = ({
 
         <div className="two-col-grid">
         <div>
+        <Section title={t("shipSection")} color={SECTION_COLORS.techLevel} theme={theme}>
+          <div style={fieldGridStyle}>
+            <Field label={t("shipNameLabel")} theme={theme}>
+              {id => (
+                <input
+                  id={id}
+                  type="text"
+                  style={inputStyle}
+                  placeholder={t("shipNamePlaceholder")}
+                  value={shipName}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setShipName(e.target.value)}
+                />
+              )}
+            </Field>
+            <Field label={t("freightCargoBay")} theme={theme}>
+              {id => (
+                <input
+                  id={id}
+                  type="number"
+                  min={0}
+                  style={inputStyle}
+                  value={cargoBay}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setCargoBay(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                />
+              )}
+            </Field>
+          </div>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", marginTop: 12 }}>
+            <input
+              type="checkbox"
+              checked={mailExtras.armed}
+              onChange={e => setMailExtras({ ...mailExtras, armed: e.target.checked })}
+              style={{ accentColor: COLORS.primary, width: 16, height: 16 }}
+            />
+            <span style={{ fontSize: 14, fontWeight: 500 }}>{t("mailArmed")}</span>
+          </label>
+        </Section>
+        <Section title={t("freightSkillsSection")} color={SECTION_COLORS.atmosphere} theme={theme}>
+          <div style={fieldGridStyle}>
+            <Field label={t("freightSkillEffect")} theme={theme}>
+              {id => (
+                <>
+                  <input
+                    id={id}
+                    type="number"
+                    style={inputStyle}
+                    value={skillEffect}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                      const n = parseInt(e.target.value, 10);
+                      setSkillEffect(Number.isNaN(n) ? 0 : n);
+                    }}
+                  />
+                  <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 4 }}>
+                    {t("freightSkillNote")}
+                  </div>
+                </>
+              )}
+            </Field>
+          </div>
+          {/* Rango y SOC en su propia fila, a dos columnas. */}
+          <div style={{ ...fieldGridStyle, gridTemplateColumns: "repeat(2, minmax(0, 1fr))", marginTop: 12 }}>
+            <Field label={t("mailRank")} theme={theme}>
+              {id => (
+                <>
+                  <select
+                    id={id}
+                    style={inputStyle}
+                    value={mailExtras.rankId}
+                    onChange={(e: ChangeEvent<HTMLSelectElement>) => {
+                      const picked = findMailRank(e.target.value);
+                      setMailExtras({
+                        ...mailExtras,
+                        rankId: picked ? picked.id : MAIL_RANK_NONE_ID,
+                        rank: picked ? picked.rank : 0,
+                      });
+                    }}
+                  >
+                    <option value={MAIL_RANK_NONE_ID}>{t("mailRankNone")}</option>
+                    {MAIL_RANK_GROUPS.map(group => (
+                      <optgroup key={group.service} label={t(group.labelKey)}>
+                        {group.options.map(o => (
+                          <option key={o.id} value={o.id}>
+                            {o.titleKey ? `${o.rank} · ${t(o.titleKey)}` : `${o.rank} · ${t("freightDash")}`}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                  <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 4 }}>{t("mailRankHint")}</div>
+                </>
+              )}
+            </Field>
+            <Field label={t("mailSoc")} theme={theme}>
+              {id => (
+                <>
+                  <input
+                    id={id}
+                    type="number"
+                    min={MAIL_SOC_DM_MIN}
+                    max={MAIL_SOC_DM_MAX}
+                    style={inputStyle}
+                    value={mailExtras.socDM}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      setMailExtras({ ...mailExtras, socDM: parseClampedInt(e.target.value, MAIL_SOC_DM_MIN, MAIL_SOC_DM_MAX, 0) })
+                    }
+                  />
+                  <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 4 }}>{t("mailSocHint")}</div>
+                </>
+              )}
+            </Field>
+          </div>
+        </Section>
+
         {renderWorld(t("freightOriginSection"), origin, setOrigin, originLinkUwp, setOriginLinkUwp, SECTION_COLORS.starport)}
         {renderWorld(t("freightDestinationSection"), destination, setDestination, destinationLinkUwp, setDestinationLinkUwp, SECTION_COLORS.population)}
 
@@ -539,18 +782,6 @@ export const FreightView: FC<FreightViewProps> = ({
               theme={theme}
               t={t}
             />
-            <Field label={t("freightCargoBay")} theme={theme}>
-              {id => (
-                <input
-                  id={id}
-                  type="number"
-                  min={0}
-                  style={inputStyle}
-                  value={cargoBay}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setCargoBay(Math.max(0, parseInt(e.target.value, 10) || 0))}
-                />
-              )}
-            </Field>
           </div>
           <JumpsBreakdown
             parsecs={parsecs}
@@ -563,46 +794,34 @@ export const FreightView: FC<FreightViewProps> = ({
           />
         </Section>
 
-        <Section title={t("freightSkillsSection")} color={SECTION_COLORS.atmosphere} theme={theme}>
-          <Field label={t("freightSkillEffect")} theme={theme}>
-            {id => (
-              <>
-                <input
-                  id={id}
-                  type="number"
-                  style={inputStyle}
-                  value={skillEffect}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                    const n = parseInt(e.target.value, 10);
-                    setSkillEffect(Number.isNaN(n) ? 0 : n);
-                  }}
-                />
-                <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 4 }}>
-                  {t("freightSkillNote")}
-                </div>
-              </>
-            )}
-          </Field>
-        </Section>
         </div>
 
         <div>
         {/* Live DM preview */}
         <Section title={t("freightDMsSection")} color={COLORS.primary} theme={theme}>
-          {liveResult.breakdown.length === 0 ? (
-            <div style={{ fontSize: 13, color: theme.textDimmed }}>{t("freightNoFactors")}</div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              {liveResult.breakdown.map((item, idx) => (
-                <div key={idx} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "4px 0", borderBottom: `1px dashed ${theme.border}` }}>
-                  <span style={{ color: theme.text }}>{item.label}</span>
-                  <span style={{ fontFamily: "monospace", fontWeight: 500, color: item.value < 0 ? COLORS.warning : COLORS.success }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {liveResult.breakdown.map((item, idx) => {
+              const zero = item.value === 0;
+              return (
+                <div
+                  key={idx}
+                  className={zero ? "dm-zero-row" : undefined}
+                  style={{
+                    display: zero ? undefined : "flex",
+                    justifyContent: "space-between",
+                    fontSize: 13,
+                    padding: "4px 0",
+                    borderBottom: `1px dashed ${theme.border}`,
+                  }}
+                >
+                  <span style={{ color: zero ? theme.textDimmed : theme.text }}>{item.label}</span>
+                  <span style={{ fontFamily: "monospace", fontWeight: 500, color: dmColor(item.value, theme) }}>
                     {formatSigned(item.value)}
                   </span>
                 </div>
-              ))}
-            </div>
-          )}
+              );
+            })}
+          </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12, paddingTop: 12, borderTop: `2px solid ${theme.border}`, fontWeight: 500 }}>
             <span>{t("freightBaseDM")}</span>
             <span style={{ fontFamily: "monospace", color: liveResult.baseDM < 0 ? COLORS.warning : COLORS.success }}>
@@ -673,68 +892,6 @@ export const FreightView: FC<FreightViewProps> = ({
         <Section title={t("mailSection")} color={COLORS.danger} theme={theme}>
           <div style={{ fontSize: 13, color: theme.textDimmed, marginBottom: 14, lineHeight: 1.5 }}>
             {t("mailSectionIntro")}
-          </div>
-          <div style={fieldGridStyle}>
-            <Field label={t("mailRank")} theme={theme}>
-              {id => (
-                <>
-                  <select
-                    id={id}
-                    style={inputStyle}
-                    value={mailExtras.rankId}
-                    onChange={(e: ChangeEvent<HTMLSelectElement>) => {
-                      const picked = findMailRank(e.target.value);
-                      setMailExtras({
-                        ...mailExtras,
-                        rankId: picked ? picked.id : MAIL_RANK_NONE_ID,
-                        rank: picked ? picked.rank : 0,
-                      });
-                    }}
-                  >
-                    <option value={MAIL_RANK_NONE_ID}>{t("mailRankNone")}</option>
-                    {MAIL_RANK_GROUPS.map(group => (
-                      <optgroup key={group.service} label={t(group.labelKey)}>
-                        {group.options.map(o => (
-                          <option key={o.id} value={o.id}>
-                            {o.titleKey ? `${o.rank} · ${t(o.titleKey)}` : `${o.rank} · ${t("freightDash")}`}
-                          </option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
-                  <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 4 }}>{t("mailRankHint")}</div>
-                </>
-              )}
-            </Field>
-            <Field label={t("mailSoc")} theme={theme}>
-              {id => (
-                <>
-                  <input
-                    id={id}
-                    type="number"
-                    min={MAIL_SOC_DM_MIN}
-                    max={MAIL_SOC_DM_MAX}
-                    style={inputStyle}
-                    value={mailExtras.socDM}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                      setMailExtras({ ...mailExtras, socDM: parseClampedInt(e.target.value, MAIL_SOC_DM_MIN, MAIL_SOC_DM_MAX, 0) })
-                    }
-                  />
-                  <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 4 }}>{t("mailSocHint")}</div>
-                </>
-              )}
-            </Field>
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginTop: 14 }}>
-            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
-              <input
-                type="checkbox"
-                checked={mailExtras.armed}
-                onChange={e => setMailExtras({ ...mailExtras, armed: e.target.checked })}
-                style={{ accentColor: COLORS.primary, width: 16, height: 16 }}
-              />
-              <span style={{ fontSize: 14, fontWeight: 500 }}>{t("mailArmed")}</span>
-            </label>
           </div>
           {lowTL && (
             <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 8, fontStyle: "italic" }}>
@@ -860,7 +1017,7 @@ export const FreightView: FC<FreightViewProps> = ({
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 10 }}>
                   <MailCell theme={theme} label={t("mailContainers")} value={String(mailResult.containers)} mono />
-                  <MailCell theme={theme} label={t("mailCargoTons")} value={`${mailResult.cargoTons} t`} mono />
+                  <MailCell theme={theme} label={t("mailCargoTons")} value={`${formatTons(mailResult.cargoTons ?? 0, lang)} t`} mono />
                   <MailCell
                     theme={theme}
                     label={t("mailPayment")}
@@ -875,7 +1032,7 @@ export const FreightView: FC<FreightViewProps> = ({
                       {t("mailContainers")}
                     </span>
                     <span style={{ fontSize: 11, color: theme.textDimmed, fontFamily: "monospace" }}>
-                      ({MAIL_TONS_PER_CONTAINER} t · {formatCredits(MAIL_PAYMENT_PER_CONTAINER, lang)})
+                      ({formatTons(MAIL_TONS_PER_CONTAINER, lang)} t · {formatCredits(MAIL_PAYMENT_PER_CONTAINER, lang)})
                     </span>
                   </div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -897,7 +1054,7 @@ export const FreightView: FC<FreightViewProps> = ({
                           cursor: "pointer",
                         }}
                       >
-                        #{idx + 1}: {MAIL_TONS_PER_CONTAINER} t
+                        #{idx + 1}: {formatTons(MAIL_TONS_PER_CONTAINER, lang)} t
                       </button>
                     ))}
                   </div>
@@ -918,20 +1075,12 @@ export const FreightView: FC<FreightViewProps> = ({
         <Section title={t("freightSummarySection")} color={SECTION_COLORS.starport} theme={theme}>
           {!calculatedResult.hasRolls ? (
             <div style={{ fontSize: 13, color: theme.textDimmed }}>{t("freightRollsMissing")}</div>
-          ) : (() => {
-            const cargoRate = calculatedResult.ratePerTon;
-            const cargoGross = Math.round(selection.tons * cargoRate);
-            const cargoNet = Math.round(cargoGross * calculatedResult.latePaymentMultiplier);
-            const mailAccepted = mailSelected && mailResult?.available === true;
-            const mailTons = mailAccepted ? mailResult?.cargoTons ?? 0 : 0;
-            const mailIncome = mailAccepted ? mailResult?.payment ?? 0 : 0;
-            const mailContainers = mailAccepted ? mailResult?.containers ?? 0 : 0;
-            const mailRate = MAIL_PAYMENT_PER_CONTAINER / MAIL_TONS_PER_CONTAINER; // Cr 5,000 / t fijo
-            const totalTons = selection.tons + mailTons;
-            const totalGross = cargoGross + mailIncome;
-            const totalNet = cargoNet + mailIncome; // el correo no se ve afectado por la entrega tardía
-            const excessTons = Math.max(0, totalTons - calculatedResult.cargoBay);
-            const fitsInBay = excessTons === 0;
+          ) : summary && (() => {
+            const {
+              cargoRate, cargoGross, mailAccepted, mailTons, mailIncome,
+              mailContainers, mailRate, totalTons, totalGross, totalNet,
+              excessTons, fitsInBay,
+            } = summary;
             const selectionLine =
               selection.count > 0 || mailAccepted
                 ? [
@@ -1013,6 +1162,23 @@ export const FreightView: FC<FreightViewProps> = ({
         </Section>
         )}
 
+        {calculatedResult && calculatedResult.hasRolls && (
+          <div style={{ margin: "20px 0 0" }}>
+            <Button
+              variant="primary"
+              size="lg"
+              theme={theme}
+              onClick={() => setContractOpen(true)}
+              fullWidth
+            >
+              <IconFileText />{t("exportContract")}
+            </Button>
+            <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 6, textAlign: "center" }}>
+              {t("exportContractHint")}
+            </div>
+          </div>
+        )}
+
         {calculatedResult && (
           <div style={{ margin: "24px 0 8px" }}>
             <Button
@@ -1028,6 +1194,16 @@ export const FreightView: FC<FreightViewProps> = ({
               {t("resetCalculatorHint")}
             </div>
           </div>
+        )}
+
+        {contractOpen && contractData && (
+          <ContractModal
+            theme={theme}
+            lang={lang}
+            t={t}
+            data={contractData}
+            onClose={() => setContractOpen(false)}
+          />
         )}
 
         <Footer theme={theme} t={t} />
