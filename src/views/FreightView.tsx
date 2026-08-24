@@ -242,6 +242,12 @@ export const FreightView: FC<FreightViewProps> = ({
   );
   const liveMail = useMemo(() => calculateMail(mailInputs, t), [mailInputs, t]);
 
+  // Una línea por salto. Con un solo salto no hay nada que desglosar: la
+  // tarifa de la tabla ya es la del viaje entero.
+  const perJumpRate: string[] = jumps.length > 1
+    ? jumps.map(j => `J-${j} · ${formatCredits(FREIGHT_RATES_PER_TON[j], lang)} /t`)
+    : [];
+
   const [contractOpen, setContractOpen] = useState<boolean>(false);
   const [calculatedResult, setCalculatedResult] = useState<FreightResult | null>(null);
   const [mailResult, setMailResult] = useState<MailResult | null>(null);
@@ -370,15 +376,24 @@ export const FreightView: FC<FreightViewProps> = ({
     (["major", "minor", "incidental"] as LotType[]).forEach(type => {
       calculatedResult.lots[type].perLotTons?.forEach((tonsOfLot, idx) => {
         if (!selectedLots.has(lotId(type, idx))) return;
-        lines.push({
-          id: lotId(type, idx),
-          label: `${t(lotKey(type))} #${idx + 1}`,
-          detail: null,
+        const label = `${t(lotKey(type))} #${idx + 1}`;
+        // Con varios saltos, cada tramo del lote es su propia línea: la tarifa
+        // de la tabla es por salto y así se ve cómo se reparte el cobro.
+        const legs = jumps.length > 1
+          ? jumps.map((j, i) => ({
+              id: `${lotId(type, idx)}-${i}`,
+              label: `${label} · J-${j}`,
+              rate: FREIGHT_RATES_PER_TON[j],
+            }))
+          : [{ id: lotId(type, idx), label, rate: summary.cargoRate }];
+        legs.forEach(leg => lines.push({
+          id: leg.id,
+          label: leg.label,
           qty: `${formatTons(tonsOfLot, lang)} t`,
-          rate: `${formatCredits(summary.cargoRate, lang)} /t`,
-          amount: formatCredits(Math.round(tonsOfLot * summary.cargoRate), lang),
+          rate: `${formatCredits(leg.rate, lang)} /t`,
+          amount: formatCredits(Math.round(tonsOfLot * leg.rate), lang),
           accent: COLORS.primary,
-        });
+        }));
       });
     });
 
@@ -388,7 +403,6 @@ export const FreightView: FC<FreightViewProps> = ({
       lines.push({
         id: `mail-${i}`,
         label: `${t("contractMailContainer")} #${i}`,
-        detail: null,
         qty: `${formatTons(MAIL_TONS_PER_CONTAINER, lang)} t`,
         rate: `${formatCredits(summary.mailRate, lang)} /t`,
         amount: formatCredits(MAIL_PAYMENT_PER_CONTAINER, lang),
@@ -462,6 +476,8 @@ export const FreightView: FC<FreightViewProps> = ({
     setWorldRaw: (w: FreightWorldInputs) => void,
     linkUwp: string | null,
     setLinkUwp: (uwp: string | null) => void,
+    // El mundo del otro extremo: no se puede elegir dos veces la misma ruta.
+    otherLinkUwp: string | null,
     color: string,
   ) => {
     const handleManual = (w: FreightWorldInputs): void => {
@@ -475,6 +491,7 @@ export const FreightView: FC<FreightViewProps> = ({
           t={t}
           recentPlanets={recentPlanets}
           linkUwp={linkUwp}
+          excludeUwp={otherLinkUwp}
           onPick={planet => applyPlanet(planet, setWorldRaw, setLinkUwp)}
           onClear={() => setLinkUwp(null)}
           savePlanet={savePlanet}
@@ -751,8 +768,8 @@ export const FreightView: FC<FreightViewProps> = ({
           </div>
         </Section>
 
-        {renderWorld(t("freightOriginSection"), origin, setOrigin, originLinkUwp, setOriginLinkUwp, SECTION_COLORS.starport)}
-        {renderWorld(t("freightDestinationSection"), destination, setDestination, destinationLinkUwp, setDestinationLinkUwp, SECTION_COLORS.population)}
+        {renderWorld(t("freightOriginSection"), origin, setOrigin, originLinkUwp, setOriginLinkUwp, destinationLinkUwp, SECTION_COLORS.starport)}
+        {renderWorld(t("freightDestinationSection"), destination, setDestination, destinationLinkUwp, setDestinationLinkUwp, originLinkUwp, SECTION_COLORS.population)}
 
         <Section title={t("freightRouteSection")} color={SECTION_COLORS.size} theme={theme}>
           <div style={fieldGridStyle}>
@@ -1118,6 +1135,7 @@ export const FreightView: FC<FreightViewProps> = ({
                     rate={`${formatCredits(cargoRate, lang)} /t`}
                     amount={formatCredits(cargoGross, lang)}
                     detail={`${formatTons(selection.tons, lang)} t`}
+                    notes={perJumpRate}
                   />
                   {mailAccepted && (
                     <BreakdownRow
@@ -1260,18 +1278,27 @@ interface BreakdownRowProps {
   rate: string;
   amount: string;
   detail: string;
+  // Desglose por salto, una línea cada uno; vacío si la ruta es de un salto.
+  notes?: string[];
 }
 
-const BreakdownRow: FC<BreakdownRowProps> = ({ theme, label, rate, amount, detail }) => (
-  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", fontSize: 13, padding: "4px 0", gap: 12, flexWrap: "wrap" }}>
-    <span style={{ color: theme.textDimmed, minWidth: 60 }}>{label}</span>
-    <span style={{ display: "flex", gap: 6, alignItems: "baseline", flexWrap: "wrap" }}>
-      <span style={{ fontFamily: "monospace", color: theme.textDimmed, fontSize: 12 }}>
-        {detail} × {rate}
+const BreakdownRow: FC<BreakdownRowProps> = ({ theme, label, rate, amount, detail, notes = [] }) => (
+  <div style={{ padding: "4px 0" }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", fontSize: 13, gap: 12, flexWrap: "wrap" }}>
+      <span style={{ color: theme.textDimmed, minWidth: 60 }}>{label}</span>
+      <span style={{ display: "flex", gap: 6, alignItems: "baseline", flexWrap: "wrap" }}>
+        <span style={{ fontFamily: "monospace", color: theme.textDimmed, fontSize: 12 }}>
+          {detail} × {rate}
+        </span>
+        <span style={{ fontFamily: "monospace", color: theme.text, fontWeight: 500 }}>
+          = {amount}
+        </span>
       </span>
-      <span style={{ fontFamily: "monospace", color: theme.text, fontWeight: 500 }}>
-        = {amount}
-      </span>
-    </span>
+    </div>
+    {notes.map((note, i) => (
+      <div key={i} style={{ fontSize: 11, fontFamily: "monospace", color: theme.textDimmed, marginTop: 2, textAlign: "right" }}>
+        {note}
+      </div>
+    ))}
   </div>
 );

@@ -23,12 +23,11 @@ export interface ContractMetaItem {
 // block of seats of one passenger class.
 export interface ContractLine {
   id: string;
-  label: string;         // "Major lot #1", "High passage"
-  detail: string | null; // secondary note under the label
-  qty: string;           // "40 t", "x3"
-  rate: string | null;   // "Cr 1,000 /t"
-  amount: string;        // "Cr 40,000"
-  accent: string;        // row marker color
+  label: string;       // "Major lot #1 · J-2", "High passage"
+  qty: string;         // "40 t", "x3"
+  rate: string | null; // "Cr 1,000 /t"
+  amount: string;      // "Cr 40,000"
+  accent: string;      // row marker color
 }
 
 // Fila de cierre de la tabla de conceptos: suma de lo facturado, en unidades

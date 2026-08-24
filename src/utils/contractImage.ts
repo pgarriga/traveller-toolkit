@@ -25,6 +25,7 @@ const RULE = THEMES.light.border;
 const SANS = "Inter, system-ui, sans-serif";
 const MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";
 
+const ROW_H = 30;
 const COL_QTY = 90;
 const COL_RATE = 110;
 const COL_AMOUNT = 120;
@@ -174,8 +175,7 @@ const paint = (
     y += 28;
 
     data.lines.forEach((line, idx) => {
-      const h = line.detail ? 42 : 30;
-      if (idx % 2 === 0) fill(PAD, y, inner, h, "rgba(212, 82, 28, 0.06)");
+      if (idx % 2 === 0) fill(PAD, y, inner, ROW_H, "rgba(212, 82, 28, 0.06)");
       fill(PAD + 12, y + 12, 6, 6, line.accent);
       setFont(400, 13, SANS);
       put(clip(line.label, itemW), PAD + 26, y + 8, INK);
@@ -183,12 +183,8 @@ const paint = (
       put(line.qty, xQty, y + 8, INK, "right");
       put(line.rate ?? l.dash, xRate, y + 8, MUTED, "right");
       put(line.amount, right - 12, y + 8, INK, "right");
-      if (line.detail) {
-        setFont(400, 11, SANS);
-        put(clip(line.detail, itemW), PAD + 26, y + 26, DIM);
-      }
-      fill(PAD, y + h - 1, inner, 1, "rgba(212, 82, 28, 0.15)");
-      y += h;
+      fill(PAD, y + ROW_H - 1, inner, 1, "rgba(212, 82, 28, 0.15)");
+      y += ROW_H;
     });
 
     if (data.total) {

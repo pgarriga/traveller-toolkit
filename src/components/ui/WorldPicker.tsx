@@ -17,6 +17,9 @@ interface WorldPickerProps {
   t: TranslationFunction;
   recentPlanets: RecentPlanet[];
   linkUwp: string | null;
+  // Mundo que ya ocupa el otro extremo de la ruta: se muestra, pero no se
+  // puede elegir. Un viaje de un mundo a sí mismo no existe.
+  excludeUwp?: string | null;
   onPick: (planet: RecentPlanet) => void;
   onClear: () => void;
   savePlanet: (uwp: string, name: string, zone: ZoneCode, world?: TravellerMapWorld) => void;
@@ -26,12 +29,13 @@ interface ModalProps {
   theme: Theme;
   t: TranslationFunction;
   recentPlanets: RecentPlanet[];
+  excludeUwp: string | null;
   onSelectVisited: (planet: RecentPlanet) => void;
   onSelectSearched: (r: WorldSearchResult) => void;
   onClose: () => void;
 }
 
-const PickerModal: FC<ModalProps> = ({ theme, t, recentPlanets, onSelectVisited, onSelectSearched, onClose }) => {
+const PickerModal: FC<ModalProps> = ({ theme, t, recentPlanets, excludeUwp, onSelectVisited, onSelectSearched, onClose }) => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<WorldSearchResult[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -117,6 +121,25 @@ const PickerModal: FC<ModalProps> = ({ theme, t, recentPlanets, onSelectVisited,
     cursor: "pointer",
     fontFamily: "inherit",
   };
+
+  const isExcluded = (uwp: string): boolean =>
+    excludeUwp !== null && uwp.toUpperCase() === excludeUwp.toUpperCase();
+
+  const disabledRow: CSSProperties = { opacity: 0.45, cursor: "not-allowed" };
+
+  const excludedBadge = (
+    <span
+      style={{
+        fontSize: 10,
+        color: theme.textDimmed,
+        textTransform: "uppercase",
+        letterSpacing: 1,
+        flexShrink: 0,
+      }}
+    >
+      {t("worldPickerAlreadyUsed")}
+    </span>
+  );
 
   const sectionLabel: CSSProperties = {
     fontSize: 11,
@@ -257,23 +280,32 @@ const PickerModal: FC<ModalProps> = ({ theme, t, recentPlanets, onSelectVisited,
               {recentPlanets.length === 0 ? t("noRecentPlanets") : t("worldPickerNoVisitedMatch")}
             </div>
           ) : (
-            filteredVisited.map(p => (
-              <button
-                key={`visited-${p.uwp}`}
-                type="button"
-                onClick={() => onSelectVisited(p)}
-                style={{ ...rowStyle, borderLeft: `3px solid ${getZoneColor(p.zone)}` }}
-              >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {p.name}
+            filteredVisited.map(p => {
+              const excluded = isExcluded(p.uwp);
+              return (
+                <button
+                  key={`visited-${p.uwp}`}
+                  type="button"
+                  disabled={excluded}
+                  onClick={() => onSelectVisited(p)}
+                  style={{
+                    ...rowStyle,
+                    borderLeft: `3px solid ${getZoneColor(p.zone)}`,
+                    ...(excluded ? disabledRow : null),
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {p.name}
+                    </div>
+                    <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {p.world?.sector ? `${p.world.sector} · ` : ""}<span style={{ fontFamily: "monospace" }}>{p.uwp}</span>
+                    </div>
                   </div>
-                  <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {p.world?.sector ? `${p.world.sector} · ` : ""}<span style={{ fontFamily: "monospace" }}>{p.uwp}</span>
-                  </div>
-                </div>
-              </button>
-            ))
+                  {excluded && excludedBadge}
+                </button>
+              );
+            })
           )}
 
           {(loading || results !== null) && (
@@ -314,23 +346,32 @@ const PickerModal: FC<ModalProps> = ({ theme, t, recentPlanets, onSelectVisited,
                   {t("searchNoResults")}
                 </div>
               ) : (
-                newResults.map(r => (
-                  <button
-                    key={`search-${r.sector}-${r.hex}-${r.uwp}`}
-                    type="button"
-                    onClick={() => onSelectSearched(r)}
-                    style={{ ...rowStyle, borderLeft: `3px solid ${COLORS.primary}` }}
-                  >
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {r.name}
+                newResults.map(r => {
+                  const excluded = isExcluded(r.uwp);
+                  return (
+                    <button
+                      key={`search-${r.sector}-${r.hex}-${r.uwp}`}
+                      type="button"
+                      disabled={excluded}
+                      onClick={() => onSelectSearched(r)}
+                      style={{
+                        ...rowStyle,
+                        borderLeft: `3px solid ${COLORS.primary}`,
+                        ...(excluded ? disabledRow : null),
+                      }}
+                    >
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {r.name}
+                        </div>
+                        <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {r.sector} · {r.hex} · <span style={{ fontFamily: "monospace" }}>{r.uwp}</span>
+                        </div>
                       </div>
-                      <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {r.sector} · {r.hex} · <span style={{ fontFamily: "monospace" }}>{r.uwp}</span>
-                      </div>
-                    </div>
-                  </button>
-                ))
+                      {excluded && excludedBadge}
+                    </button>
+                  );
+                })
               )}
             </>
           )}
@@ -345,6 +386,7 @@ export const WorldPicker: FC<WorldPickerProps> = ({
   t,
   recentPlanets,
   linkUwp,
+  excludeUwp = null,
   onPick,
   onClear,
   savePlanet,
@@ -492,6 +534,7 @@ export const WorldPicker: FC<WorldPickerProps> = ({
           theme={theme}
           t={t}
           recentPlanets={recentPlanets}
+          excludeUwp={excludeUwp}
           onSelectVisited={(planet) => { onPick(planet); setOpen(false); }}
           onSelectSearched={handlePickSearched}
           onClose={() => setOpen(false)}

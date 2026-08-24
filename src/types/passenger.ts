@@ -47,7 +47,6 @@ export interface PassengerClassResult {
   dice: number[] | null;
   passengers: number | null;
   pricePerSeat: number;
-  income: number | null;
 }
 
 export interface PassengerResult {
@@ -55,6 +54,4 @@ export interface PassengerResult {
   breakdown: PassengerDMBreakdownItem[];
   classes: Record<PassengerClass, PassengerClassResult>;
   hasRolls: boolean;
-  totalPassengers: number | null;
-  totalRevenue: number | null;
 }

@@ -87,7 +87,6 @@ export const calculatePassengers = (
         dice: null,
         passengers: null,
         pricePerSeat,
-        income: null,
       };
     }
 
@@ -96,7 +95,6 @@ export const calculatePassengers = (
 
     if (dice.length > 0) {
       const passengers = dice.reduce((sum, d) => sum + d, 0);
-      const income = passengers * pricePerSeat;
       return {
         type,
         dm,
@@ -106,7 +104,6 @@ export const calculatePassengers = (
         dice,
         passengers,
         pricePerSeat,
-        income,
       };
     }
 
@@ -119,7 +116,6 @@ export const calculatePassengers = (
       dice: null,
       passengers: null,
       pricePerSeat,
-      income: null,
     };
   };
 
@@ -131,25 +127,11 @@ export const calculatePassengers = (
   };
 
   const hasRolls = (Object.values(classes) as PassengerClassResult[]).some(c => c.dice !== null);
-  const totalPassengers = hasRolls
-    ? (Object.values(classes) as PassengerClassResult[]).reduce(
-        (sum, c) => sum + (c.passengers ?? 0),
-        0,
-      )
-    : null;
-  const totalRevenue = hasRolls
-    ? (Object.values(classes) as PassengerClassResult[]).reduce(
-        (sum, c) => sum + (c.income ?? 0),
-        0,
-      )
-    : null;
 
   return {
     baseDM,
     breakdown,
     classes,
     hasRolls,
-    totalPassengers,
-    totalRevenue,
   };
 };

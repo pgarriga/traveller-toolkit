@@ -345,15 +345,23 @@ export const PassengerView: FC<PassengerViewProps> = ({
       const seats = booked[cls];
       if (seats === 0) return;
       const price = calculatedResult.classes[cls].pricePerSeat;
-      lines.push({
-        id: cls,
-        label: t(classKey(cls)),
-        detail: null,
+      // Con varios saltos, cada tramo es su propia línea, igual que en el
+      // resumen: el precio de la tabla es por salto.
+      const legs = jumps.length > 1
+        ? jumps.map((j, i) => ({
+            id: `${cls}-${i}`,
+            label: `${t(classKey(cls))} · J-${j}`,
+            price: PASSAGE_PRICES[j][cls],
+          }))
+        : [{ id: cls, label: t(classKey(cls)), price }];
+      legs.forEach(leg => lines.push({
+        id: leg.id,
+        label: leg.label,
         qty: `× ${seats}`,
-        rate: formatCredits(price, lang),
-        amount: formatCredits(seats * price, lang),
+        rate: formatCredits(leg.price, lang),
+        amount: formatCredits(seats * leg.price, lang),
         accent: classColor(cls),
-      });
+      }));
     });
 
     return {
@@ -406,6 +414,8 @@ export const PassengerView: FC<PassengerViewProps> = ({
     setWorldRaw: (w: PassengerWorldInputs) => void,
     linkUwp: string | null,
     setLinkUwp: (uwp: string | null) => void,
+    // El mundo del otro extremo: no se puede elegir dos veces la misma ruta.
+    otherLinkUwp: string | null,
     color: string,
   ) => {
     const handleManual = (w: PassengerWorldInputs): void => {
@@ -419,6 +429,7 @@ export const PassengerView: FC<PassengerViewProps> = ({
           t={t}
           recentPlanets={recentPlanets}
           linkUwp={linkUwp}
+          excludeUwp={otherLinkUwp}
           onPick={planet => applyPlanet(planet, setWorldRaw, setLinkUwp)}
           onClear={() => setLinkUwp(null)}
           savePlanet={savePlanet}
@@ -474,13 +485,14 @@ export const PassengerView: FC<PassengerViewProps> = ({
   const renderClassRow = (cls: PassengerClass, classResult: PassengerClassResult) => {
     const color = classColor(cls);
     const hasResult = classResult.dice !== null;
-    const diceSum = classResult.dice?.reduce((s, d) => s + d, 0) ?? null;
     const diceText = classResult.dice && classResult.dice.length > 0
-      ? `${classResult.dice.join(" + ")} = ${diceSum}`
-      : t("freightDash");
-    const perJumpText = jumps.length > 1
-      ? jumps.map(j => `J-${j} ${formatCredits(PASSAGE_PRICES[j][cls], lang)}`).join(" + ")
+      ? classResult.dice.join(" + ")
       : null;
+    // Con un solo salto no hay nada que desglosar: el precio de la tabla ya
+    // es el del viaje entero.
+    const perJumpText = jumps.length > 1
+      ? jumps.map(j => `J-${j} ${formatCredits(PASSAGE_PRICES[j][cls], lang)}`)
+      : [];
 
     return (
       <div key={cls} style={{ padding: "12px 0", borderTop: `1px solid ${theme.border}`, display: "flex", flexDirection: "column", gap: 8 }}>
@@ -488,15 +500,23 @@ export const PassengerView: FC<PassengerViewProps> = ({
           <span style={{ color, fontSize: 14, fontWeight: 500, textTransform: "uppercase", letterSpacing: 1 }}>
             {t(classKey(cls))}
           </span>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
-            <span style={{ fontFamily: "monospace", fontSize: 12, color: theme.textDimmed }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "baseline",
+              justifyContent: "flex-end",
+              gap: 10,
+              flexWrap: "wrap",
+              fontFamily: "monospace",
+              color: theme.textDimmed,
+            }}
+          >
+            {perJumpText.map((note, i) => (
+              <span key={i} style={{ fontSize: 11 }}>{note}</span>
+            ))}
+            <span style={{ fontSize: 12 }}>
               {t("passengerColPrice")}: {formatCredits(classResult.pricePerSeat, lang)}
             </span>
-            {perJumpText && (
-              <span style={{ fontFamily: "monospace", fontSize: 11, color: theme.textDimmed }}>
-                = {perJumpText}
-              </span>
-            )}
           </div>
         </div>
 
@@ -505,10 +525,10 @@ export const PassengerView: FC<PassengerViewProps> = ({
             {t("passengerRollsMissing")}
           </div>
         ) : (
-          <>
-            <div style={{ fontSize: 12, fontFamily: "monospace", color: theme.text, lineHeight: 1.5 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 12, fontFamily: "monospace", color: theme.text, lineHeight: 1.5 }}>
               <span style={{ color: theme.textDimmed }}>2D </span>
-              <span>{classResult.rolled2D}</span>
+              {classResult.rolled2D}
               <span style={{ color: theme.textDimmed }}> + DM </span>
               <span style={{ color: classResult.dm < 0 ? COLORS.warning : COLORS.success }}>
                 {formatSigned(classResult.dm)}
@@ -519,39 +539,25 @@ export const PassengerView: FC<PassengerViewProps> = ({
               <span className={rolling ? "dice-rolling" : undefined} style={{ fontWeight: 500 }}>
                 {classResult.diceCount}D6
               </span>
-            </div>
-            {hasResult ? (
-              <>
-                <div style={{ fontSize: 12, fontFamily: "monospace", color: theme.textDimmed }}>
-                  {t("passengerColDice")}: <span style={{ color: theme.text }}>{diceText}</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8 }}>
-                  <div style={{ display: "flex", flexDirection: "column" }}>
-                    <span style={{ fontSize: 10, color: theme.textDimmed, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                      {t("passengerColPassengers")}
-                    </span>
-                    {classResult.passengers === 0 || classResult.diceCount === 0 ? (
-                      <span style={{ fontSize: 14, color: COLORS.warning, fontWeight: 500 }}>
-                        {t("passengerNoSeats")}
-                      </span>
-                    ) : (
-                      <span style={{ fontSize: 22, fontWeight: 500, color: theme.text, fontFamily: "monospace" }}>
-                        {classResult.passengers}
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-                    <span style={{ fontSize: 10, color: theme.textDimmed, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                      {t("passengerColIncome")}
-                    </span>
-                    <span style={{ fontSize: 16, fontWeight: 500, color: COLORS.success, fontFamily: "monospace" }}>
-                      {formatCredits(classResult.income ?? 0, lang)}
-                    </span>
-                  </div>
-                </div>
-              </>
-            ) : null}
-          </>
+              {diceText && <span style={{ color: theme.textDimmed }}> · {diceText}</span>}
+            </span>
+            {hasResult && (
+              classResult.passengers === 0 || classResult.diceCount === 0 ? (
+                <span style={{ fontSize: 13, color: COLORS.warning, fontWeight: 500 }}>
+                  {t("passengerNoSeats")}
+                </span>
+              ) : (
+                <span style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                  <span style={{ fontSize: 22, fontWeight: 500, color: theme.text, fontFamily: "monospace" }}>
+                    {classResult.passengers}
+                  </span>
+                  <span style={{ fontSize: 10, color: theme.textDimmed, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                    {t("passengerColPassengers")}
+                  </span>
+                </span>
+              )
+            )}
+          </div>
         )}
       </div>
     );
@@ -661,8 +667,8 @@ export const PassengerView: FC<PassengerViewProps> = ({
           </div>
         </Section>
 
-        {renderWorld(t("passengerOriginSection"), origin, setOrigin, originLinkUwp, setOriginLinkUwp, SECTION_COLORS.starport)}
-        {renderWorld(t("passengerDestinationSection"), destination, setDestination, destinationLinkUwp, setDestinationLinkUwp, SECTION_COLORS.population)}
+        {renderWorld(t("passengerOriginSection"), origin, setOrigin, originLinkUwp, setOriginLinkUwp, destinationLinkUwp, SECTION_COLORS.starport)}
+        {renderWorld(t("passengerDestinationSection"), destination, setDestination, destinationLinkUwp, setDestinationLinkUwp, originLinkUwp, SECTION_COLORS.population)}
 
         </div>
 
@@ -802,7 +808,9 @@ export const PassengerView: FC<PassengerViewProps> = ({
           <div style={{ fontSize: 13, color: theme.textDimmed, marginBottom: 14, lineHeight: 1.5 }}>
             {t("passengerTrafficIntro")}
           </div>
-          <div style={fieldGridStyle}>
+          {/* Dos por fila: las cuatro clases forman un cuadro, no una fila de
+              tres y una huérfana. */}
+          <div style={{ ...fieldGridStyle, gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
             {PASSENGER_CLASS_OPTIONS.map(cls => {
               const liveDM = liveResult.classes[cls].dm;
               return (
@@ -953,20 +961,28 @@ export const PassengerView: FC<PassengerViewProps> = ({
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {PASSENGER_CLASS_OPTIONS.map(cls => {
+                {PASSENGER_CLASS_OPTIONS.flatMap(cls => {
                   const n = booked[cls];
-                  if (n === 0) return null;
+                  if (n === 0) return [];
                   const c = calculatedResult.classes[cls];
-                  return (
-                    <div key={cls} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", fontSize: 13, padding: "4px 0", borderBottom: `1px dashed ${theme.border}` }}>
-                      <span style={{ color: theme.textDimmed }}>
-                        {n} × {t(classKey(cls))}
-                      </span>
+                  // Con varios saltos cada tramo es una línea entera: el
+                  // precio de la tabla es por salto, y una sola cifra
+                  // esconde cómo se reparte el cobro por el camino.
+                  const legs = jumps.length > 1
+                    ? jumps.map((j, i) => ({
+                        key: `${cls}-${i}`,
+                        label: `${n} × ${t(classKey(cls))} · J-${j}`,
+                        amount: n * PASSAGE_PRICES[j][cls],
+                      }))
+                    : [{ key: cls, label: `${n} × ${t(classKey(cls))}`, amount: n * c.pricePerSeat }];
+                  return legs.map(leg => (
+                    <div key={leg.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", fontSize: 13, padding: "4px 0", borderBottom: `1px dashed ${theme.border}` }}>
+                      <span style={{ color: theme.textDimmed }}>{leg.label}</span>
                       <span style={{ fontFamily: "monospace", color: theme.text }}>
-                        {formatCredits(n * c.pricePerSeat, lang)}
+                        {formatCredits(leg.amount, lang)}
                       </span>
                     </div>
-                  );
+                  ));
                 })}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 8, paddingTop: 10, borderTop: `2px solid ${theme.border}` }}>
                   <span style={{ fontSize: 14, fontWeight: 500 }}>

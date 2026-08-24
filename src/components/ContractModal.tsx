@@ -292,11 +292,6 @@ export const ContractModal: FC<ContractModalProps> = ({ theme, t, data, onClose 
                       }}
                     />
                     {line.label}
-                    {line.detail && (
-                      <div style={{ fontSize: 11, color: theme.textDimmed, marginLeft: 16 }}>
-                        {line.detail}
-                      </div>
-                    )}
                   </td>
                   <td style={{ fontFamily: "monospace", whiteSpace: "nowrap" }}>{line.qty}</td>
                   <td style={{ fontFamily: "monospace", whiteSpace: "nowrap", color: theme.textDimmed }}>
