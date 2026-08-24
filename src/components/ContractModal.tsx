@@ -1,18 +1,16 @@
 import type { CSSProperties, FC } from "react";
 import { useMemo, useState } from "react";
 import type { Theme } from "../types/theme";
-import type { Language, TranslationFunction } from "../types/i18n";
+import type { TranslationFunction } from "../types/i18n";
 import type { ContractData, ContractKind, ContractMetaItem } from "../types/contract";
 import { Modal } from "./ui/Modal";
 import { Button } from "./ui/Button";
-import { IconCopy, IconPrinter, IconShare } from "./icons";
+import { IconDownload, IconShare } from "./icons";
 import { COLORS } from "../constants/colors";
 import { renderContractImage } from "../utils/contractImage";
-import { localeFor } from "../utils/format";
 
 interface ContractModalProps {
   theme: Theme;
-  lang: Language;
   t: TranslationFunction;
   data: ContractData;
   onClose: () => void;
@@ -22,113 +20,56 @@ interface ContractModalProps {
 // en un chat, así que lleva de vuelta a la app.
 const APP_URL = "https://pgarriga.github.io/traveller-toolkit/";
 
-// Every export is its own document, so the reference is minted when the modal
-// opens rather than derived from the calculation.
-const makeReference = (kind: ContractKind): string => {
-  const prefix = kind === "freight" ? "FRT" : "PSG";
-  const stamp = Date.now().toString(36).toUpperCase().slice(-5);
-  const tail = Math.floor(Math.random() * 1296).toString(36).toUpperCase().padStart(2, "0");
-  return `${prefix}-${stamp}-${tail}`;
-};
-
-// Plain-text twin of the sheet, for the clipboard.
-const toPlainText = (data: ContractData, header: ContractMetaItem[], t: TranslationFunction): string => {
-  const out: string[] = [data.title.toUpperCase()];
-  header.forEach(h => out.push(`${h.label}: ${h.value}`));
-  out.push("");
-  data.parties.forEach(p => out.push(`${p.role}: ${p.name}${p.detail ? ` (${p.detail})` : ""}`));
-  if (data.meta.length > 0) {
-    out.push("");
-    data.meta.forEach(m => out.push(`${m.label}: ${m.value}`));
-  }
-  out.push("", `--- ${t("contractItems")} ---`);
-  if (data.lines.length === 0) {
-    out.push(t("contractNoLines"));
-  } else {
-    data.lines.forEach(l => {
-      const rate = l.rate ? ` @ ${l.rate}` : "";
-      out.push(`- ${l.label} · ${l.qty}${rate} = ${l.amount}`);
-    });
-  }
-  if (data.totals.length > 0) {
-    out.push("");
-    data.totals.forEach(x => out.push(`${x.label}: ${x.value}`));
-  }
-  if (data.notes.length > 0) {
-    out.push("");
-    data.notes.forEach(n => out.push(n));
-  }
-  out.push("", `${t("contractFooter")} · ${APP_URL}`);
-  return out.join("\n");
+// NAVE-FRE-AAAAMMDDHHMM. La referencia es también el nombre del PNG que se
+// descarga, así que el nombre de la nave se reduce a A-Z y 0-9: fuera tildes,
+// espacios y cualquier cosa que un sistema de ficheros mire con recelo. Sin
+// nombre de nave, el segmento simplemente no aparece.
+const makeReference = (kind: ContractKind, ship: string | null): string => {
+  const tag = kind === "freight" ? "FRE" : "PAS";
+  const name = (ship ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
+  const d = new Date();
+  const pad = (n: number): string => String(n).padStart(2, "0");
+  const stamp =
+    `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}` +
+    `${pad(d.getHours())}${pad(d.getMinutes())}`;
+  return [name, tag, stamp].filter(Boolean).join("-");
 };
 
 // Un único aviso para las acciones del pie: sólo una está activa a la vez.
-type Status = "idle" | "copied" | "copyError" | "downloaded" | "shareError";
+type Status = "idle" | "downloaded" | "error";
 
 const STATUS_KEY: Record<Exclude<Status, "idle">, string> = {
-  copied: "contractCopied",
-  copyError: "contractCopyError",
   downloaded: "contractDownloaded",
-  shareError: "contractShareError",
+  error: "contractImageError",
 };
-
-const isError = (s: Status): boolean => s === "copyError" || s === "shareError";
 
 // Los botones del pie son acciones táctiles: 44 px mínimo.
 const touchTarget: CSSProperties = { minHeight: 44 };
 
-export const ContractModal: FC<ContractModalProps> = ({ theme, lang, t, data, onClose }) => {
-  const [reference] = useState(() => makeReference(data.kind));
-  const [issued] = useState(() =>
-    new Date().toLocaleString(localeFor(lang), {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    }),
-  );
+export const ContractModal: FC<ContractModalProps> = ({ theme, t, data, onClose }) => {
+  const [reference] = useState(() => makeReference(data.kind, data.ship));
   const [status, setStatus] = useState<Status>("idle");
-  const [sharing, setSharing] = useState(false);
+  // Las dos acciones pintan el mismo PNG: mientras dura, se deshabilitan ambas.
+  const [rendering, setRendering] = useState(false);
 
   // La nave encabeza el contrato: es de quién es el trato, no un metadato más.
   const header = useMemo<ContractMetaItem[]>(() => {
     const items: ContractMetaItem[] = [];
     if (data.ship) items.push({ label: t("contractShip"), value: data.ship });
     items.push({ label: t("contractReference"), value: reference });
-    items.push({ label: t("contractIssued"), value: issued });
     return items;
-  }, [data.ship, reference, issued, t]);
-
-  const plainText = useMemo(() => toPlainText(data, header, t), [data, header, t]);
+  }, [data.ship, reference, t]);
 
   const settle = (state: Status): void => {
     setStatus(state);
     window.setTimeout(() => setStatus("idle"), 2500);
   };
 
-  const handleCopy = (): void => {
-    // navigator.clipboard no existe fuera de un contexto seguro (http en LAN),
-    // así que hay que comprobarlo antes de llamarlo, no sólo capturar el rechazo.
-    if (!navigator.clipboard) {
-      settle("copyError");
-      return;
-    }
-    navigator.clipboard
-      .writeText(plainText)
-      .then(() => settle("copied"))
-      .catch((err: Error) => {
-        console.error("Clipboard write failed:", err);
-        settle("copyError");
-      });
-  };
-
-  // Comparte el contrato como PNG. Donde el navegador sabe compartir ficheros
-  // (móvil, sobre todo) abre la hoja nativa — Telegram, WhatsApp, correo…; si
-  // no, descarga la imagen para adjuntarla a mano.
-  const handleShare = (): void => {
-    if (sharing) return;
-    setSharing(true);
+  const buildImage = (): Promise<File> =>
     renderContractImage(data, {
       header,
       items: t("contractItems"),
@@ -140,35 +81,54 @@ export const ContractModal: FC<ContractModalProps> = ({ theme, lang, t, data, on
       footer: t("contractFooter"),
       url: APP_URL,
       dash: t("freightDash"),
-    })
-      .then(blob => {
-        const file = new File([blob], `${reference}.png`, { type: "image/png" });
-        if (navigator.canShare?.({ files: [file] })) {
-          return navigator.share({ files: [file], title: data.title }).then(() => "idle" as Status);
-        }
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = file.name;
-        // El ancla tiene que estar en el documento y la URL no se puede
-        // revocar en el mismo tick: algunos navegadores cancelan la descarga.
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.setTimeout(() => URL.revokeObjectURL(url), 10000);
-        return "downloaded" as Status;
-      })
+    }).then(blob => new File([blob], `${reference}.png`, { type: "image/png" }));
+
+  const saveFile = (file: File): void => {
+    const url = URL.createObjectURL(file);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = file.name;
+    // El ancla tiene que estar en el documento y la URL no se puede revocar en
+    // el mismo tick: algunos navegadores cancelan la descarga.
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.setTimeout(() => URL.revokeObjectURL(url), 10000);
+  };
+
+  const runImageAction = (action: (file: File) => Promise<Status>): void => {
+    if (rendering) return;
+    setRendering(true);
+    buildImage()
+      .then(action)
       .then(next => {
         if (next !== "idle") settle(next);
       })
       .catch((err: Error) => {
         // Cerrar la hoja de compartir nativa no es un fallo.
         if (err.name === "AbortError") return;
-        console.error("Contract image share failed:", err);
-        settle("shareError");
+        console.error("Contract image failed:", err);
+        settle("error");
       })
-      .finally(() => setSharing(false));
+      .finally(() => setRendering(false));
   };
+
+  const handleDownload = (): void =>
+    runImageAction(file => {
+      saveFile(file);
+      return Promise.resolve("downloaded" as Status);
+    });
+
+  // Donde el navegador sabe compartir ficheros (móvil, sobre todo) abre la hoja
+  // nativa — Telegram, WhatsApp, correo…; si no, descarga la imagen igualmente.
+  const handleShare = (): void =>
+    runImageAction(file => {
+      if (navigator.canShare?.({ files: [file] })) {
+        return navigator.share({ files: [file], title: data.title }).then(() => "idle" as Status);
+      }
+      saveFile(file);
+      return Promise.resolve("downloaded" as Status);
+    });
 
   const capLabel: CSSProperties = {
     fontSize: 10,
@@ -209,25 +169,28 @@ export const ContractModal: FC<ContractModalProps> = ({ theme, lang, t, data, on
             style={{
               fontSize: 12,
               marginRight: "auto",
-              color: isError(status) ? COLORS.warning : COLORS.success,
+              color: status === "error" ? COLORS.warning : COLORS.success,
             }}
           >
-            {sharing ? t("contractSharing") : status === "idle" ? "" : t(STATUS_KEY[status])}
+            {rendering ? t("contractRendering") : status === "idle" ? "" : t(STATUS_KEY[status])}
           </span>
-          <Button variant="ghost" theme={theme} onClick={handleCopy} style={touchTarget}>
-            <IconCopy />{t("contractCopy")}
+          <Button
+            variant="ghost"
+            theme={theme}
+            onClick={handleDownload}
+            disabled={rendering}
+            style={touchTarget}
+          >
+            <IconDownload />{t("contractDownload")}
           </Button>
           <Button
             variant="ghost"
             theme={theme}
             onClick={handleShare}
-            disabled={sharing}
+            disabled={rendering}
             style={touchTarget}
           >
             <IconShare />{t("contractShare")}
-          </Button>
-          <Button variant="ghost" theme={theme} onClick={() => window.print()} style={touchTarget}>
-            <IconPrinter />{t("contractPrint")}
           </Button>
           <Button variant="primary" theme={theme} onClick={onClose} style={touchTarget}>
             {t("close")}

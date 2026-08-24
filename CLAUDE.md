@@ -6,8 +6,8 @@ Traveller Toolkit - A multi-tool web app for the Mongoose Traveller 2nd Edition 
 - **Search World** — searches official Traveller worlds by name via the [Traveller Map](https://travellermap.com) API (`/api/search`). Selecting a result jumps to World Detail and auto-saves the world to Visited Worlds.
 - **Visited Worlds** — standalone tool at `/recent` listing the worlds you've visited (persisted in `localStorage`). Sortable dropdown, Edit/Done toggle for per-card deletion, colored tags per UWP attribute.
 - **Worlds Near Me** — standalone tool at `/nearby`. Pick the world you are on, describe your ship (jump rating, fuel range, fuel it accepts), set UWP filters (max distance, minimum starport, TL, population, travel zones) and get the matching worlds, sorted by number of jumps (parsec distance and name break ties, unreachable worlds last). Each result also shows the minimum number of jumps to reach it along a route where the ship never runs out of fuel. `jumpsFromOrigin` searches over `(world, fuel left)` states, not just worlds, so a ship with tankage for several jumps can cross a system with no fuel in it. The `FuelPolicy` (`refined` = starports A/B, `unrefined` = also C/D, `wilderness` = also gas giants and oceans) decides where the ship will refuel; a world it cannot refuel at is still crossed when the fuel range allows. Data comes from the Traveller Map `/api/jumpworlds` endpoint. Below the results table sits a **jump map**: the official `/api/jumpmap` PNG with an SVG ring overlaid on each world that passed the filters (see `utils/jumpMapImage.ts`).
-- **Passenger Traffic** — rolls High / Middle / Basic / Low passenger availability with the Mongoose 2e DMs and computes income. The **Nave** section (first on the page) names the ship and declares how many berths it sells of each class; that count caps the seat selection, and 0 means the class cannot be taken at all. An **Export contract** button opens a passage contract listing every booked seat, headed by the ship's name.
-- **Freight Calculator** — computes traffic DMs, rolls lots, and lets the player pick which lots to buy up to their cargo bay capacity. Includes an integrated Mail Run block. An **Export contract** button opens an invoice with the accepted lots and mail containers, headed by the ship's name.
+- **Passenger Traffic** — rolls High / Middle / Basic / Low passenger availability with the Mongoose 2e DMs and computes income. The **Nave** section (first on the page) names the ship and declares how many berths it sells of each class; that count caps the seat selection, and 0 means the class cannot be taken at all. An **View contract** button opens a passage contract listing every booked seat, headed by the ship's name.
+- **Freight Calculator** — computes traffic DMs, rolls lots, and lets the player pick which lots to buy up to their cargo bay capacity. Includes an integrated Mail Run block. An **View contract** button opens an invoice with the accepted lots and mail containers, headed by the ship's name.
 
 **UI terminology**: user-facing copy uses "world" (Traveller-native term). Code identifiers (`RecentPlanet`, `useRecentPlanets`, `planet` route, `planetName` translation key, `PlanetView`) keep the "planet" naming to avoid a cross-file rename — this asymmetry is intentional.
 
@@ -54,7 +54,7 @@ src/
 │   └── passenger.ts          # PassengerInputs, PassengerResult, PassengerClass, ShipBerths
 ├── components/
 │   ├── icons/
-│   │   └── index.tsx         # SVG icon components (IconSearch, IconPin, IconBox, IconClock, IconUsers, IconMail, IconSettings, IconTrash, IconRefresh, IconRadar, IconMenu, IconClose, IconFileText, IconPrinter, IconCopy, IconShare)
+│   │   └── index.tsx         # SVG icon components (IconSearch, IconPin, IconBox, IconClock, IconUsers, IconMail, IconSettings, IconTrash, IconRefresh, IconRadar, IconMenu, IconClose, IconFileText, IconDownload, IconShare)
 │   ├── banners/
 │   │   └── index.tsx         # Decorative per-tool SVG headers (SearchBanner, RecentBanner, NearbyBanner, PassengerBanner, FreightBanner)
 │   ├── ui/
@@ -374,18 +374,19 @@ import { ContractModal } from "../components/ContractModal";
 <ContractModal theme={theme} lang={lang} t={t} data={contractData} onClose={close} />
 ```
 
-Sharing as an image goes through `utils/contractImage.ts`, which paints the same
-`ContractData` onto a canvas by hand and returns a PNG blob. It does NOT
-rasterise the DOM — the SVG `<foreignObject>` trick drops the Inter webfont and
-everything in `index.css`. The sheet is always painted light, since a shared
-image has no theme to follow. `ContractModal` then hands the blob to
-`navigator.share({ files })` where the browser supports it, and falls back to
-downloading the PNG.
+The contract leaves the app as a PNG, and `utils/contractImage.ts` paints that
+image by hand onto a canvas from the same `ContractData`. It does NOT rasterise
+the DOM — the SVG `<foreignObject>` trick drops the Inter webfont and everything
+in `index.css`. The sheet is always painted light, since a shared image has
+no theme to follow. `ContractModal` either saves that PNG or hands it to
+`navigator.share({ files })`, falling back to the same download where the
+browser cannot share files.
 
-Printing is handled by the `@media print` block at the bottom of `src/index.css`:
-it hides everything except `.contract-sheet` (the modal panel) and repaints it
-light, since the dark theme would print unreadable. Anything inside a contract
-that must not reach paper gets `className="contract-no-print"`.
+The `@media print` block at the bottom of `src/index.css` has no button behind
+it: it is there so the browser's own print command, with the contract open,
+produces the sheet alone rather than the page behind a dark overlay. It hides
+everything except `.contract-sheet` (the modal panel) and repaints it light.
+Controls that must not reach paper carry `className="contract-no-print"`.
 
 ### PageHeader (`components/ui/PageHeader.tsx`)
 ```tsx
@@ -454,9 +455,8 @@ import {
 //   IconClock   → Currently unused in the UI; kept exported for future use
 //   IconMail    → Currently unused: `Section` takes a plain string title, so the
 //                 Mail Run block inside FreightView carries no icon
-//   IconFileText→ "Export contract" button at the bottom of FreightView and PassengerView
-//   IconPrinter → Print action inside ContractModal
-//   IconCopy    → Copy-as-text action inside ContractModal
+//   IconFileText→ "View contract" button at the bottom of FreightView and PassengerView
+//   IconDownload→ Download-as-image action inside ContractModal
 //   IconShare   → Share-as-image action inside ContractModal
 ```
 

@@ -1162,44 +1162,46 @@ export const FreightView: FC<FreightViewProps> = ({
         </Section>
         )}
 
-        {calculatedResult && calculatedResult.hasRolls && (
-          <div style={{ margin: "20px 0 0" }}>
-            <Button
-              variant="primary"
-              size="lg"
-              theme={theme}
-              onClick={() => setContractOpen(true)}
-              fullWidth
-            >
-              <IconFileText />{t("exportContract")}
-            </Button>
-            <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 6, textAlign: "center" }}>
-              {t("exportContractHint")}
-            </div>
-          </div>
-        )}
-
         {calculatedResult && (
-          <div style={{ margin: "24px 0 8px" }}>
-            <Button
-              variant="secondary"
-              size="lg"
-              theme={theme}
-              onClick={handleReset}
-              fullWidth
-            >
-              <IconRefresh />{t("resetCalculator")}
-            </Button>
-            <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 6, textAlign: "center" }}>
-              {t("resetCalculatorHint")}
+          // Las dos acciones finales comparten fila; `flex: 1 1 240px` las
+          // apila solas en cuanto la columna no da para las dos.
+          <div style={{ margin: "24px 0 8px", display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ flex: "1 1 240px" }}>
+              <Button
+                variant="secondary"
+                size="lg"
+                theme={theme}
+                onClick={handleReset}
+                fullWidth
+              >
+                <IconRefresh />{t("resetCalculator")}
+              </Button>
+              <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 6, textAlign: "center" }}>
+                {t("resetCalculatorHint")}
+              </div>
             </div>
+            {calculatedResult.hasRolls && (
+              <div style={{ flex: "1 1 240px" }}>
+                <Button
+                  variant="primary"
+                  size="lg"
+                  theme={theme}
+                  onClick={() => setContractOpen(true)}
+                  fullWidth
+                >
+                  <IconFileText />{t("viewContract")}
+                </Button>
+                <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 6, textAlign: "center" }}>
+                  {t("viewContractHint")}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {contractOpen && contractData && (
           <ContractModal
             theme={theme}
-            lang={lang}
             t={t}
             data={contractData}
             onClose={() => setContractOpen(false)}
