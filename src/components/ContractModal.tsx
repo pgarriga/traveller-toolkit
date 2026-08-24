@@ -72,12 +72,12 @@ export const ContractModal: FC<ContractModalProps> = ({ theme, t, data, onClose 
   const buildImage = (): Promise<File> =>
     renderContractImage(data, {
       header,
-      items: t("contractItems"),
       colItem: t("contractColItem"),
       colQty: t("contractColQty"),
       colRate: t("contractColRate"),
       colAmount: t("contractColAmount"),
       noLines: t("contractNoLines"),
+      total: t("contractTotal"),
       footer: t("contractFooter"),
       url: APP_URL,
       dash: t("freightDash"),
@@ -143,16 +143,18 @@ export const ContractModal: FC<ContractModalProps> = ({ theme, t, data, onClose 
     color: theme.text,
   };
 
-  // <h3> under the modal's <h2>: the sheet's blocks are real structure, so a
-  // screen reader can jump between them.
-  const blockTitle: CSSProperties = {
-    fontSize: 11,
-    color: COLORS.primary,
-    textTransform: "uppercase",
-    letterSpacing: 1.5,
+  // La fila de cierre de la tabla: es la cifra que se firma, así que lleva la
+  // línea naranja encima y no la trama de las filas normales.
+  const totalCell: CSSProperties = {
+    borderTop: `2px solid ${COLORS.primary}`,
+    background: "transparent",
     fontWeight: 500,
-    margin: "18px 0 8px",
+    fontSize: 14,
+    textAlign: "left",
+    padding: "10px 12px",
+    color: theme.text,
   };
+
 
   return (
     <Modal
@@ -227,7 +229,7 @@ export const ContractModal: FC<ContractModalProps> = ({ theme, t, data, onClose 
         }}
       >
         {data.parties.map(party => (
-          <div key={party.role} style={{ borderLeft: `3px solid ${COLORS.primary}`, paddingLeft: 10 }}>
+          <div key={party.role}>
             <div style={capLabel}>{party.role}</div>
             <div style={{ fontSize: 15, fontWeight: 500, color: theme.text }}>{party.name}</div>
             {party.detail && (
@@ -259,13 +261,12 @@ export const ContractModal: FC<ContractModalProps> = ({ theme, t, data, onClose 
       )}
 
       {/* Line items */}
-      <h3 style={blockTitle}>{t("contractItems")}</h3>
       {data.lines.length === 0 ? (
-        <div style={{ fontSize: 13, color: theme.textDimmed, fontStyle: "italic" }}>
+        <div style={{ fontSize: 13, color: theme.textDimmed, fontStyle: "italic", marginTop: 24 }}>
           {t("contractNoLines")}
         </div>
       ) : (
-        <div style={{ overflowX: "auto" }}>
+        <div style={{ overflowX: "auto", marginTop: 24 }}>
           <table className="traveller-table">
             <thead>
               <tr>
@@ -307,6 +308,20 @@ export const ContractModal: FC<ContractModalProps> = ({ theme, t, data, onClose 
                 </tr>
               ))}
             </tbody>
+            {data.total && (
+              <tfoot>
+                <tr>
+                  <th scope="row" style={totalCell}>{t("contractTotal")}</th>
+                  <td style={{ ...totalCell, fontFamily: "monospace", whiteSpace: "nowrap" }}>
+                    {data.total.qty}
+                  </td>
+                  <td style={totalCell} />
+                  <td style={{ ...totalCell, fontFamily: "monospace", whiteSpace: "nowrap", textAlign: "right" }}>
+                    {data.total.amount}
+                  </td>
+                </tr>
+              </tfoot>
+            )}
           </table>
         </div>
       )}

@@ -31,6 +31,13 @@ export interface ContractLine {
   accent: string;        // row marker color
 }
 
+// Fila de cierre de la tabla de conceptos: suma de lo facturado, en unidades
+// (toneladas o asientos) y en créditos.
+export interface ContractLineTotal {
+  qty: string;
+  amount: string;
+}
+
 export interface ContractTotal {
   label: string;
   value: string;
@@ -45,6 +52,7 @@ export interface ContractData {
   parties: ContractParty[];
   meta: ContractMetaItem[];
   lines: ContractLine[];
+  total: ContractLineTotal | null;
   totals: ContractTotal[];
   notes: string[];
 }

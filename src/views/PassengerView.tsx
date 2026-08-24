@@ -15,7 +15,7 @@ import type {
   PassengerZoneTier,
   ShipBerths,
 } from "../types/passenger";
-import type { ContractData, ContractLine, ContractParty, ContractTotal } from "../types/contract";
+import type { ContractData, ContractLine, ContractParty } from "../types/contract";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { ContractModal } from "../components/ContractModal";
@@ -356,18 +356,6 @@ export const PassengerView: FC<PassengerViewProps> = ({
       });
     });
 
-    const totals: ContractTotal[] = [
-      {
-        label: t("passengerTotalSeats"),
-        value: `${selectionTotals.count} ${t("passengerSeatsLabel")}`,
-      },
-      {
-        label: t("passengerTotalRevenue"),
-        value: formatCredits(selectionTotals.revenue, lang),
-        strong: true,
-      },
-    ];
-
     return {
       kind: "passenger",
       title: t("contractPassengerTitle"),
@@ -382,8 +370,12 @@ export const PassengerView: FC<PassengerViewProps> = ({
         { label: t("contractJumpPlan"), value: jumps.map(j => `J-${j}`).join(" + ") },
       ],
       lines,
-      totals,
-      notes: [t("passengerHelpHint")],
+      total: {
+        qty: `× ${selectionTotals.count}`,
+        amount: formatCredits(selectionTotals.revenue, lang),
+      },
+      totals: [],
+      notes: [],
     };
   }, [
     calculatedResult, booked, selectionTotals, lang, t, parsecs, jumps, shipName,

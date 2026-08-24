@@ -370,11 +370,10 @@ export const FreightView: FC<FreightViewProps> = ({
     (["major", "minor", "incidental"] as LotType[]).forEach(type => {
       calculatedResult.lots[type].perLotTons?.forEach((tonsOfLot, idx) => {
         if (!selectedLots.has(lotId(type, idx))) return;
-        const label = `${t(lotKey(type))} #${idx + 1}`;
         lines.push({
           id: lotId(type, idx),
-          label,
-          detail: t(lotDescKey(type)),
+          label: `${t(lotKey(type))} #${idx + 1}`,
+          detail: null,
           qty: `${formatTons(tonsOfLot, lang)} t`,
           rate: `${formatCredits(summary.cargoRate, lang)} /t`,
           amount: formatCredits(Math.round(tonsOfLot * summary.cargoRate), lang),
@@ -383,31 +382,23 @@ export const FreightView: FC<FreightViewProps> = ({
       });
     });
 
-    if (summary.mailAccepted) {
+    // El correo va contenedor a contenedor, igual que los lotes: se aceptan
+    // todos o ninguno, pero en la factura cada uno es una línea.
+    for (let i = 1; i <= summary.mailContainers; i++) {
       lines.push({
-        id: "mail",
-        label: t("summaryMail"),
-        detail: `${summary.mailContainers} × ${formatTons(MAIL_TONS_PER_CONTAINER, lang)} t`,
-        qty: `${formatTons(summary.mailTons, lang)} t`,
+        id: `mail-${i}`,
+        label: `${t("contractMailContainer")} #${i}`,
+        detail: null,
+        qty: `${formatTons(MAIL_TONS_PER_CONTAINER, lang)} t`,
         rate: `${formatCredits(summary.mailRate, lang)} /t`,
-        amount: formatCredits(summary.mailIncome, lang),
+        amount: formatCredits(MAIL_PAYMENT_PER_CONTAINER, lang),
         accent: COLORS.success,
       });
     }
 
-    const totals: ContractTotal[] = [
-      {
-        // Sin la capacidad de la bodega: es un dato de la nave, no del trato.
-        label: t("contractTotalTons"),
-        value: `${formatTons(summary.totalTons, lang)} t`,
-        warn: !summary.fitsInBay,
-      },
-      {
-        label: t("summaryTotalGross"),
-        value: formatCredits(summary.totalGross, lang),
-        strong: calculatedResult.onTime,
-      },
-    ];
+    // Las toneladas y el importe cierran la tabla de conceptos; aquí abajo
+    // sólo queda lo que no es una suma de líneas.
+    const totals: ContractTotal[] = [];
     if (!calculatedResult.onTime) {
       totals.push({
         label: t("summaryTotalNet"),
@@ -435,6 +426,10 @@ export const FreightView: FC<FreightViewProps> = ({
         { label: t("contractJumpPlan"), value: jumps.map(j => `J-${j}`).join(" + ") },
       ],
       lines,
+      total: {
+        qty: `${formatTons(summary.totalTons, lang)} t`,
+        amount: formatCredits(summary.totalGross, lang),
+      },
       totals,
       notes,
     };
@@ -837,9 +832,9 @@ export const FreightView: FC<FreightViewProps> = ({
           </div>
           <div style={fieldGridStyle}>
             {[
-              { type: "major" as const, label: t("freightRollMajor"), expected: liveResult.lots.major.lots, rollValue: rollMajorRaw, setRoll: setRollMajorRaw },
-              { type: "minor" as const, label: t("freightRollMinor"), expected: liveResult.lots.minor.lots, rollValue: rollMinorRaw, setRoll: setRollMinorRaw },
-              { type: "incidental" as const, label: t("freightRollIncidental"), expected: liveResult.lots.incidental.lots, rollValue: rollIncidentalRaw, setRoll: setRollIncidentalRaw },
+              { type: "major" as const, label: t(lotKey("major")), expected: liveResult.lots.major.lots, rollValue: rollMajorRaw, setRoll: setRollMajorRaw },
+              { type: "minor" as const, label: t(lotKey("minor")), expected: liveResult.lots.minor.lots, rollValue: rollMinorRaw, setRoll: setRollMinorRaw },
+              { type: "incidental" as const, label: t(lotKey("incidental")), expected: liveResult.lots.incidental.lots, rollValue: rollIncidentalRaw, setRoll: setRollIncidentalRaw },
             ].map(field => (
               <Field
                 key={field.type}

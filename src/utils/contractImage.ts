@@ -32,12 +32,12 @@ const COL_AMOUNT = 120;
 export interface ContractImageLabels {
   // Referencia, fecha de emisión y nave: lo que va bajo el título.
   header: ContractMetaItem[];
-  items: string;
   colItem: string;
   colQty: string;
   colRate: string;
   colAmount: string;
   noLines: string;
+  total: string;
   footer: string;
   url: string;
   dash: string;
@@ -113,12 +113,6 @@ const paint = (
     put(clip(value, w), x, y + 15, INK);
   };
 
-  const heading = (label: string): void => {
-    setFont(500, 11, SANS, 1.5);
-    put(label.toUpperCase(), PAD, y, TRAVELLER.orange);
-    y += 22;
-  };
-
   // ---- cabecera --------------------------------------------------------
   fill(0, 0, WIDTH, 6, TRAVELLER.orange);
   y = 34;
@@ -141,13 +135,12 @@ const paint = (
   data.parties.forEach((party, idx) => {
     const x = PAD + idx * half;
     const w = half - 16;
-    fill(x, y, 3, 52, TRAVELLER.orange);
     setFont(500, 10, SANS, 1);
-    put(party.role.toUpperCase(), x + 10, y, DIM);
+    put(party.role.toUpperCase(), x, y, DIM);
     setFont(500, 16, SANS);
-    put(clip(party.name, w - 10), x + 10, y + 14, INK);
+    put(clip(party.name, w), x, y + 14, INK);
     setFont(400, 11, MONO);
-    put(clip(party.detail, w - 10), x + 10, y + 36, MUTED);
+    put(clip(party.detail, w), x, y + 36, MUTED);
   });
   y += 52 + 16;
 
@@ -160,11 +153,9 @@ const paint = (
   }
 
   rule();
-  y += 20;
+  y += 32;
 
   // ---- conceptos -------------------------------------------------------
-  heading(l.items);
-
   if (data.lines.length === 0) {
     setFont(400, 13, SANS);
     put(l.noLines, PAD, y, DIM);
@@ -199,6 +190,17 @@ const paint = (
       fill(PAD, y + h - 1, inner, 1, "rgba(212, 82, 28, 0.15)");
       y += h;
     });
+
+    if (data.total) {
+      fill(PAD, y, inner, 2, TRAVELLER.orange);
+      y += 10;
+      setFont(500, 14, SANS);
+      put(l.total.toUpperCase(), PAD + 12, y, INK);
+      setFont(500, 14, MONO);
+      put(data.total.qty, xQty, y, INK, "right");
+      put(data.total.amount, right - 12, y, INK, "right");
+      y += 24;
+    }
   }
 
   // ---- totales ---------------------------------------------------------
