@@ -48,14 +48,6 @@ export const HomeView: FC<HomeViewProps> = ({
       onClick: () => navigateTo("search"),
     },
     {
-      key: "recent",
-      icon: <IconPin />,
-      title: t("recentWorldsTitle"),
-      description: t("homeRecentDesc"),
-      accent: COLORS.info,
-      onClick: () => navigateTo("recent"),
-    },
-    {
       key: "nearby",
       icon: <IconRadar />,
       title: t("nearbyTitle"),
@@ -78,6 +70,14 @@ export const HomeView: FC<HomeViewProps> = ({
       description: t("homeFreightDesc"),
       accent: COLORS.secondary,
       onClick: () => navigateTo("freight"),
+    },
+    {
+      key: "recent",
+      icon: <IconPin />,
+      title: t("recentWorldsTitle"),
+      description: t("homeRecentDesc"),
+      accent: COLORS.info,
+      onClick: () => navigateTo("recent"),
     },
   ];
 
