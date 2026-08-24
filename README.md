@@ -18,8 +18,8 @@ A modern, browser-based set of tools for the **Mongoose Traveller 2nd Edition** 
 | `/search` | **Search World** | Looks up official Traveller worlds by name via the [Traveller Map](https://travellermap.com) API and jumps into the world detail with a full UWP breakdown. |
 | `/recent` | **Visited Worlds** | Standalone tool listing the worlds you've visited (persisted in `localStorage`). Sortable and editable — see [Visited Worlds](#visited-worlds) below. |
 | `/nearby` | **Worlds Near Me** | Pick the world you are on, describe your ship (jump rating, fuel range, fuel it accepts), set UWP filters, and get the matching worlds ranked by how many jumps away they are — see [Worlds Near Me](#worlds-near-me) below. |
-| `/passengers` | **Passenger Traffic** | Rolls High / Middle / Basic / Low passenger availability with the Mongoose 2e DMs and computes income. |
-| `/freight` | **Freight Calculator** | Computes traffic DMs between two worlds, rolls lots automatically, and lets you pick which lots to take up to your cargo bay's capacity. Shows income live as you toggle lots. |
+| `/passengers` | **Passenger Traffic** | Rolls High / Middle / Basic / Low passenger availability with the Mongoose 2e DMs and computes income. Exports the booked seats as a printable passage contract. |
+| `/freight` | **Freight Calculator** | Computes traffic DMs between two worlds, rolls lots automatically, and lets you pick which lots to take up to your cargo bay's capacity. Shows income live as you toggle lots, and exports the accepted lots and mail as a printable freight contract. |
 | `/settings` | **Settings** | Theme (auto / light / dark) and language (auto / Spanish / English). |
 | `/planet/{UWP}` | **World Detail** | Editable world name + UWP + zone, deep-linkable. |
 
@@ -179,12 +179,14 @@ All UI elements, labels, and game data are fully translated. You can also overri
 src/
 ├── components/
 │   ├── icons/          # SVG icon components (IconSearch, IconPin, IconBox, IconUsers, ...)
-│   └── ui/             # Button, Section, Row, PageHeader
+│   ├── ui/             # Button, Section, Row, Field, PageHeader, Modal
+│   └── ContractModal.tsx # Printable freight / passage contract sheet
 ├── constants/          # colors, zones, gameRules, freight, mail, passenger
 ├── hooks/              # useThemeMode, useRecentPlanets
 ├── i18n/               # translations (ES/EN) + game data
-├── types/              # theme, uwp, i18n, game-data, freight, mail, passenger
-├── utils/              # routing, uwp, freight, mail, passenger, travellerMap, i18n-helpers
+├── types/              # theme, uwp, i18n, game-data, freight, mail, passenger, contract
+├── utils/              # routing, uwp, freight, mail, passenger, travellerMap,
+│                       # contractImage, format, i18n-helpers
 ├── views/              # HomeView, SearchView, RecentWorldsView,
 │                       # FreightView, PassengerView, PlanetView, SettingsView
 ├── App.tsx             # Main orchestration: view state + routing + popstate
