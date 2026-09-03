@@ -122,3 +122,11 @@ export const IconDownload: FC = () => (
   </svg>
 );
 
+export const IconShip: FC = () => (
+  <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: "middle", marginRight: 6 }}>
+    <path d="M12 2c2.4 3.2 3.7 7 3.7 11.2L12 15.4l-3.7-2.2C8.3 9 9.6 5.2 12 2z"/>
+    <path d="M8.4 11.6 4.6 15.4v3.8l3.6-2"/>
+    <path d="M15.6 11.6l3.8 3.8v3.8l-3.6-2"/>
+    <path d="M12 18v3"/>
+  </svg>
+);

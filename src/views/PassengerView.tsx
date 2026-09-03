@@ -13,7 +13,6 @@ import type {
   PassengerStarport,
   PassengerWorldInputs,
   PassengerZoneTier,
-  ShipBerths,
 } from "../types/passenger";
 import type { ContractData, ContractLine, ContractParty } from "../types/contract";
 import { Navbar } from "../components/Navbar";
@@ -40,13 +39,14 @@ import {
   STEWARD_SKILL_MAX,
   STEWARD_SKILL_MIN,
 } from "../constants/passenger";
-import { STORAGE_KEYS, isFiniteNumber, isString } from "../constants/storage";
+import { STORAGE_KEYS, isFiniteNumber } from "../constants/storage";
 import { usePersistentState } from "../hooks/usePersistentState";
+import { useShip } from "../hooks/useShip";
 import { calculatePassengers } from "../utils/passenger";
 import { planetToPassengerWorld } from "../utils/planetToWorldInputs";
 import { formatCredits } from "../utils/format";
 
-type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent" | "nearby";
+type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent" | "nearby" | "ship";
 
 interface PassengerViewProps {
   theme: Theme;
@@ -164,14 +164,6 @@ const EMPTY_SELECTION: Record<PassengerClass, number> = {
   low: 0,
 };
 
-const NO_BERTHS: ShipBerths = { high: 0, middle: 0, basic: 0, low: 0 };
-
-const isShipBerths = (raw: unknown): raw is ShipBerths => {
-  if (typeof raw !== "object" || raw === null) return false;
-  const b = raw as Record<string, unknown>;
-  return PASSENGER_CLASS_OPTIONS.every(cls => isFiniteNumber(b[cls]));
-};
-
 export const PassengerView: FC<PassengerViewProps> = ({
   theme,
   lang,
@@ -203,12 +195,10 @@ export const PassengerView: FC<PassengerViewProps> = ({
   const [jumpCount, setJumpCount] = useState<number>(1);
   const jumps = useMemo(() => distributeJumps(parsecs, jumpCount), [parsecs, jumpCount]);
   // Datos de nave/tripulación: persisten entre sesiones y sobreviven al reset.
-  const [shipName, setShipName] = usePersistentState<string>(
-    STORAGE_KEYS.shipName, "", isString,
-  );
-  const [berths, setBerths] = usePersistentState<ShipBerths>(
-    STORAGE_KEYS.passengerBerths, NO_BERTHS, isShipBerths,
-  );
+  // El nombre y las plazas son de la nave, no de esta ruta, así que salen de la
+  // ficha de "Mi nave": editarlos aquí es editarlos allí.
+  const { name: shipName, setName: setShipName, capacity, setBerths } = useShip();
+  const berths = capacity.berths;
   const [brokerEffect, setBrokerEffect] = usePersistentState<number>(
     STORAGE_KEYS.passengerBrokerEffect, 0, isFiniteNumber,
   );
@@ -619,7 +609,7 @@ export const PassengerView: FC<PassengerViewProps> = ({
             ))}
           </div>
           <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 10 }}>
-            {t("shipBerthsNote")}
+            {t("shipBerthsNote")} {t("shipFromSheetHint")}
           </div>
         </Section>
         <Section title={t("passengerSkillsSection")} color={SECTION_COLORS.atmosphere} theme={theme}>

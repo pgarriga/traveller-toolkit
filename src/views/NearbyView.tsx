@@ -32,7 +32,7 @@ import {
 import { fetchJumpWorlds } from "../utils/travellerMap";
 import { filterWorlds, jumpsFromOrigin, withDistance, worldKey } from "../utils/nearby";
 
-type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent" | "nearby";
+type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent" | "nearby" | "ship";
 
 interface NearbyViewProps {
   theme: Theme;

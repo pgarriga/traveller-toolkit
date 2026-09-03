@@ -24,10 +24,17 @@ const GROUPED: Intl.NumberFormatOptions = { useGrouping: "always" };
 export const formatCredits = (n: number, lang: Language): string =>
   `Cr ${n.toLocaleString(localeFor(lang), GROUPED)}`;
 
-// Las toneladas admiten media tonelada, pero nunca más de un decimal.
-export const formatTons = (n: number, lang: Language): string =>
+// Las toneladas de un lote admiten media tonelada, pero nunca más de un
+// decimal. Las fichas de nave sí llegan más lejos —el manual imprime bodegas de
+// 22,85 t y monturas de 0,32 t—, y para esas se pide `maxDecimals: 2`.
+export const formatTons = (n: number, lang: Language, maxDecimals = 1): string =>
   n.toLocaleString(localeFor(lang), {
     ...GROUPED,
     minimumFractionDigits: n % 1 === 0 ? 0 : 1,
-    maximumFractionDigits: 1,
+    maximumFractionDigits: maxDecimals,
   });
+
+// Los precios de nave van en megacréditos y el manual los da hasta la
+// diezmilésima (36,9405 MCr), que es el céntimo de crédito.
+export const formatMCr = (n: number, lang: Language): string =>
+  `${n.toLocaleString(localeFor(lang), { ...GROUPED, maximumFractionDigits: 4 })} MCr`;

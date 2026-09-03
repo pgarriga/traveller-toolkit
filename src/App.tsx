@@ -24,8 +24,9 @@ import { SearchView } from "./views/SearchView";
 import { RecentWorldsView } from "./views/RecentWorldsView";
 import { NearbyView } from "./views/NearbyView";
 import { HomeView } from "./views/HomeView";
+import { ShipView } from "./views/ShipView";
 
-type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent" | "nearby";
+type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent" | "nearby" | "ship";
 
 export default function App() {
   const { t, lang, langMode, setLangMode } = useTranslation();
@@ -246,6 +247,10 @@ export default function App() {
         onSelectWorld={loadWorldFromSearch}
       />
     );
+  }
+
+  if (view === "ship") {
+    return <ShipView {...commonProps} lang={lang} />;
   }
 
   if (view === "recent") {

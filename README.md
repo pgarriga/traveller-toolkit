@@ -20,6 +20,7 @@ A modern, browser-based set of tools for the **Mongoose Traveller 2nd Edition** 
 | `/nearby` | **Worlds Near Me** | Pick the world you are on, describe your ship (jump rating, fuel range, fuel it accepts), set UWP filters, and get the matching worlds ranked by how many jumps away they are — see [Worlds Near Me](#worlds-near-me) below. |
 | `/passengers` | **Passenger Traffic** | Rolls High / Middle / Basic / Low passenger availability with the Mongoose 2e DMs and computes income. Shows the booked seats as a passage contract you can download or share as an image. |
 | `/freight` | **Freight Calculator** | Computes traffic DMs between two worlds, rolls lots automatically, and lets you pick which lots to take up to your cargo bay's capacity. Shows income live as you toggle lots, and shows the accepted lots and mail as a freight contract you can download or share as an image. |
+| `/ship` | **My Ship** | An editable sheet for your ship, laid out like a stat block in the rulebook. Load any of the 24 "Common Spacecraft" designs and strip out or bolt on weapons, staterooms, craft and systems — see [My Ship](#my-ship) below. |
 | `/settings` | **Settings** | Theme (auto / light / dark) and language (auto / Spanish / English). |
 | `/planet/{UWP}` | **World Detail** | Editable world name + UWP + zone, deep-linkable. |
 
@@ -66,6 +67,13 @@ A modern, browser-based set of tools for the **Mongoose Traveller 2nd Edition** 
 - **Jump map** below the results — the official Traveller Map render of the area ([`/api/jumpmap`](https://travellermap.com/doc/api)), with a steel-blue ring drawn on every world that passed the filters — solid and tinted when there is a fuel-safe route to it, dashed and hollow when there is not — plus a dashed orange ring on the world you are on. The image is theirs and shows every world in range; the rings are ours and mark the matches, so the map answers "which of these are the ones I want" at a glance. Markers stay non-interactive on purpose — the results table above is the keyboard-accessible way into each world.
 - **One request per search** — the radius (max distance + jump rating) is fetched once and the filters and ship settings re-apply instantly as you change them.
 - **Exact parsec distances** computed from the map's world-space coordinates on an odd-q hex grid, validated against the API's own jump results across sector boundaries.
+
+### My Ship
+- **A sheet, not a designer** — Every row of the rulebook's stat block is here (TL, hull, armour, drives, power plant, fuel, bridge, computer, sensors, weapons, ammunition, craft, systems, software, staterooms, common areas, cargo), each line carrying its own tonnage and price in MCr. Nothing is validated or recomputed: the sheet never checks tonnage against the hull or rebuilds the purchase price, so every number stays yours.
+- **24 designs from the rulebook** as starting points — 14 starships (Scout/Courier, Seeker, Free Trader, Far Trader, Safari Ship, System Defence Boat, Yacht, Gazelle-class Close Escort, Laboratory Ship, Patrol Corvette, Subsidised Merchant, Donosev-class Survey Scout, Subsidised Liner, Mercenary Cruiser) and 10 small craft (light fighter, launch, shuttle, ship's boat, slow boat, pinnace, slow pinnace, modular cutter, ferry, passenger shuttle). Loading one keeps your ship's name, its passenger berths and your notes.
+- **Add and remove components** — Each section has its own "add" menu, built from every part those 24 designs actually carry: turrets from single-empty to triple pulse laser, particle barbettes, fixed mounts, missile magazines, drones, labs, workshops, staterooms, low berths and the rest. "Custom" adds a blank row for anything the rulebook does not list.
+- **Feeds the calculators** — The cargo bay and the passenger berths live on the sheet, and the Freight and Passenger calculators read them from there. Editing either number in a calculator edits the ship, so there is only ever one answer to "how big is my hold?".
+- **Totals**, informational only: the components' tonnage against the hull, and their price alongside the purchase price you typed.
 
 ### Visited Worlds
 - **Standalone tool** at `/recent` (its own card on the home page, its own navbar entry).
@@ -180,14 +188,17 @@ src/
 ├── components/
 │   ├── icons/          # SVG icon components (IconSearch, IconPin, IconBox, IconUsers, ...)
 │   ├── ui/             # Button, Section, Row, Field, PageHeader, Modal
-│   └── ContractModal.tsx # Printable freight / passage contract sheet
-├── constants/          # colors, zones, gameRules, freight, mail, passenger
-├── hooks/              # useThemeMode, useRecentPlanets
-├── i18n/               # translations (ES/EN) + game data
-├── types/              # theme, uwp, i18n, game-data, freight, mail, passenger, contract
+│   ├── ContractModal.tsx # Printable freight / passage contract sheet
+│   └── ShipSectionEditor.tsx # One stat-block row of the My Ship sheet
+├── constants/          # colors, zones, gameRules, freight, mail, passenger,
+│                       # ship, shipParts, shipTemplates
+├── hooks/              # useThemeMode, useRecentPlanets, useShip
+├── i18n/               # translations (ES/CA/EN) + game data
+├── types/              # theme, uwp, i18n, game-data, freight, mail, passenger,
+│                       # contract, ship
 ├── utils/              # routing, uwp, freight, mail, passenger, travellerMap,
-│                       # contractImage, format, i18n-helpers
-├── views/              # HomeView, SearchView, RecentWorldsView,
+│                       # contractImage, format, ship, i18n-helpers
+├── views/              # HomeView, SearchView, RecentWorldsView, ShipView,
 │                       # FreightView, PassengerView, PlanetView, SettingsView
 ├── App.tsx             # Main orchestration: view state + routing + popstate
 ├── index.css           # Global styles + responsive breakpoints

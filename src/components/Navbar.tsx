@@ -2,11 +2,11 @@ import type { FC } from "react";
 import { useEffect, useRef } from "react";
 import type { Theme } from "../types/theme";
 import type { TranslationFunction } from "../types/i18n";
-import { IconSettings, IconBox, IconMenu, IconClose, IconUsers, IconSearch, IconPin, IconRadar } from "./icons";
+import { IconSettings, IconBox, IconMenu, IconClose, IconUsers, IconSearch, IconPin, IconRadar, IconShip } from "./icons";
 import { Button } from "./ui/Button";
 import { COLORS } from "../constants/colors";
 
-type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent" | "nearby";
+type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent" | "nearby" | "ship";
 
 interface NavbarProps {
   theme: Theme;
@@ -196,6 +196,18 @@ export const Navbar: FC<NavbarProps> = ({ theme, view, goHome, navigateTo, menuO
             role="menuitem"
           >
             <IconBox />{t("freightTitle")}
+          </Button>
+          <Button
+            variant="nav-mobile"
+            size="lg"
+            active={view === "ship"}
+            theme={theme}
+            onClick={() => navigateTo("ship")}
+            fullWidth
+            style={{ justifyContent: "flex-start" }}
+            role="menuitem"
+          >
+            <IconShip />{t("shipTitle")}
           </Button>
           <Button
             variant="nav-mobile"

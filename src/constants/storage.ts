@@ -4,9 +4,16 @@
 
 export const STORAGE_KEYS = {
   recentPlanets: "traveller-recent",
-  // La nave es la misma en las dos calculadoras, así que comparten clave.
+  // La nave es la misma en las dos calculadoras y en "Mi nave", así que
+  // comparten clave.
   shipName: "traveller-ship-name",
+  // La ficha de "Mi nave". Contiene la bodega y las plazas de pasajero, que
+  // antes vivían sueltas en freightCargoBay y passengerBerths.
+  ship: "traveller-ship",
   freightSkillEffect: "traveller-freight-skill-effect",
+  // Heredadas: hoy las dos capacidades viven dentro de la ficha de la nave y
+  // estas claves solo se leen una vez, para no perder lo que el jugador ya tenía
+  // puesto cuando "Mi nave" no existía. Ver hooks/useShip.ts.
   freightCargoBay: "traveller-freight-cargo-bay",
   freightMail: "traveller-freight-mail",
   passengerBrokerEffect: "traveller-passenger-broker-effect",

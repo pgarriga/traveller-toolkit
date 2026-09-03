@@ -1,6 +1,6 @@
 // URL routing helpers
 
-type RoutingView = "home" | "planet" | "settings" | "freight" | "passenger" | "search" | "recent" | "nearby";
+type RoutingView = "home" | "planet" | "settings" | "freight" | "passenger" | "search" | "recent" | "nearby" | "ship";
 
 interface ParsedUrl {
   view: RoutingView;
@@ -22,6 +22,9 @@ export const parseUrl = (): ParsedUrl => {
   }
   if (path === "/nearby") {
     return { view: "nearby", uwp: null };
+  }
+  if (path === "/ship") {
+    return { view: "ship", uwp: null };
   }
   if (path === "/recent") {
     return { view: "recent", uwp: null };
@@ -53,6 +56,7 @@ export const buildUrl = (view: RoutingView, uwp: string | null = null): string =
   if (view === "search") return `${basePath}/search`;
   if (view === "recent") return `${basePath}/recent`;
   if (view === "nearby") return `${basePath}/nearby`;
+  if (view === "ship") return `${basePath}/ship`;
   if (view === "planet" && uwp) return `${basePath}/planet/${uwp.toUpperCase()}`;
   return basePath || "/";
 };

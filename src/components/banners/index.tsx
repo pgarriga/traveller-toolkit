@@ -651,3 +651,90 @@ export const FreightBanner: FC<BannerProps> = ({ theme }) => (
     </g>
   </svg>
 );
+
+// ---------- Ship Banner ----------
+// A shipyard elevation: the hull in outline with its systems called out, and the
+// one component under the cursor picked out in orange — which is what the sheet
+// is for. The tonnage bar on the right echoes the sheet's totals row.
+
+const SHIP_CALLOUTS: readonly { x: number; label: string; accent?: boolean }[] = [
+  { x: 214, label: "M-DRV" },
+  { x: 286, label: "J-DRV" },
+  { x: 358, label: "PWR" },
+  { x: 430, label: "TURRET", accent: true },
+  { x: 502, label: "BRIDGE" },
+];
+
+export const ShipBanner: FC<BannerProps> = ({ theme }) => (
+  <svg aria-hidden="true" viewBox="0 0 800 120" style={svgStyle} preserveAspectRatio="xMidYMid meet">
+    <CornerFrame color={theme.textDimmed} />
+    <text x="30" y="22" fill={theme.textDimmed} fontSize="10" fontFamily="monospace" letterSpacing="1.5">
+      {"> SHIP SHEET"}
+    </text>
+    <text
+      x="770"
+      y="22"
+      fill={theme.textDimmed}
+      fontSize="10"
+      fontFamily="monospace"
+      letterSpacing="1.5"
+      textAnchor="end"
+    >
+      TL 12 · 200 TONS
+    </text>
+
+    {/* Hull elevation: a blunt wedge with two drive nacelles. */}
+    <g stroke={theme.textMuted} strokeWidth={1.4} fill="none" strokeLinejoin="round">
+      <path d="M180 68 L196 50 L520 50 L556 62 L556 74 L520 86 L196 86 Z" />
+      <path d="M212 50 L212 86" />
+      <path d="M470 50 L470 86" />
+      <path d="M196 86 L188 96 L262 96 L268 86" />
+      <path d="M520 50 L534 42 L560 42 L556 50" />
+    </g>
+
+    {/* Turret: the highlighted component. */}
+    <g stroke={COLORS.primary} strokeWidth={1.6} fill="none" strokeLinecap="round">
+      <path d="M424 50 L424 42 L436 42 L436 50" />
+      <line x1={430} y1={42} x2={430} y2={34} />
+    </g>
+
+    {/* Callout ticks and labels under the hull. */}
+    {SHIP_CALLOUTS.map(callout => (
+      <g key={callout.label}>
+        <line
+          x1={callout.x}
+          y1={86}
+          x2={callout.x}
+          y2={101}
+          stroke={callout.accent ? COLORS.primary : theme.border}
+          strokeWidth={1}
+          strokeDasharray={callout.accent ? undefined : "2 3"}
+        />
+        <text
+          x={callout.x}
+          y={113}
+          fill={callout.accent ? COLORS.primary : theme.textDimmed}
+          fontSize="9"
+          fontFamily="monospace"
+          textAnchor="middle"
+          letterSpacing="1.5"
+          fontWeight={callout.accent ? 500 : undefined}
+        >
+          {callout.label}
+        </text>
+      </g>
+    ))}
+
+    {/* Tonnage used against the hull, the sheet's totals row in miniature. */}
+    <g transform="translate(600, 52)">
+      <text x={0} y={0} fill={theme.textDimmed} fontSize="10" fontFamily="monospace" letterSpacing="1.5">
+        HULL 200t
+      </text>
+      <rect x={0} y={9} width={170} height={12} stroke={theme.textDimmed} strokeWidth={1} fill="none" />
+      <rect x={0} y={9} width={119} height={12} fill={`${COLORS.primary}55`} stroke={COLORS.primary} strokeWidth={1} />
+      <text x={0} y={38} fill={COLORS.primary} fontSize="10" fontFamily="monospace" letterSpacing="1.5" fontWeight={500}>
+        FITTED 140t
+      </text>
+    </g>
+  </svg>
+);

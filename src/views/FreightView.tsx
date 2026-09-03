@@ -47,14 +47,15 @@ import {
   findMailRank,
   rollD6 as rollMailD6,
 } from "../constants/mail";
-import { STORAGE_KEYS, isFiniteNumber, isString } from "../constants/storage";
+import { STORAGE_KEYS, isFiniteNumber } from "../constants/storage";
 import { usePersistentState } from "../hooks/usePersistentState";
+import { useShip } from "../hooks/useShip";
 import { calculateFreight } from "../utils/freight";
 import { calculateMail } from "../utils/mail";
 import { planetToFreightWorld } from "../utils/planetToWorldInputs";
 import { formatCredits, formatTons } from "../utils/format";
 
-type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent" | "nearby";
+type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent" | "nearby" | "ship";
 
 interface FreightViewProps {
   theme: Theme;
@@ -198,12 +199,10 @@ export const FreightView: FC<FreightViewProps> = ({
   const [jumpCount, setJumpCount] = useState<number>(1);
   const jumps = useMemo(() => distributeJumps(parsecs, jumpCount), [parsecs, jumpCount]);
   // Datos de nave/tripulación: persisten entre sesiones y sobreviven al reset.
-  const [shipName, setShipName] = usePersistentState<string>(
-    STORAGE_KEYS.shipName, "", isString,
-  );
-  const [cargoBay, setCargoBay] = usePersistentState<number>(
-    STORAGE_KEYS.freightCargoBay, 0, isFiniteNumber,
-  );
+  // El nombre y la bodega son de la nave, no de esta ruta, así que salen de la
+  // ficha de "Mi nave": editarlos aquí es editarlos allí.
+  const { name: shipName, setName: setShipName, capacity, setCargoTons } = useShip();
+  const cargoBay = capacity.cargoTons;
   const [skillEffect, setSkillEffect] = usePersistentState<number>(
     STORAGE_KEYS.freightSkillEffect, 0, isFiniteNumber,
   );
@@ -677,11 +676,12 @@ export const FreightView: FC<FreightViewProps> = ({
                   min={0}
                   style={inputStyle}
                   value={cargoBay}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setCargoBay(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setCargoTons(Math.max(0, parseInt(e.target.value, 10) || 0))}
                 />
               )}
             </Field>
           </div>
+          <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 8 }}>{t("shipFromSheetHint")}</div>
           <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", marginTop: 12 }}>
             <input
               type="checkbox"
