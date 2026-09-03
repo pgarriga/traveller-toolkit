@@ -8,7 +8,7 @@ Traveller Toolkit - A multi-tool web app for the Mongoose Traveller 2nd Edition 
 - **Worlds Near Me** — standalone tool at `/nearby`. Pick the world you are on, describe your ship (jump rating, fuel range, fuel it accepts), set UWP filters (max distance, minimum starport, TL, population, travel zones) and get the matching worlds, sorted by number of jumps (parsec distance and name break ties, unreachable worlds last). Each result also shows the minimum number of jumps to reach it along a route where the ship never runs out of fuel. `jumpsFromOrigin` searches over `(world, fuel left)` states, not just worlds, so a ship with tankage for several jumps can cross a system with no fuel in it. The `FuelPolicy` (`refined` = starports A/B, `unrefined` = also C/D, `wilderness` = also gas giants and oceans) decides where the ship will refuel; a world it cannot refuel at is still crossed when the fuel range allows. Data comes from the Traveller Map `/api/jumpworlds` endpoint. Below the results table sits a **jump map**: the official `/api/jumpmap` PNG with an SVG ring overlaid on each world that passed the filters (see `utils/jumpMapImage.ts`).
 - **Passenger Traffic** — rolls High / Middle / Basic / Low passenger availability with the Mongoose 2e DMs and computes income. The **Nave** section (first on the page) names the ship and declares how many berths it sells of each class; that count caps the seat selection, and 0 means the class cannot be taken at all. An **View contract** button opens a passage contract listing every booked seat, headed by the ship's name.
 - **Freight Calculator** — computes traffic DMs, rolls lots, and lets the player pick which lots to buy up to their cargo bay capacity. Includes an integrated Mail Run block. An **View contract** button opens an invoice with the accepted lots and mail containers, headed by the ship's name.
-- **My Ship** — standalone tool at `/ship`: an editable sheet reproducing the stat block the rulebook prints for every ship (TL, hull, armour, M-drive, J-drive, power plant, fuel, bridge, computer, sensors, weapons, ammunition, craft, systems, software, staterooms, common areas, cargo — each line with its own tonnage and MCr price — plus crew, hull points, maintenance, purchase price and power requirements). It is a **sheet, not a designer**: nothing is validated or recomputed, so a line's tonnage never has to agree with the hull and the purchase price is whatever the player typed. Any of the 24 "Common Spacecraft" designs (pp. 189-228) can be loaded as a starting point from `constants/shipTemplates.ts`, and each section's "add" menu comes from `constants/shipParts.ts`, a catalogue harvested from those same 24 designs. The sheet also owns the **cargo bay** and the **passenger berths**, which the Freight and Passenger calculators read from it — see *Ship data ownership* below.
+- **My Ship** — standalone tool at `/ship`: an editable sheet reproducing the stat block the rulebook prints for every ship (TL, hull, armour, M-drive, J-drive, power plant, fuel, bridge, computer, sensors, weapons, ammunition, craft, systems, software, staterooms, common areas, cargo — each line with its own tonnage — plus crew, hull points and power requirements). It is a **sheet, not a designer**: nothing is validated, so a line's tonnage never has to agree with the hull. It carries **no money at all** — no per-line price, no purchase price, no maintenance cost; what the ship cost is not played from here. Any of the 24 "Common Spacecraft" designs (pp. 189-228) can be loaded as a starting point from `constants/shipTemplates.ts`, and each section's "add" menu comes from `constants/shipParts.ts`, a catalogue harvested from those same 24 designs. The sheet also owns the **cargo bay** and the **passenger berths**, which the Freight and Passenger calculators read from it — see *Ship data ownership* below.
 
 **UI terminology**: user-facing copy uses "world" (Traveller-native term). Code identifiers (`RecentPlanet`, `useRecentPlanets`, `planet` route, `planetName` translation key, `PlanetView`) keep the "planet" naming to avoid a cross-file rename — this asymmetry is intentional.
 
@@ -112,7 +112,7 @@ src/
 │   ├── travellerMap.ts       # searchWorlds() + fetchWorldZone() + fetchJumpWorlds() → Traveller Map API
 │   ├── jumpMapImage.ts       # jumpMapUrl() + jumpMapScale() + projectOnJumpMap() → /api/jumpmap image geometry
 │   ├── contractImage.ts      # renderContractImage() → paints a ContractData onto a canvas, returns a PNG blob
-│   ├── format.ts             # localeFor() + formatCredits() + formatTons() + formatMCr() — the only number formatting in the app
+│   ├── format.ts             # localeFor() + formatCredits() + formatTons() — the only number formatting in the app
 │   ├── planetToWorldInputs.ts # Maps a RecentPlanet to Passenger/Freight world inputs
 │   └── i18n-helpers.ts       # isNoneValue, requiresWarning
 ├── i18n/
@@ -181,10 +181,16 @@ Lives in `src/views/ShipView.tsx`, `src/components/ShipSectionEditor.tsx`,
 
 **It is a sheet, not a designer.** It reproduces the layout of the rulebook's
 stat block and lets the player edit every cell, and that is all: no rule is
-applied, no total is enforced, no price is derived. A row's tonnage does not have
-to agree with the hull, and the purchase price is whatever was typed. The
-`Totales` card sums the rows purely so the player can see the drift — treat any
-request to "fix" a total by computing it as a change of scope, not a bug fix.
+applied, no total is enforced. A row's tonnage does not have to agree with the
+hull. The `Totales` card sums the rows purely so the player can see the drift —
+treat any request to "fix" a total by computing it as a change of scope, not a
+bug fix.
+
+**There is no money on the sheet.** No price per line, no purchase price, no
+maintenance cost, and `ShipComponent` has no `price` field to put one in. This is
+a deliberate product decision, not an omission: the sheet answers "what does the
+ship carry, and how much room does it take". Do not reintroduce a price column,
+and do not transcribe the rulebook's prices into `shipTemplates.ts`.
 
 Three layers, and they only meet once:
 
@@ -205,10 +211,11 @@ ship. Do not add render-time translation of component labels.
 label, as the manual prints it, and the tonnage and price are the line's totals.
 A separate multiplier could only contradict them.
 
-Template data is transcribed **as printed**, not as it should add up. Several
-blocks in the book do not agree with themselves (the Safari Ship prints "—" for
-its bridge price, the Mercenary Cruiser's rows sum 14 MCr above its stated
-purchase price, the light fighter leaves 0.4 t unassigned). Those stay. The only
+Template data is transcribed **as printed**, not as it should add up. 19 of the
+24 designs sum to exactly their hull tonnage; the other five leave space
+unassigned in the book itself (the System Defence Boat 4.15 t, the light fighter
+0.4 t, the modular cutter 2 t, the passenger shuttle 8 t, and the ferry prints no
+cargo figure at all for its 69.15 free tons). Those stay as they are. The only
 amendments are where the PDF extraction lost or transposed a value — the slow
 pinnace's M-drive columns, for one — and each carries a comment saying so.
 
@@ -557,7 +564,6 @@ import { formatCredits, formatTons, localeFor } from "../utils/format";
 formatCredits(25000, lang)  // "Cr 25.000" (es/ca) · "Cr 25,000" (en)
 formatTons(12.5, lang)      // "12,5" (es/ca) · "12.5" (en)
 formatTons(22.85, lang, 2)  // "22,85" — ship sheets need two decimals, lots do not
-formatMCr(36.9405, lang)    // "36,9405 MCr" (es/ca) · "36.9405 MCr" (en)
 ```
 
 Both helpers pass `useGrouping: "always"`. Without it, `es-ES` and `ca-ES` carry
@@ -710,9 +716,10 @@ import { calculateFreight } from "../utils/freight";
 13. **NO live re-rolling of dice during render** - The freight lot d6 are rolled once inside `handleCalculate` on button click; do not call `Math.random` inside `useMemo` or render
 14. **NO ad-hoc number formatting** - Use `formatCredits`/`formatTons` from `utils/format.ts`; never call `toLocaleString` in a view
 15. **NO `<label>` next to its control** - A `<label>` that neither wraps its control nor carries `htmlFor` leaves the control with no accessible name. Use `<Field>`; wrap the control only for checkboxes
-16. **NO computing anything on the ship sheet** - My Ship validates nothing and derives nothing (see *My Ship* above). Its totals are a read-out, not a constraint
-17. **NO second copy of the ship's name, cargo bay or berths** - They belong to `useShip()`; see *Ship data ownership*. Never re-add a `usePersistentState` for them in a calculator
-18. **NO Spanish prose in `shipTemplates.ts`** - Template labels are i18n keys, materialised once by `shipFromTemplate`
+16. **NO computing anything on the ship sheet** - My Ship validates nothing and derives nothing (see *My Ship* above). Its total is a read-out, not a constraint
+17. **NO money on the ship sheet** - No price column, no purchase price, no maintenance. `ShipComponent` has no `price` field on purpose
+18. **NO second copy of the ship's name, cargo bay or berths** - They belong to `useShip()`; see *Ship data ownership*. Never re-add a `usePersistentState` for them in a calculator
+19. **NO Spanish prose in `shipTemplates.ts`** - Template labels are i18n keys, materialised once by `shipFromTemplate`
 
 ### TypeScript-Specific
 11. **NO `.js` or `.jsx` files** - ALL code must be TypeScript (`.ts` or `.tsx`)

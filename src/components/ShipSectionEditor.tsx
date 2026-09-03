@@ -128,15 +128,6 @@ export const ShipSectionEditor: FC<ShipSectionEditorProps> = ({
               value={component.tons ?? ""}
               onChange={e => onUpdate(component.id, { tons: parseNullableNumber(e.target.value) })}
             />
-            <input
-              type="number"
-              step="any"
-              aria-label={`${title} — ${t("shipColPrice")}`}
-              placeholder={t("shipColPrice")}
-              style={inputStyle}
-              value={component.price ?? ""}
-              onChange={e => onUpdate(component.id, { price: parseNullableNumber(e.target.value) })}
-            />
             <Button
               variant="icon"
               theme={theme}
@@ -157,7 +148,6 @@ export const ShipRowHeader: FC<{ theme: Theme; t: TranslationFunction }> = ({ th
   <div className="ship-sheet-row ship-sheet-row--header" aria-hidden="true">
     <span style={fieldLabelStyle(theme)}>{t("shipComponentPlaceholder")}</span>
     <span style={fieldLabelStyle(theme)}>{t("shipColTons")}</span>
-    <span style={fieldLabelStyle(theme)}>{t("shipColPrice")}</span>
     <span />
   </div>
 );

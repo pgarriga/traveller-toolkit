@@ -7,9 +7,10 @@
 // entradas aquí y sus claves a i18n/translations.ts; nada más depende de esta
 // lista.
 //
-// `tons` y `price` son valores POR UNIDAD y solo sirven para rellenar la fila al
-// insertarla: la ficha no recalcula nada, así que el jugador manda sobre ambos
-// números en cuanto la fila existe. null es el "—" del manual.
+// `tons` es un valor POR UNIDAD y solo sirve para rellenar la fila al insertarla:
+// la ficha no recalcula nada, así que el jugador manda sobre ese número en cuanto
+// la fila existe. null es el "—" del manual. No hay precios: la ficha no lleva
+// dinero (ver types/ship.ts).
 
 import type { ShipSectionKey } from "../types/ship";
 
@@ -19,107 +20,105 @@ export interface ShipPart {
   /** Clave de i18n; se traduce al insertar y a partir de ahí es texto de la ficha. */
   labelKey: string;
   tons: number | null;
-  /** MCr. */
-  price: number | null;
 }
 
 export const SHIP_PARTS = [
   // --- Casco -------------------------------------------------------------
-  { id: "hullStreamlined", section: "hull", labelKey: "shipPartHullStreamlined", tons: null, price: null },
-  { id: "hullStandard", section: "hull", labelKey: "shipPartHullStandard", tons: null, price: null },
-  { id: "hullSphere", section: "hull", labelKey: "shipPartHullSphere", tons: null, price: null },
-  { id: "hullReinforced", section: "hull", labelKey: "shipPartHullReinforced", tons: null, price: null },
+  { id: "hullStreamlined", section: "hull", labelKey: "shipPartHullStreamlined", tons: null },
+  { id: "hullStandard", section: "hull", labelKey: "shipPartHullStandard", tons: null },
+  { id: "hullSphere", section: "hull", labelKey: "shipPartHullSphere", tons: null },
+  { id: "hullReinforced", section: "hull", labelKey: "shipPartHullReinforced", tons: null },
 
   // --- Blindaje ----------------------------------------------------------
-  { id: "armourCrystaliron", section: "armour", labelKey: "shipPartArmourCrystaliron", tons: null, price: null },
+  { id: "armourCrystaliron", section: "armour", labelKey: "shipPartArmourCrystaliron", tons: null },
 
   // --- Motores y planta --------------------------------------------------
-  { id: "mDrive", section: "mDrive", labelKey: "shipPartMDrive", tons: null, price: null },
-  { id: "jDrive", section: "jDrive", labelKey: "shipPartJDrive", tons: null, price: null },
-  { id: "powerPlantFusion", section: "powerPlant", labelKey: "shipPartPowerFusion", tons: null, price: null },
-  { id: "powerPlantFusionTl8", section: "powerPlant", labelKey: "shipPartPowerFusionTl8", tons: null, price: null },
-  { id: "fuelTank", section: "fuel", labelKey: "shipPartFuelTank", tons: null, price: null },
+  { id: "mDrive", section: "mDrive", labelKey: "shipPartMDrive", tons: null },
+  { id: "jDrive", section: "jDrive", labelKey: "shipPartJDrive", tons: null },
+  { id: "powerPlantFusion", section: "powerPlant", labelKey: "shipPartPowerFusion", tons: null },
+  { id: "powerPlantFusionTl8", section: "powerPlant", labelKey: "shipPartPowerFusionTl8", tons: null },
+  { id: "fuelTank", section: "fuel", labelKey: "shipPartFuelTank", tons: null },
 
   // --- Puente ------------------------------------------------------------
-  { id: "bridgeStandard", section: "bridge", labelKey: "shipPartBridgeStandard", tons: 10, price: 1 },
-  { id: "bridgeSmall", section: "bridge", labelKey: "shipPartBridgeSmall", tons: 10, price: 1 },
-  { id: "cockpit", section: "bridge", labelKey: "shipPartCockpit", tons: 1.1, price: 0.01 },
+  { id: "bridgeStandard", section: "bridge", labelKey: "shipPartBridgeStandard", tons: 10 },
+  { id: "bridgeSmall", section: "bridge", labelKey: "shipPartBridgeSmall", tons: 10 },
+  { id: "cockpit", section: "bridge", labelKey: "shipPartCockpit", tons: 1.1 },
 
   // --- Computadora -------------------------------------------------------
-  { id: "computer", section: "computer", labelKey: "shipPartComputer", tons: null, price: 0.03 },
+  { id: "computer", section: "computer", labelKey: "shipPartComputer", tons: null },
 
   // --- Sensores ----------------------------------------------------------
-  { id: "sensorsBasic", section: "sensors", labelKey: "shipPartSensorsBasic", tons: null, price: null },
-  { id: "sensorsCivilian", section: "sensors", labelKey: "shipPartSensorsCivilian", tons: 1, price: 3 },
-  { id: "sensorsMilitary", section: "sensors", labelKey: "shipPartSensorsMilitary", tons: 2, price: 4.1 },
-  { id: "sensorsImproved", section: "sensors", labelKey: "shipPartSensorsImproved", tons: 3, price: 4.3 },
-  { id: "sensorsCountermeasures", section: "sensors", labelKey: "shipPartSensorsCountermeasures", tons: 5, price: 12.3 },
+  { id: "sensorsBasic", section: "sensors", labelKey: "shipPartSensorsBasic", tons: null },
+  { id: "sensorsCivilian", section: "sensors", labelKey: "shipPartSensorsCivilian", tons: 1 },
+  { id: "sensorsMilitary", section: "sensors", labelKey: "shipPartSensorsMilitary", tons: 2 },
+  { id: "sensorsImproved", section: "sensors", labelKey: "shipPartSensorsImproved", tons: 3 },
+  { id: "sensorsCountermeasures", section: "sensors", labelKey: "shipPartSensorsCountermeasures", tons: 5 },
 
   // --- Armas -------------------------------------------------------------
-  { id: "turretSingleEmpty", section: "weapons", labelKey: "shipPartTurretSingleEmpty", tons: 1, price: 0.2 },
-  { id: "turretDouble", section: "weapons", labelKey: "shipPartTurretDouble", tons: 1, price: 0.5 },
-  { id: "turretTriple", section: "weapons", labelKey: "shipPartTurretTriple", tons: 1, price: 1 },
-  { id: "turretTripleBeamLaser", section: "weapons", labelKey: "shipPartTurretTripleBeamLaser", tons: 1, price: 2.5 },
-  { id: "turretTriplePulseLaser", section: "weapons", labelKey: "shipPartTurretTriplePulseLaser", tons: 1, price: 4 },
-  { id: "turretTripleMissile", section: "weapons", labelKey: "shipPartTurretTripleMissile", tons: 1, price: 3.25 },
-  { id: "barbetteParticle", section: "weapons", labelKey: "shipPartBarbetteParticle", tons: 5, price: 8 },
-  { id: "fixedMount", section: "weapons", labelKey: "shipPartFixedMount", tons: null, price: 0.1 },
-  { id: "fixedMountPulseLaser", section: "weapons", labelKey: "shipPartFixedMountPulseLaser", tons: null, price: 1.1 },
+  { id: "turretSingleEmpty", section: "weapons", labelKey: "shipPartTurretSingleEmpty", tons: 1 },
+  { id: "turretDouble", section: "weapons", labelKey: "shipPartTurretDouble", tons: 1 },
+  { id: "turretTriple", section: "weapons", labelKey: "shipPartTurretTriple", tons: 1 },
+  { id: "turretTripleBeamLaser", section: "weapons", labelKey: "shipPartTurretTripleBeamLaser", tons: 1 },
+  { id: "turretTriplePulseLaser", section: "weapons", labelKey: "shipPartTurretTriplePulseLaser", tons: 1 },
+  { id: "turretTripleMissile", section: "weapons", labelKey: "shipPartTurretTripleMissile", tons: 1 },
+  { id: "barbetteParticle", section: "weapons", labelKey: "shipPartBarbetteParticle", tons: 5 },
+  { id: "fixedMount", section: "weapons", labelKey: "shipPartFixedMount", tons: null },
+  { id: "fixedMountPulseLaser", section: "weapons", labelKey: "shipPartFixedMountPulseLaser", tons: null },
 
   // --- Munición ----------------------------------------------------------
-  { id: "missileMagazine", section: "ammo", labelKey: "shipPartMissileMagazine", tons: 12, price: null },
+  { id: "missileMagazine", section: "ammo", labelKey: "shipPartMissileMagazine", tons: 12 },
 
   // --- Naves embarcadas --------------------------------------------------
-  { id: "craftLaunch", section: "craft", labelKey: "shipPartCraftLaunch", tons: null, price: 6.257 },
-  { id: "craftModularCutter", section: "craft", labelKey: "shipPartCraftModularCutter", tons: null, price: 10.287 },
-  { id: "craftShuttle", section: "craft", labelKey: "shipPartCraftShuttle", tons: null, price: 2.367 },
-  { id: "craftShipsBoat", section: "craft", labelKey: "shipPartCraftShipsBoat", tons: null, price: 7.272 },
-  { id: "craftPinnace", section: "craft", labelKey: "shipPartCraftPinnace", tons: null, price: 8.712 },
-  { id: "craftLightFighter", section: "craft", labelKey: "shipPartCraftLightFighter", tons: null, price: 9.09 },
-  { id: "craftGCarrier", section: "craft", labelKey: "shipPartCraftGCarrier", tons: null, price: 11.58 },
-  { id: "craftAirRaft", section: "craft", labelKey: "shipPartCraftAirRaft", tons: null, price: 0.155 },
+  { id: "craftLaunch", section: "craft", labelKey: "shipPartCraftLaunch", tons: null },
+  { id: "craftModularCutter", section: "craft", labelKey: "shipPartCraftModularCutter", tons: null },
+  { id: "craftShuttle", section: "craft", labelKey: "shipPartCraftShuttle", tons: null },
+  { id: "craftShipsBoat", section: "craft", labelKey: "shipPartCraftShipsBoat", tons: null },
+  { id: "craftPinnace", section: "craft", labelKey: "shipPartCraftPinnace", tons: null },
+  { id: "craftLightFighter", section: "craft", labelKey: "shipPartCraftLightFighter", tons: null },
+  { id: "craftGCarrier", section: "craft", labelKey: "shipPartCraftGCarrier", tons: null },
+  { id: "craftAirRaft", section: "craft", labelKey: "shipPartCraftAirRaft", tons: null },
 
   // --- Sistemas ----------------------------------------------------------
-  { id: "fuelScoops", section: "systems", labelKey: "shipPartFuelScoops", tons: null, price: null },
-  { id: "fuelProcessor", section: "systems", labelKey: "shipPartFuelProcessor", tons: 1, price: 0.05 },
-  { id: "dockingSpace", section: "systems", labelKey: "shipPartDockingSpace", tons: null, price: null },
-  { id: "repulsor", section: "systems", labelKey: "shipPartRepulsor", tons: null, price: 0.25 },
-  { id: "probeDrones", section: "systems", labelKey: "shipPartProbeDrones", tons: 0.2, price: 0.1 },
-  { id: "advProbeDrones", section: "systems", labelKey: "shipPartAdvProbeDrones", tons: 0.2, price: 0.16 },
-  { id: "miningDrones", section: "systems", labelKey: "shipPartMiningDrones", tons: 2, price: 0.2 },
-  { id: "repairDrones", section: "systems", labelKey: "shipPartRepairDrones", tons: 2, price: 0.4 },
-  { id: "workshop", section: "systems", labelKey: "shipPartWorkshop", tons: 6, price: 0.9 },
-  { id: "cargoCrane", section: "systems", labelKey: "shipPartCargoCrane", tons: 3, price: 3 },
-  { id: "laboratory", section: "systems", labelKey: "shipPartLaboratory", tons: 4, price: 1 },
-  { id: "sensorStation", section: "systems", labelKey: "shipPartSensorStation", tons: 1, price: 0.5 },
-  { id: "medicalBay", section: "systems", labelKey: "shipPartMedicalBay", tons: 4, price: 2 },
-  { id: "armoury", section: "systems", labelKey: "shipPartArmoury", tons: 1, price: 0.25 },
-  { id: "multiEnvSpace", section: "systems", labelKey: "shipPartMultiEnvSpace", tons: 8, price: 0.5 },
-  { id: "dropTankMount", section: "systems", labelKey: "shipPartDropTankMount", tons: 0.32, price: 0.16 },
-  { id: "cabinSpace", section: "systems", labelKey: "shipPartCabinSpace", tons: 1.5, price: 0.075 },
-  { id: "accelerationBench", section: "systems", labelKey: "shipPartAccelerationBench", tons: 1, price: 0.01 },
-  { id: "modularHull", section: "systems", labelKey: "shipPartModularHull", tons: 30, price: 1.8 },
+  { id: "fuelScoops", section: "systems", labelKey: "shipPartFuelScoops", tons: null },
+  { id: "fuelProcessor", section: "systems", labelKey: "shipPartFuelProcessor", tons: 1 },
+  { id: "dockingSpace", section: "systems", labelKey: "shipPartDockingSpace", tons: null },
+  { id: "repulsor", section: "systems", labelKey: "shipPartRepulsor", tons: null },
+  { id: "probeDrones", section: "systems", labelKey: "shipPartProbeDrones", tons: 0.2 },
+  { id: "advProbeDrones", section: "systems", labelKey: "shipPartAdvProbeDrones", tons: 0.2 },
+  { id: "miningDrones", section: "systems", labelKey: "shipPartMiningDrones", tons: 2 },
+  { id: "repairDrones", section: "systems", labelKey: "shipPartRepairDrones", tons: 2 },
+  { id: "workshop", section: "systems", labelKey: "shipPartWorkshop", tons: 6 },
+  { id: "cargoCrane", section: "systems", labelKey: "shipPartCargoCrane", tons: 3 },
+  { id: "laboratory", section: "systems", labelKey: "shipPartLaboratory", tons: 4 },
+  { id: "sensorStation", section: "systems", labelKey: "shipPartSensorStation", tons: 1 },
+  { id: "medicalBay", section: "systems", labelKey: "shipPartMedicalBay", tons: 4 },
+  { id: "armoury", section: "systems", labelKey: "shipPartArmoury", tons: 1 },
+  { id: "multiEnvSpace", section: "systems", labelKey: "shipPartMultiEnvSpace", tons: 8 },
+  { id: "dropTankMount", section: "systems", labelKey: "shipPartDropTankMount", tons: 0.32 },
+  { id: "cabinSpace", section: "systems", labelKey: "shipPartCabinSpace", tons: 1.5 },
+  { id: "accelerationBench", section: "systems", labelKey: "shipPartAccelerationBench", tons: 1 },
+  { id: "modularHull", section: "systems", labelKey: "shipPartModularHull", tons: 30 },
 
   // --- Software ----------------------------------------------------------
-  { id: "swJumpControl", section: "software", labelKey: "shipPartSwJumpControl", tons: null, price: 0.1 },
-  { id: "swLibrary", section: "software", labelKey: "shipPartSwLibrary", tons: null, price: null },
-  { id: "swManoeuvre", section: "software", labelKey: "shipPartSwManoeuvre", tons: null, price: null },
-  { id: "swIntellect", section: "software", labelKey: "shipPartSwIntellect", tons: null, price: null },
-  { id: "swEvade", section: "software", labelKey: "shipPartSwEvade", tons: null, price: 1 },
-  { id: "swFireControl", section: "software", labelKey: "shipPartSwFireControl", tons: null, price: 2 },
-  { id: "swAutoRepair", section: "software", labelKey: "shipPartSwAutoRepair", tons: null, price: 5 },
+  { id: "swJumpControl", section: "software", labelKey: "shipPartSwJumpControl", tons: null },
+  { id: "swLibrary", section: "software", labelKey: "shipPartSwLibrary", tons: null },
+  { id: "swManoeuvre", section: "software", labelKey: "shipPartSwManoeuvre", tons: null },
+  { id: "swIntellect", section: "software", labelKey: "shipPartSwIntellect", tons: null },
+  { id: "swEvade", section: "software", labelKey: "shipPartSwEvade", tons: null },
+  { id: "swFireControl", section: "software", labelKey: "shipPartSwFireControl", tons: null },
+  { id: "swAutoRepair", section: "software", labelKey: "shipPartSwAutoRepair", tons: null },
 
   // --- Camarotes ---------------------------------------------------------
-  { id: "stateroomStandard", section: "staterooms", labelKey: "shipPartStateroomStandard", tons: 4, price: 0.5 },
-  { id: "stateroomLuxury", section: "staterooms", labelKey: "shipPartStateroomLuxury", tons: 10, price: 1.5 },
-  { id: "lowBerth", section: "staterooms", labelKey: "shipPartLowBerth", tons: 0.5, price: 0.05 },
+  { id: "stateroomStandard", section: "staterooms", labelKey: "shipPartStateroomStandard", tons: 4 },
+  { id: "stateroomLuxury", section: "staterooms", labelKey: "shipPartStateroomLuxury", tons: 10 },
+  { id: "lowBerth", section: "staterooms", labelKey: "shipPartLowBerth", tons: 0.5 },
 
   // --- Áreas comunes -----------------------------------------------------
-  { id: "commonArea", section: "commonAreas", labelKey: "shipPartCommonArea", tons: null, price: null },
-  { id: "trophyRoom", section: "commonAreas", labelKey: "shipPartTrophyRoom", tons: 7, price: 0.7 },
+  { id: "commonArea", section: "commonAreas", labelKey: "shipPartCommonArea", tons: null },
+  { id: "trophyRoom", section: "commonAreas", labelKey: "shipPartTrophyRoom", tons: 7 },
 
   // --- Carga -------------------------------------------------------------
-  { id: "cargoHold", section: "cargo", labelKey: "shipPartCargoHold", tons: null, price: null },
+  { id: "cargoHold", section: "cargo", labelKey: "shipPartCargoHold", tons: null },
 ] as const satisfies readonly ShipPart[];
 
 export type ShipPartId = (typeof SHIP_PARTS)[number]["id"];

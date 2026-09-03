@@ -2,8 +2,12 @@
 //
 // La ficha reproduce el bloque de estadísticas con el que el manual básico
 // presenta cada nave (NT, casco, motores, armas, camarotes...), pero NO aplica
-// las reglas de construcción: no valida el tonelaje contra el casco ni recalcula
-// el precio. Es la hoja del jugador, y él manda sobre cada número.
+// las reglas de construcción: no valida el tonelaje contra el casco. Es la hoja
+// del jugador, y él manda sobre cada número.
+//
+// El dinero se queda fuera a propósito: ni precio por línea, ni precio de
+// compra, ni mantenimiento. La ficha dice qué lleva la nave y cuánto ocupa; lo
+// que costó no se juega desde aquí.
 //
 // Por eso las etiquetas de los componentes son texto libre: se rellenan
 // traducidas al insertarlas desde el catálogo (constants/shipParts.ts) o al
@@ -33,7 +37,7 @@ export type ShipSectionKey =
   | "commonAreas"
   | "cargo";
 
-/** Una línea del bloque: "Torreta triple (rayo láser) ×2 · 2 t · 5 MCr". */
+/** Una línea del bloque: "Torreta triple (rayo láser) ×2 · 2 t". */
 export interface ShipComponent {
   /** Clave estable para las listas de React; no significa nada para el jugador. */
   id: string;
@@ -44,10 +48,8 @@ export interface ShipComponent {
    * separado solo podría contradecirlos.
    */
   label: string;
-  /** null es el "—" del manual: el componente no ocupa espacio / no se cobra aparte. */
+  /** null es el "—" del manual: el componente no ocupa espacio propio. */
   tons: number | null;
-  /** En MCr, como en la columna PRECIO del manual. */
-  price: number | null;
 }
 
 /** El recuadro "Requisitos de Potencia" de la ficha. */
@@ -82,18 +84,13 @@ export interface ShipSheet {
   hullPoints: number | null;
   /** "Piloto, astronavegante, ingeniero". Texto libre: el manual también lo escribe así. */
   crew: string;
-  /** Cr/mes. */
-  maintenance: number | null;
-  /** MCr. */
-  purchasePrice: number | null;
   power: ShipPower;
   sections: Record<ShipSectionKey, ShipComponent[]>;
   capacity: ShipCapacity;
   notes: string;
 }
 
-/** Sumas informativas del pie de la ficha. No se validan contra el casco. */
+/** Suma informativa del pie de la ficha. No se valida contra el casco. */
 export interface ShipTotals {
   tons: number;
-  price: number;
 }

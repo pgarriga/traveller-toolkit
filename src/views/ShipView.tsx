@@ -22,7 +22,7 @@ import type { ShipTemplate } from "../constants/shipTemplates";
 import { SHIP_TEMPLATES, findTemplate } from "../constants/shipTemplates";
 import { useShip } from "../hooks/useShip";
 import { componentFromPart, isShipEmpty, shipFromTemplate, shipTotals } from "../utils/ship";
-import { formatCredits, formatMCr, formatTons } from "../utils/format";
+import { formatTons } from "../utils/format";
 
 type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent" | "nearby" | "ship" | "ship";
 
@@ -263,10 +263,6 @@ export const ShipView: FC<ShipViewProps> = ({
                   />
                 )}
               </Field>
-              <div style={{ ...fieldGridStyle, marginTop: 12 }}>
-                {numberField("shipMaintenanceLabel", ship.maintenance, maintenance => patch({ maintenance }))}
-                {numberField("shipPurchasePriceLabel", ship.purchasePrice, purchasePrice => patch({ purchasePrice }))}
-              </div>
             </Section>
 
             <Section title={t("shipCapacitySection")} color={SECTION_COLORS.population} theme={theme}>
@@ -328,11 +324,13 @@ export const ShipView: FC<ShipViewProps> = ({
           </div>
 
           <div>
-            {SHIP_SECTION_GROUPS.map((group, index) => (
+            {SHIP_SECTION_GROUPS.map(group => (
               <Section
                 key={group.titleKey}
                 title={t(group.titleKey)}
-                color={index === 2 ? COLORS.danger : SECTION_COLORS.starport}
+                // El armamento se separa del resto; las demás tarjetas comparten
+                // el naranja para no convertir la ficha en un semáforo.
+                color={group.titleKey === "shipGroupWeapons" ? COLORS.danger : SECTION_COLORS.starport}
                 theme={theme}
               >
                 <ShipRowHeader theme={theme} t={t} />
@@ -360,21 +358,6 @@ export const ShipView: FC<ShipViewProps> = ({
                   : `${formatTons(totals.tons, lang, 2)} / ${formatTons(ship.hullTons, lang, 2)} t`}
                 theme={theme}
               />
-              <Row label={t("shipTotalPrice")} value={formatMCr(totals.price, lang)} theme={theme} />
-              {ship.purchasePrice !== null && (
-                <Row
-                  label={t("shipPurchasePriceLabel")}
-                  value={formatMCr(ship.purchasePrice, lang)}
-                  theme={theme}
-                />
-              )}
-              {ship.maintenance !== null && (
-                <Row
-                  label={t("shipMaintenanceLabel")}
-                  value={formatCredits(ship.maintenance, lang)}
-                  theme={theme}
-                />
-              )}
               <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 10, lineHeight: 1.5 }}>
                 {t("shipTotalsHint")}
               </div>

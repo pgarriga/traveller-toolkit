@@ -472,8 +472,6 @@ export const translations: Record<Language, Record<string, string>> = {
     shipHullPointsLabel: "Puntos de casco",
     shipCrewLabel: "Tripulación",
     shipCrewPlaceholder: "Piloto, astronavegante, ingeniero",
-    shipMaintenanceLabel: "Mantenimiento (Cr/mes)",
-    shipPurchasePriceLabel: "Precio de compra (MCr)",
 
     // Mi nave — plantillas
     shipTemplateSection: "Diseños del manual",
@@ -487,7 +485,8 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Mi nave — componentes
     shipGroupHullDrives: "Casco y motores",
-    shipGroupSystems: "Sistemas y software",
+    shipGroupSystems: "Sistemas",
+    shipGroupSoftware: "Software",
     shipGroupWeapons: "Armamento",
     shipGroupAccommodation: "Naves, alojamiento y carga",
     shipAddComponent: "Añadir",
@@ -496,7 +495,6 @@ export const translations: Record<Language, Record<string, string>> = {
     shipRemoveComponent: "Quitar componente",
     shipComponentPlaceholder: "Componente",
     shipColTons: "Toneladas",
-    shipColPrice: "Precio (MCr)",
     shipNoComponents: "Sin componentes",
 
     // Mi nave — potencia, capacidades, totales
@@ -511,8 +509,7 @@ export const translations: Record<Language, Record<string, string>> = {
     shipCargoTonsLabel: "Bodega de carga (toneladas)",
     shipTotalsSection: "Totales",
     shipTotalTons: "Toneladas de los componentes",
-    shipTotalPrice: "Precio de los componentes",
-    shipTotalsHint: "Suma de las filas de arriba, solo informativa: la ficha no valida el tonelaje contra el casco ni recalcula el precio de compra.",
+    shipTotalsHint: "Suma de las filas de arriba, solo informativa: la ficha no valida el tonelaje contra el casco.",
     shipNotesSection: "Notas",
     shipNotesPlaceholder: "Peculiaridades, modificaciones, historia de la nave…",
     shipFromSheetHint: "Se guarda en «Mi nave».",
@@ -1139,8 +1136,6 @@ export const translations: Record<Language, Record<string, string>> = {
     shipHullPointsLabel: "Hull points",
     shipCrewLabel: "Crew",
     shipCrewPlaceholder: "Pilot, astrogator, engineer",
-    shipMaintenanceLabel: "Maintenance (Cr/month)",
-    shipPurchasePriceLabel: "Purchase price (MCr)",
 
     // Mi nave — plantillas
     shipTemplateSection: "Rulebook designs",
@@ -1154,7 +1149,8 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Mi nave — componentes
     shipGroupHullDrives: "Hull and drives",
-    shipGroupSystems: "Systems and software",
+    shipGroupSystems: "Systems",
+    shipGroupSoftware: "Software",
     shipGroupWeapons: "Weaponry",
     shipGroupAccommodation: "Craft, accommodation and cargo",
     shipAddComponent: "Add",
@@ -1163,7 +1159,6 @@ export const translations: Record<Language, Record<string, string>> = {
     shipRemoveComponent: "Remove component",
     shipComponentPlaceholder: "Component",
     shipColTons: "Tons",
-    shipColPrice: "Price (MCr)",
     shipNoComponents: "No components",
 
     // Mi nave — potencia, capacidades, totales
@@ -1178,8 +1173,7 @@ export const translations: Record<Language, Record<string, string>> = {
     shipCargoTonsLabel: "Cargo bay (tons)",
     shipTotalsSection: "Totals",
     shipTotalTons: "Component tonnage",
-    shipTotalPrice: "Component price",
-    shipTotalsHint: "The rows above, added up. Informational only: the sheet does not check tonnage against the hull, nor recompute the purchase price.",
+    shipTotalsHint: "The rows above, added up. Informational only: the sheet does not check tonnage against the hull.",
     shipNotesSection: "Notes",
     shipNotesPlaceholder: "Quirks, modifications, the ship's history…",
     shipFromSheetHint: "Saved in “My Ship”.",
@@ -1806,8 +1800,6 @@ export const translations: Record<Language, Record<string, string>> = {
     shipHullPointsLabel: "Punts de casc",
     shipCrewLabel: "Tripulació",
     shipCrewPlaceholder: "Pilot, astronavegant, enginyer",
-    shipMaintenanceLabel: "Manteniment (Cr/mes)",
-    shipPurchasePriceLabel: "Preu de compra (MCr)",
 
     // Mi nave — plantillas
     shipTemplateSection: "Dissenys del manual",
@@ -1821,7 +1813,8 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Mi nave — componentes
     shipGroupHullDrives: "Casc i motors",
-    shipGroupSystems: "Sistemes i programari",
+    shipGroupSystems: "Sistemes",
+    shipGroupSoftware: "Programari",
     shipGroupWeapons: "Armament",
     shipGroupAccommodation: "Naus, allotjament i càrrega",
     shipAddComponent: "Afegir",
@@ -1830,7 +1823,6 @@ export const translations: Record<Language, Record<string, string>> = {
     shipRemoveComponent: "Treure component",
     shipComponentPlaceholder: "Component",
     shipColTons: "Tones",
-    shipColPrice: "Preu (MCr)",
     shipNoComponents: "Sense components",
 
     // Mi nave — potencia, capacidades, totales
@@ -1845,8 +1837,7 @@ export const translations: Record<Language, Record<string, string>> = {
     shipCargoTonsLabel: "Bodega de càrrega (tones)",
     shipTotalsSection: "Totals",
     shipTotalTons: "Tones dels components",
-    shipTotalPrice: "Preu dels components",
-    shipTotalsHint: "Suma de les files de dalt, només informativa: la fitxa no valida el tonatge contra el casc ni recalcula el preu de compra.",
+    shipTotalsHint: "Suma de les files de dalt, només informativa: la fitxa no valida el tonatge contra el casc.",
     shipNotesSection: "Notes",
     shipNotesPlaceholder: "Peculiaritats, modificacions, història de la nau…",
     shipFromSheetHint: "Es desa a «La meva nau».",

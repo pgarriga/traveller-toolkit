@@ -34,7 +34,8 @@ export const SHIP_SECTION_KEYS: readonly ShipSectionKey[] = SHIP_SECTIONS.map(s 
  */
 export const SHIP_SECTION_GROUPS: readonly { titleKey: string; sections: readonly ShipSectionKey[] }[] = [
   { titleKey: "shipGroupHullDrives", sections: ["hull", "armour", "mDrive", "jDrive", "powerPlant", "fuel"] },
-  { titleKey: "shipGroupSystems", sections: ["bridge", "computer", "sensors", "systems", "software"] },
+  { titleKey: "shipGroupSystems", sections: ["bridge", "computer", "sensors", "systems"] },
+  { titleKey: "shipGroupSoftware", sections: ["software"] },
   { titleKey: "shipGroupWeapons", sections: ["weapons", "ammo"] },
   { titleKey: "shipGroupAccommodation", sections: ["craft", "staterooms", "commonAreas", "cargo"] },
 ];

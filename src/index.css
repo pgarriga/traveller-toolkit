@@ -497,14 +497,14 @@ a, button {
    Everything else is hidden rather than removed so the page keeps its layout,
    and the sheet is repainted light — the dark theme would print unreadable.
    `!important` is unavoidable here: the modal styles the panel inline. */
-/* Mi nave — una línea del bloque de estadísticas: componente, toneladas,
-   precio y el botón de quitar. En móvil el nombre pasa a ocupar su propia
-   línea, porque tres campos y un botón no caben en 320 px sin quedar
-   ilegibles. (Nada que ver con .ship-grid, que son los controles de nave de
+/* Mi nave — una línea del bloque de estadísticas: componente, toneladas y el
+   botón de quitar. Con solo dos campos la fila cabe entera hasta en 320 px, así
+   que no hace falta partirla; el móvil se limita a estrechar la columna
+   numérica. (Nada que ver con .ship-grid, que son los controles de nave de
    Mundos Cercanos.) */
 .ship-sheet-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 96px 110px 40px;
+  grid-template-columns: minmax(0, 1fr) 110px 40px;
   gap: 8px;
   align-items: center;
   margin-bottom: 6px;
@@ -514,18 +514,9 @@ a, button {
   margin-bottom: 2px;
 }
 
-@media (max-width: 560px) {
+@media (max-width: 420px) {
   .ship-sheet-row {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 40px;
-  }
-
-  .ship-sheet-row > *:first-child {
-    grid-column: 1 / -1;
-  }
-
-  /* La cabecera pierde el sentido cuando los campos se reparten en dos filas. */
-  .ship-sheet-row--header {
-    display: none;
+    grid-template-columns: minmax(0, 1fr) 88px 40px;
   }
 }
 

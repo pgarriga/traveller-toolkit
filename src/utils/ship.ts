@@ -48,7 +48,6 @@ const materialiseComponent = (component: TemplateComponent, t: TranslationFuncti
   id: componentId(),
   label: templateComponentLabel(component, t),
   tons: component.tons ?? null,
-  price: component.price ?? null,
 });
 
 /**
@@ -74,8 +73,6 @@ export const emptyShip = (): ShipSheet => ({
   hullTons: null,
   hullPoints: null,
   crew: "",
-  maintenance: null,
-  purchasePrice: null,
   power: { basic: null, mDrive: null, jDrive: null, sensors: null, weapons: null },
   sections: emptySections(),
   capacity: { cargoTons: 0, berths: { ...NO_BERTHS } },
@@ -108,8 +105,6 @@ export const shipFromTemplate = (
     hullTons: template.hullTons,
     hullPoints: template.hullPoints,
     crew: crewLabel(template.crew, t),
-    maintenance: template.maintenance,
-    purchasePrice: template.purchasePrice,
     power: { ...template.power },
     sections,
     capacity: { cargoTons: template.cargoTons, berths: { ...previous.capacity.berths } },
@@ -124,27 +119,22 @@ export const componentFromPart = (partId: string | null, t: TranslationFunction)
     id: componentId(),
     label: part ? t(part.labelKey) : "",
     tons: part?.tons ?? null,
-    price: part?.price ?? null,
   };
 };
 
 /**
- * Sumas del pie de la ficha. Son informativas: nadie las compara con el casco ni
- * con el precio de compra, que el jugador escribe a mano.
+ * Suma del pie de la ficha. Es informativa: nadie la compara con el casco.
  */
 export const shipTotals = (ship: ShipSheet): ShipTotals => {
   let tons = 0;
-  let price = 0;
   for (const key of SHIP_SECTION_KEYS) {
     for (const component of ship.sections[key]) {
       tons += component.tons ?? 0;
-      price += component.price ?? 0;
     }
   }
-  // Las toneladas y los MCr del manual llegan a los dos decimales (22,85 t) y a
-  // los cuatro (36,9405 MCr); redondear aquí evita el 0,30000000000000004 de la
-  // suma en coma flotante.
-  return { tons: Math.round(tons * 100) / 100, price: Math.round(price * 10000) / 10000 };
+  // Las toneladas del manual llegan a los dos decimales (22,85 t); redondear
+  // aquí evita el 0,30000000000000004 de la suma en coma flotante.
+  return { tons: Math.round(tons * 100) / 100 };
 };
 
 export const isShipEmpty = (ship: ShipSheet): boolean =>
@@ -159,11 +149,7 @@ const isNullableNumber = (raw: unknown): raw is number | null =>
   raw === null || (typeof raw === "number" && Number.isFinite(raw));
 
 const isComponent = (raw: unknown): raw is ShipComponent =>
-  isRecord(raw) &&
-  typeof raw.id === "string" &&
-  typeof raw.label === "string" &&
-  isNullableNumber(raw.tons) &&
-  isNullableNumber(raw.price);
+  isRecord(raw) && typeof raw.id === "string" && typeof raw.label === "string" && isNullableNumber(raw.tons);
 
 export const isShipBerths = (raw: unknown): raw is ShipBerths =>
   isRecord(raw) &&
@@ -177,8 +163,7 @@ export const isShipSheet = (raw: unknown): raw is ShipSheet => {
   if (typeof raw.crew !== "string" || typeof raw.notes !== "string") return false;
   if (raw.templateId !== null && typeof raw.templateId !== "string") return false;
   if (!isNullableNumber(raw.tl) || !isNullableNumber(raw.hullTons)) return false;
-  if (!isNullableNumber(raw.hullPoints) || !isNullableNumber(raw.maintenance)) return false;
-  if (!isNullableNumber(raw.purchasePrice)) return false;
+  if (!isNullableNumber(raw.hullPoints)) return false;
 
   const power = raw.power;
   if (!isRecord(power)) return false;

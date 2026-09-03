@@ -33,8 +33,3 @@ export const formatTons = (n: number, lang: Language, maxDecimals = 1): string =
     minimumFractionDigits: n % 1 === 0 ? 0 : 1,
     maximumFractionDigits: maxDecimals,
   });
-
-// Los precios de nave van en megacréditos y el manual los da hasta la
-// diezmilésima (36,9405 MCr), que es el céntimo de crédito.
-export const formatMCr = (n: number, lang: Language): string =>
-  `${n.toLocaleString(localeFor(lang), { ...GROUPED, maximumFractionDigits: 4 })} MCr`;

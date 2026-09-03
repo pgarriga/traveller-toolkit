@@ -378,8 +378,6 @@ export type TranslationKey =
   | "shipHullPointsLabel"
   | "shipCrewLabel"
   | "shipCrewPlaceholder"
-  | "shipMaintenanceLabel"
-  | "shipPurchasePriceLabel"
   | "shipNotesSection"
   | "shipNotesPlaceholder"
   // My Ship — rulebook designs picker
@@ -394,6 +392,7 @@ export type TranslationKey =
   // My Ship — component editor
   | "shipGroupHullDrives"
   | "shipGroupSystems"
+  | "shipGroupSoftware"
   | "shipGroupWeapons"
   | "shipGroupAccommodation"
   | "shipAddComponent"
@@ -402,7 +401,6 @@ export type TranslationKey =
   | "shipRemoveComponent"
   | "shipComponentPlaceholder"
   | "shipColTons"
-  | "shipColPrice"
   | "shipNoComponents"
   // My Ship — power, capacities, totals
   | "shipPowerSection"
@@ -416,7 +414,6 @@ export type TranslationKey =
   | "shipCargoTonsLabel"
   | "shipTotalsSection"
   | "shipTotalTons"
-  | "shipTotalPrice"
   | "shipTotalsHint"
   // My Ship — sheet sections
   | "shipSecHull"
