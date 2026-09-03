@@ -74,6 +74,22 @@ export interface ShipCapacity {
 // El nombre de la nave NO vive aquí: sigue en STORAGE_KEYS.shipName, que las
 // calculadoras de Carga y Pasajeros ya compartían antes de que existiera esta
 // ficha. Guardarlo también dentro de la ficha crearía dos copias del mismo dato.
+/**
+ * Una persona a bordo.
+ *
+ * No tiene nada que ver con `ShipSheet.crew`, que es la tripulación que el
+ * DISEÑO exige ("Piloto, astronavegante, ingeniero") y viene de la plantilla.
+ * Esto es quién la cubre de verdad en la mesa, y puede sobrar o faltar gente.
+ */
+export interface CrewMember {
+  id: string;
+  name: string;
+  /** Texto libre; se rellena traducido al añadir desde el menú de oficios. */
+  role: string;
+  /** Habilidades, rango, deudas, lo que el jugador quiera apuntar. */
+  notes: string;
+}
+
 export interface ShipSheet {
   /** "Tipo: S", "Clase: Gacela", "Nave pequeña"... Texto libre. */
   designation: string;
@@ -82,8 +98,10 @@ export interface ShipSheet {
   tl: number | null;
   hullTons: number | null;
   hullPoints: number | null;
-  /** "Piloto, astronavegante, ingeniero". Texto libre: el manual también lo escribe así. */
+  /** Tripulación que el diseño EXIGE: "Piloto, astronavegante, ingeniero". Texto libre, como en el manual. */
   crew: string;
+  /** Quién va a bordo de verdad. Lo pone el jugador; ninguna plantilla lo trae. */
+  crewList: CrewMember[];
   power: ShipPower;
   sections: Record<ShipSectionKey, ShipComponent[]>;
   capacity: ShipCapacity;

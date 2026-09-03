@@ -8,7 +8,7 @@ Traveller Toolkit - A multi-tool web app for the Mongoose Traveller 2nd Edition 
 - **Worlds Near Me** — standalone tool at `/nearby`. Pick the world you are on, describe your ship (jump rating, fuel range, fuel it accepts), set UWP filters (max distance, minimum starport, TL, population, travel zones) and get the matching worlds, sorted by number of jumps (parsec distance and name break ties, unreachable worlds last). Each result also shows the minimum number of jumps to reach it along a route where the ship never runs out of fuel. `jumpsFromOrigin` searches over `(world, fuel left)` states, not just worlds, so a ship with tankage for several jumps can cross a system with no fuel in it. The `FuelPolicy` (`refined` = starports A/B, `unrefined` = also C/D, `wilderness` = also gas giants and oceans) decides where the ship will refuel; a world it cannot refuel at is still crossed when the fuel range allows. Data comes from the Traveller Map `/api/jumpworlds` endpoint. Below the results table sits a **jump map**: the official `/api/jumpmap` PNG with an SVG ring overlaid on each world that passed the filters (see `utils/jumpMapImage.ts`).
 - **Passenger Traffic** — rolls High / Middle / Basic / Low passenger availability with the Mongoose 2e DMs and computes income. The **Nave** section (first on the page) names the ship and declares how many berths it sells of each class; that count caps the seat selection, and 0 means the class cannot be taken at all. An **View contract** button opens a passage contract listing every booked seat, headed by the ship's name.
 - **Freight Calculator** — computes traffic DMs, rolls lots, and lets the player pick which lots to buy up to their cargo bay capacity. Includes an integrated Mail Run block. An **View contract** button opens an invoice with the accepted lots and mail containers, headed by the ship's name.
-- **My Ship** — standalone tool at `/ship`: an editable sheet reproducing the stat block the rulebook prints for every ship (TL, hull, armour, M-drive, J-drive, power plant, fuel, bridge, computer, sensors, weapons, ammunition, craft, systems, software, staterooms, common areas, cargo — each line with its own tonnage — plus crew, hull points and power requirements). It is a **sheet, not a designer**: nothing is validated, so a line's tonnage never has to agree with the hull. It carries **no money at all** — no per-line price, no purchase price, no maintenance cost; what the ship cost is not played from here. Any of the 24 "Common Spacecraft" designs (pp. 189-228) can be loaded as a starting point from `constants/shipTemplates.ts`, and each section's "add" menu comes from `constants/shipParts.ts`, a catalogue harvested from those same 24 designs. The sheet also owns the **cargo bay** and the **passenger berths**, which the Freight and Passenger calculators read from it — see *Ship data ownership* below.
+- **My Ship** — standalone tool at `/ship`: an editable sheet reproducing the stat block the rulebook prints for every ship, split across three tabs. **Perfil** carries the identity (name, designation, TL, hull tonnage and hull points), the rulebook-design loader, a read-only summary, the capacities the calculators read, the power requirements and free notes. **Detalles** is the component sheet itself — hull, armour, M-drive, J-drive, power plant, fuel, bridge, computer, sensors, systems, software, weapons, ammunition, craft, staterooms, common areas and cargo, each line with its own tonnage. **Tripulación** holds both the crew the *design* requires (a text line, from the template) and the roster of who is actually aboard. It is a **sheet, not a designer**: nothing is validated, so a line's tonnage never has to agree with the hull. It carries **no money at all** — no per-line price, no purchase price, no maintenance cost; what the ship cost is not played from here. Any of the 24 "Common Spacecraft" designs (pp. 189-228) can be loaded as a starting point from `constants/shipTemplates.ts`, and each section's "add" menu comes from `constants/shipParts.ts`, a catalogue harvested from those same 24 designs. The sheet also owns the **cargo bay** and the **passenger berths**, which the Freight and Passenger calculators read from it — see *Ship data ownership* below.
 
 **UI terminology**: user-facing copy uses "world" (Traveller-native term). Code identifiers (`RecentPlanet`, `useRecentPlanets`, `planet` route, `planetName` translation key, `PlanetView`) keep the "planet" naming to avoid a cross-file rename — this asymmetry is intentional.
 
@@ -53,7 +53,7 @@ src/
 │   ├── mail.ts               # MailInputs, MailResult, MailRank (Mail Run)
 │   ├── contract.ts           # ContractData, ContractLine, ContractParty, ContractTotal
 │   ├── passenger.ts          # PassengerInputs, PassengerResult, PassengerClass, ShipBerths
-│   └── ship.ts               # ShipSheet, ShipComponent, ShipSectionKey, ShipPower, ShipCapacity
+│   └── ship.ts               # ShipSheet, ShipComponent, CrewMember, ShipSectionKey, ShipPower, ShipCapacity
 ├── components/
 │   ├── icons/
 │   │   └── index.tsx         # SVG icon components (IconSearch, IconPin, IconBox, IconClock, IconUsers, IconMail, IconSettings, IconTrash, IconRefresh, IconRadar, IconShip, IconMenu, IconClose, IconFileText, IconDownload, IconShare)
@@ -66,6 +66,7 @@ src/
 │   │   ├── Row.tsx           # Label-value row for data display
 │   │   ├── Field.tsx         # Labelled form control (useId → label htmlFor) + fieldLabelStyle
 │   │   ├── PageHeader.tsx    # Shared centered gradient h1 + optional icon
+│   │   ├── Tabs.tsx          # ARIA tablist (arrow keys, roving tabindex); the panels are the caller's
 │   │   ├── JumpsEditor.tsx   # JumpCountField + JumpsBreakdown + distributeJumps (Freight/Passenger)
 │   │   └── WorldPicker.tsx   # Visited-worlds dropdown + inline Traveller Map search
 │   ├── ContractModal.tsx     # Printable contract/invoice sheet built from a ContractData
@@ -92,7 +93,7 @@ src/
 │   ├── mail.ts               # Mail Run constants (rank/soc DMs, container size, etc.)
 │   ├── nearby.ts             # Distance/starport/TL/population filter options, jump + fuel + policy options, DEFAULT_FILTERS, DEFAULT_SHIP
 │   ├── storage.ts            # STORAGE_KEYS for every localStorage key + isFiniteNumber / isString guards
-│   ├── ship.ts               # SHIP_SECTIONS, SHIP_SECTION_GROUPS, emptySections
+│   ├── ship.ts               # SHIP_SECTIONS, SHIP_SECTION_GROUPS, SHIP_TABS, CrewRole, CREW_ROLES, emptySections
 │   ├── shipParts.ts          # Component catalogue for the My Ship "add" menus
 │   ├── shipTemplates.ts      # The 24 rulebook designs, as i18n keys + printed numbers
 │   └── passenger.ts          # Passenger DMs, class prices, options
@@ -108,7 +109,7 @@ src/
 │   ├── mail.ts               # calculateMail (Mail Run)
 │   ├── nearby.ts             # hexDistance, uwpFacts, withDistance, filterWorlds, canRefuel, jumpsFromOrigin
 │   ├── passenger.ts          # calculatePassengers
-│   ├── ship.ts               # emptyShip, shipFromTemplate, componentFromPart, shipTotals, isShipSheet
+│   ├── ship.ts               # emptyShip, shipFromTemplate, componentFromPart, crewMemberFromRole, shipTotals, isShipSheet
 │   ├── travellerMap.ts       # searchWorlds() + fetchWorldZone() + fetchJumpWorlds() → Traveller Map API
 │   ├── jumpMapImage.ts       # jumpMapUrl() + jumpMapScale() + projectOnJumpMap() → /api/jumpmap image geometry
 │   ├── contractImage.ts      # renderContractImage() → paints a ContractData onto a canvas, returns a PNG blob
@@ -206,6 +207,14 @@ they translate once, at load or insert time, and from then on the sheet is the
 player's own document. This is why **switching language does not retranslate a
 saved sheet** — the same reason it does not rewrite the name the player gave the
 ship. Do not add render-time translation of component labels.
+
+**Two different crews.** `ShipSheet.crew` is a text line saying what the *design*
+requires ("Piloto, astronavegante, ingeniero") and comes from the template;
+`ShipSheet.crewList` is the roster of who is actually aboard, which only the
+player fills in. Loading a template overwrites the first and leaves the second
+alone — a new hull does not fire anybody. Do not collapse the two: a ship flown
+short-handed is the normal case at the table, and the sheet has to be able to
+say so.
 
 `ShipComponent` deliberately has **no quantity field**: the "×10" is part of the
 label, as the manual prints it, and the tonnage and price are the line's totals.

@@ -69,10 +69,12 @@ A modern, browser-based set of tools for the **Mongoose Traveller 2nd Edition** 
 - **Exact parsec distances** computed from the map's world-space coordinates on an odd-q hex grid, validated against the API's own jump results across sector boundaries.
 
 ### My Ship
+- **Three tabs** — *Profile* (identity, design loader, summary, capacities, power requirements, notes), *Details* (the component sheet) and *Crew*.
 - **A sheet, not a designer** — Every row of the rulebook's stat block is here (TL, hull, armour, drives, power plant, fuel, bridge, computer, sensors, weapons, ammunition, craft, systems, software, staterooms, common areas, cargo), each line carrying its own tonnage. Nothing is validated: the sheet never checks tonnage against the hull, so every number stays yours. **No money** — no per-line price, no purchase price, no maintenance: the sheet says what the ship carries and how much room it takes.
 - **24 designs from the rulebook** as starting points — 14 starships (Scout/Courier, Seeker, Free Trader, Far Trader, Safari Ship, System Defence Boat, Yacht, Gazelle-class Close Escort, Laboratory Ship, Patrol Corvette, Subsidised Merchant, Donosev-class Survey Scout, Subsidised Liner, Mercenary Cruiser) and 10 small craft (light fighter, launch, shuttle, ship's boat, slow boat, pinnace, slow pinnace, modular cutter, ferry, passenger shuttle). Loading one keeps your ship's name, its passenger berths and your notes.
 - **Add and remove components** — Each section has its own "add" menu, built from every part those 24 designs actually carry: turrets from single-empty to triple pulse laser, particle barbettes, fixed mounts, missile magazines, drones, labs, workshops, staterooms, low berths and the rest. "Custom" adds a blank row for anything the rulebook does not list.
 - **Feeds the calculators** — The cargo bay and the passenger berths live on the sheet, and the Freight and Passenger calculators read them from there. Editing either number in a calculator edits the ship, so there is only ever one answer to "how big is my hold?".
+- **Two crews, kept apart** — The Crew tab holds both the crew the *design* calls for (the rulebook's line, filled in by the template) and a roster of who is actually aboard: name, post and notes per person, added from a menu of the twelve shipboard roles. Flying short-handed is a normal state, and the sheet can say so.
 - **Totals**, informational only: the components' tonnage against the hull.
 
 ### Visited Worlds

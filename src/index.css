@@ -520,6 +520,41 @@ a, button {
   }
 }
 
+/* Mi nave, pestaña de tripulación: nombre, puesto, notas y el botón de quitar.
+   Por debajo de 640 px el botón se queda a la derecha del nombre y los otros
+   dos campos bajan a su propia línea: tres campos de texto en una fila de
+   móvil no dejan leer ninguno. */
+.crew-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.2fr) 40px;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.crew-row--header {
+  margin-bottom: 2px;
+}
+
+@media (max-width: 640px) {
+  .crew-row {
+    grid-template-columns: minmax(0, 1fr) 40px;
+  }
+
+  .crew-row > *:nth-child(2),
+  .crew-row > *:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+
+  .crew-row {
+    margin-bottom: 14px;
+  }
+
+  .crew-row--header {
+    display: none;
+  }
+}
+
 @media print {
   body * {
     visibility: hidden !important;

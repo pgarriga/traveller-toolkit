@@ -4,9 +4,11 @@
 // en una ficha de texto plano: a partir de ese momento la ficha es del jugador y
 // nada la vuelve a traducir.
 
-import type { ShipComponent, ShipSectionKey, ShipSheet, ShipTotals } from "../types/ship";
+import type { CrewMember, ShipComponent, ShipSectionKey, ShipSheet, ShipTotals } from "../types/ship";
 import type { ShipBerths } from "../types/passenger";
 import type { ShipTemplate, TemplateComponent, CrewEntry } from "../constants/shipTemplates";
+import type { CrewRole } from "../constants/ship";
+import { crewRoleKey } from "../constants/ship";
 import type { TranslationFunction } from "../types/i18n";
 import { SHIP_SECTION_KEYS, emptySections } from "../constants/ship";
 import { findPart } from "../constants/shipParts";
@@ -73,6 +75,7 @@ export const emptyShip = (): ShipSheet => ({
   hullTons: null,
   hullPoints: null,
   crew: "",
+  crewList: [],
   power: { basic: null, mDrive: null, jDrive: null, sensors: null, weapons: null },
   sections: emptySections(),
   capacity: { cargoTons: 0, berths: { ...NO_BERTHS } },
@@ -105,12 +108,23 @@ export const shipFromTemplate = (
     hullTons: template.hullTons,
     hullPoints: template.hullPoints,
     crew: crewLabel(template.crew, t),
+    // La tripulación a bordo es de la partida, no del diseño: cargar otro casco
+    // no despide a nadie.
+    crewList: previous.crewList,
     power: { ...template.power },
     sections,
     capacity: { cargoTons: template.cargoTons, berths: { ...previous.capacity.berths } },
     notes: previous.notes,
   };
 };
+
+/** Tripulante nuevo: con el oficio ya escrito si se eligió uno del menú. */
+export const crewMemberFromRole = (role: CrewRole | null, t: TranslationFunction): CrewMember => ({
+  id: componentId(),
+  name: "",
+  role: role === null ? "" : t(crewRoleKey(role)),
+  notes: "",
+});
 
 /** Fila nueva a partir de una pieza del catálogo, o en blanco si no hay pieza. */
 export const componentFromPart = (partId: string | null, t: TranslationFunction): ShipComponent => {
@@ -148,6 +162,13 @@ const isRecord = (raw: unknown): raw is Record<string, unknown> =>
 const isNullableNumber = (raw: unknown): raw is number | null =>
   raw === null || (typeof raw === "number" && Number.isFinite(raw));
 
+const isCrewMember = (raw: unknown): raw is CrewMember =>
+  isRecord(raw) &&
+  typeof raw.id === "string" &&
+  typeof raw.name === "string" &&
+  typeof raw.role === "string" &&
+  typeof raw.notes === "string";
+
 const isComponent = (raw: unknown): raw is ShipComponent =>
   isRecord(raw) && typeof raw.id === "string" && typeof raw.label === "string" && isNullableNumber(raw.tons);
 
@@ -161,6 +182,9 @@ export const isShipSheet = (raw: unknown): raw is ShipSheet => {
   if (!isRecord(raw)) return false;
   if (typeof raw.designation !== "string") return false;
   if (typeof raw.crew !== "string" || typeof raw.notes !== "string") return false;
+  // Una ficha guardada antes de que existiera la pestaña de tripulación no trae
+  // la lista; se acepta y useShip la rellena vacía.
+  if (raw.crewList !== undefined && !(Array.isArray(raw.crewList) && raw.crewList.every(isCrewMember))) return false;
   if (raw.templateId !== null && typeof raw.templateId !== "string") return false;
   if (!isNullableNumber(raw.tl) || !isNullableNumber(raw.hullTons)) return false;
   if (!isNullableNumber(raw.hullPoints)) return false;

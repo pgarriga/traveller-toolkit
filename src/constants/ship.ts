@@ -2,6 +2,51 @@
 
 import type { ShipSectionKey, ShipSheet } from "../types/ship";
 
+/** Cada oficio que el manual lista en el recuadro "Tripulación". */
+export type CrewRole =
+  | "captain"
+  | "pilot"
+  | "coPilot"
+  | "astrogator"
+  | "engineer"
+  | "mechanic"
+  | "medic"
+  | "gunner"
+  | "marine"
+  | "administrator"
+  | "officer"
+  | "steward";
+
+/**
+ * Orden del menú de "añadir tripulante": el puente primero, luego máquinas,
+ * luego el resto, que es como el manual escribe las listas de tripulación.
+ */
+export const CREW_ROLES: readonly CrewRole[] = [
+  "captain",
+  "pilot",
+  "coPilot",
+  "astrogator",
+  "engineer",
+  "mechanic",
+  "medic",
+  "steward",
+  "gunner",
+  "marine",
+  "administrator",
+  "officer",
+];
+
+export const crewRoleKey = (role: CrewRole): string => `shipCrew_${role}`;
+
+/** Las tres pestañas de la ficha. */
+export const SHIP_TABS = [
+  { id: "profile", labelKey: "shipTabProfile" },
+  { id: "details", labelKey: "shipTabDetails" },
+  { id: "crew", labelKey: "shipTabCrew" },
+] as const;
+
+export type ShipTabId = (typeof SHIP_TABS)[number]["id"];
+
 /** Las filas del bloque de estadísticas, en el orden en que las imprime el manual. */
 export const SHIP_SECTIONS: readonly { key: ShipSectionKey; titleKey: string }[] = [
   { key: "hull", titleKey: "shipSecHull" },

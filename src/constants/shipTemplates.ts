@@ -20,21 +20,7 @@
 // van comentadas una a una allí donde están.
 
 import type { ShipPartId } from "./shipParts";
-
-/** Cada oficio que el manual lista en el recuadro "Tripulación". */
-export type CrewRole =
-  | "captain"
-  | "pilot"
-  | "coPilot"
-  | "astrogator"
-  | "engineer"
-  | "mechanic"
-  | "medic"
-  | "gunner"
-  | "marine"
-  | "administrator"
-  | "officer"
-  | "steward";
+import type { CrewRole } from "./ship";
 
 export interface CrewEntry {
   role: CrewRole;

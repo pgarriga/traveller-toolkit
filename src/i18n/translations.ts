@@ -462,6 +462,24 @@ export const translations: Record<Language, Record<string, string>> = {
     shipTitle: "Mi nave",
     homeShipDesc: "Ficha editable de tu nave: parte de uno de los 24 diseños del manual y quita o añade armas, camarotes y sistemas.",
     shipSourceNote: "Diseños de «Naves espaciales comunes», Manual Básico de Traveller 2.ª edición.",
+    // Mi nave — pestañas y tripulación
+    shipTabProfile: "Perfil",
+    shipTabDetails: "Detalles",
+    shipTabCrew: "Tripulación",
+    shipTabsLabel: "Secciones de la ficha",
+    shipSummarySection: "Resumen",
+    shipBerthsTotal: "Plazas de pasajero",
+    shipCrewAboard: "Tripulantes a bordo",
+    shipCrewRequiredSection: "Tripulación requerida",
+    shipCrewRequiredHint: "La que el diseño exige, tal y como la escribe el manual. No tiene por qué coincidir con quién va a bordo.",
+    shipCrewRosterSection: "Tripulación a bordo",
+    shipCrewRosterHint: "Quién cubre cada puesto en tu partida. Puedes ir con menos gente de la que el diseño pide, o con más.",
+    shipCrewAdd: "Añadir tripulante",
+    shipCrewRemove: "Quitar tripulante",
+    shipCrewEmpty: "Todavía no hay nadie a bordo.",
+    shipCrewMemberName: "Nombre",
+    shipCrewMemberRole: "Puesto",
+    shipCrewMemberNotes: "Notas",
 
     // Mi nave — identificacion
     shipIdentitySection: "Identificación",
@@ -470,7 +488,7 @@ export const translations: Record<Language, Record<string, string>> = {
     shipTlLabel: "Nivel tecnológico",
     shipHullTonsLabel: "Casco (toneladas)",
     shipHullPointsLabel: "Puntos de casco",
-    shipCrewLabel: "Tripulación",
+    shipCrewLabel: "Tripulación del diseño",
     shipCrewPlaceholder: "Piloto, astronavegante, ingeniero",
 
     // Mi nave — plantillas
@@ -1126,6 +1144,24 @@ export const translations: Record<Language, Record<string, string>> = {
     shipTitle: "My Ship",
     homeShipDesc: "An editable sheet for your ship: start from one of the 24 designs in the rulebook, then strip out or bolt on weapons, staterooms and systems.",
     shipSourceNote: "Designs from “Common Spacecraft”, Traveller 2nd Edition Core Rulebook.",
+    // Mi nave — pestañas y tripulación
+    shipTabProfile: "Profile",
+    shipTabDetails: "Details",
+    shipTabCrew: "Crew",
+    shipTabsLabel: "Sheet sections",
+    shipSummarySection: "Summary",
+    shipBerthsTotal: "Passenger berths",
+    shipCrewAboard: "Crew aboard",
+    shipCrewRequiredSection: "Required crew",
+    shipCrewRequiredHint: "What the design calls for, written the way the rulebook writes it. It need not match who is actually aboard.",
+    shipCrewRosterSection: "Crew aboard",
+    shipCrewRosterHint: "Who is covering each post in your game. You can fly with fewer people than the design asks for, or more.",
+    shipCrewAdd: "Add crew member",
+    shipCrewRemove: "Remove crew member",
+    shipCrewEmpty: "Nobody aboard yet.",
+    shipCrewMemberName: "Name",
+    shipCrewMemberRole: "Post",
+    shipCrewMemberNotes: "Notes",
 
     // Mi nave — identificacion
     shipIdentitySection: "Identification",
@@ -1134,7 +1170,7 @@ export const translations: Record<Language, Record<string, string>> = {
     shipTlLabel: "Tech level",
     shipHullTonsLabel: "Hull (tons)",
     shipHullPointsLabel: "Hull points",
-    shipCrewLabel: "Crew",
+    shipCrewLabel: "Crew the design calls for",
     shipCrewPlaceholder: "Pilot, astrogator, engineer",
 
     // Mi nave — plantillas
@@ -1790,6 +1826,24 @@ export const translations: Record<Language, Record<string, string>> = {
     shipTitle: "La meva nau",
     homeShipDesc: "Fitxa editable de la teva nau: parteix d'un dels 24 dissenys del manual i treu o afegeix armes, camarots i sistemes.",
     shipSourceNote: "Dissenys de «Naus espacials comunes», Manual Bàsic de Traveller 2a edició.",
+    // Mi nave — pestañas y tripulación
+    shipTabProfile: "Perfil",
+    shipTabDetails: "Detalls",
+    shipTabCrew: "Tripulació",
+    shipTabsLabel: "Seccions de la fitxa",
+    shipSummarySection: "Resum",
+    shipBerthsTotal: "Places de passatger",
+    shipCrewAboard: "Tripulants a bord",
+    shipCrewRequiredSection: "Tripulació requerida",
+    shipCrewRequiredHint: "La que el disseny exigeix, tal com l'escriu el manual. No ha de coincidir amb qui va a bord.",
+    shipCrewRosterSection: "Tripulació a bord",
+    shipCrewRosterHint: "Qui cobreix cada lloc a la teva partida. Pots anar amb menys gent de la que el disseny demana, o amb més.",
+    shipCrewAdd: "Afegir tripulant",
+    shipCrewRemove: "Treure tripulant",
+    shipCrewEmpty: "Encara no hi ha ningú a bord.",
+    shipCrewMemberName: "Nom",
+    shipCrewMemberRole: "Lloc",
+    shipCrewMemberNotes: "Notes",
 
     // Mi nave — identificacion
     shipIdentitySection: "Identificació",
@@ -1798,7 +1852,7 @@ export const translations: Record<Language, Record<string, string>> = {
     shipTlLabel: "Nivell tecnològic",
     shipHullTonsLabel: "Casc (tones)",
     shipHullPointsLabel: "Punts de casc",
-    shipCrewLabel: "Tripulació",
+    shipCrewLabel: "Tripulació del disseny",
     shipCrewPlaceholder: "Pilot, astronavegant, enginyer",
 
     // Mi nave — plantillas

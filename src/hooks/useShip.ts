@@ -58,10 +58,13 @@ export const useShip = (): UseShipReturn => {
   const fallback = useMemo(initialShip, []);
   const [stored, setShip] = usePersistentState<ShipSheet>(STORAGE_KEYS.ship, fallback, isShipSheet);
 
-  // Una ficha guardada por una versión anterior puede no traer una sección que
-  // se añadiese después. El type guard la deja pasar y aquí se rellena vacía,
-  // para que las vistas puedan leer ship.sections[key] sin comprobar nada.
-  const ship = useMemo<ShipSheet>(() => ({ ...stored, sections: { ...emptySections(), ...stored.sections } }), [stored]);
+  // Una ficha guardada por una versión anterior puede no traer una sección —o la
+  // lista de tripulación— que se añadiese después. El type guard las deja pasar y
+  // aquí se rellenan vacías, para que las vistas puedan leerlas sin comprobar nada.
+  const ship = useMemo<ShipSheet>(
+    () => ({ ...stored, crewList: stored.crewList ?? [], sections: { ...emptySections(), ...stored.sections } }),
+    [stored],
+  );
 
   const setCargoTons = useCallback(
     (cargoTons: number) => setShip(prev => ({ ...prev, capacity: { ...prev.capacity, cargoTons } })),
