@@ -678,7 +678,7 @@ import { Footer } from "../components/Footer";
 
 The band carries, centered: the app name in
 uppercase orange with the version beside it in a pill (`sr-only` reads it as
-"Versión 3.9.5", the pill shows "v3.9.5"), and the disclaimer. **The version is
+"Versión 4.0.0", the pill shows "v4.0.0"), and the disclaimer. **The version is
 always on**, in every view — there is no `showVersion` prop any more, because
 Settings was the one place nobody looks when they want to say which version they
 have open.
