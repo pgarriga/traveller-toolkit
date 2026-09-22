@@ -2,13 +2,13 @@
 
 ## Project Overview
 
-Traveller Toolkit - A multi-tool web app for the Mongoose Traveller 2nd Edition tabletop RPG. The home page lists the available tools and the user navigates between them. Current tools:
+Traveller Toolkit - A multi-tool web app for the Mongoose Traveller 2nd Edition tabletop RPG. The home page lists the available tools in three blocks — **Navegación** (Search World, Worlds Near Me, Visited Worlds), **Tránsito** (Passenger Traffic, Freight Calculator) and **Naves** — and the user navigates between them. **Naves** is the odd one out: it does not list a tool, it lists the player's fleet — one card per ship, with its name and its type, the active one badged — plus a last card that creates a new ship. The fleet is governed from there and **only** from there: `/ship` is the sheet of one ship, not a ship manager, so it carries no list of the others. A block with a single tool is fine; the grouping says what each tool is for, not how many there are. Current tools:
 - **Search World** — searches official Traveller worlds by name via the [Traveller Map](https://travellermap.com) API (`/api/search`). Selecting a result jumps to World Detail and auto-saves the world to Visited Worlds.
 - **Visited Worlds** — standalone tool at `/recent` listing the worlds you've visited (persisted in `localStorage`). Sortable dropdown, Edit/Done toggle for per-card deletion, colored tags per UWP attribute.
 - **Worlds Near Me** — standalone tool at `/nearby`. Pick the world you are on, describe your ship (jump rating, fuel range, fuel it accepts), set UWP filters (max distance, minimum starport, TL, population, travel zones) and get the matching worlds, sorted by number of jumps (parsec distance and name break ties, unreachable worlds last). Each result also shows the minimum number of jumps to reach it along a route where the ship never runs out of fuel. `jumpsFromOrigin` searches over `(world, fuel left)` states, not just worlds, so a ship with tankage for several jumps can cross a system with no fuel in it. The `FuelPolicy` (`refined` = starports A/B, `unrefined` = also C/D, `wilderness` = also gas giants and oceans) decides where the ship will refuel; a world it cannot refuel at is still crossed when the fuel range allows. Data comes from the Traveller Map `/api/jumpworlds` endpoint. Below the results table sits a **jump map**: the official `/api/jumpmap` PNG with an SVG ring overlaid on each world that passed the filters (see `utils/jumpMapImage.ts`).
 - **Passenger Traffic** — rolls High / Middle / Basic / Low passenger availability with the Mongoose 2e DMs and computes income. The **Nave** section (first on the page) names the ship and declares how many berths it sells of each class; that count caps the seat selection, and 0 means the class cannot be taken at all. An **View contract** button opens a passage contract listing every booked seat, headed by the ship's name.
 - **Freight Calculator** — computes traffic DMs, rolls lots, and lets the player pick which lots to buy up to their cargo bay capacity. Includes an integrated Mail Run block. An **View contract** button opens an invoice with the accepted lots and mail containers, headed by the ship's name.
-- **My Ship** — standalone tool at `/ship`: an editable sheet reproducing the stat block the rulebook prints for every ship, split across three tabs. **Perfil** carries the identity (name, designation, TL, hull tonnage and hull points), the rulebook-design loader, a read-only summary, the capacities the calculators read, the power requirements and free notes. **Detalles** is the component sheet itself — hull, armour, M-drive, J-drive, power plant, fuel, bridge, computer, sensors, systems, software, weapons, ammunition, craft, staterooms, common areas and cargo, each line with its own tonnage. **Tripulación** holds both the crew the *design* requires (a text line, from the template) and the roster of who is actually aboard. It is a **sheet, not a designer**: nothing is validated, so a line's tonnage never has to agree with the hull. It carries **no money at all** — no per-line price, no purchase price, no maintenance cost; what the ship cost is not played from here. Any of the 24 "Common Spacecraft" designs (pp. 189-228) can be loaded as a starting point from `constants/shipTemplates.ts`, and each section's "add" menu comes from `constants/shipParts.ts`, a catalogue harvested from those same 24 designs. The sheet also owns the **cargo bay** and the **passenger berths**, which the Freight and Passenger calculators read from it — see *Ship data ownership* below.
+- **My Ship** — standalone tool at `/ship`: a **fleet** of ships, each one an editable sheet reproducing the stat block the rulebook prints, split across four tabs. A ship is **created** before it can be edited — `ShipCreateModal` asks for a name and a type, and the type (one of the 24 rulebook designs, or *personalizada* for a blank sheet) is chosen there and **only** there. Afterwards the sheet shows the type locked and lets the player edit everything else; another type means another ship. Exactly one ship is **active** at a time, and it is the one the Freight and Passenger calculators read. **Perfil** carries the identity (the locked type, name, designation, TL, hull tonnage and hull points), free notes, and then three read-only cards in the order the ship is asked about: **Motores** (thrust and jump number, each with what its rows weigh), **Potencia** and **Bodega de carga** (used and free). There is no summary card: a list of figures already shown on their own tabs said nothing that its own tab did not say better. **Detalles** is the component sheet itself — hull, armour, M-drive, J-drive, power plant, fuel, bridge, computer, sensors, systems, software, weapons, ammunition, craft, staterooms, common areas and cargo, each line with its own tonnage — and, in the accommodation card alone, its own quantity — grouped into ten cards (`SHIP_SECTION_GROUPS`) that keep hull, drives and power plant apart, split the systems into the fixed set every ship carries (bridge, computer, sensors) and the open one it may add to (`systems`), and keep accommodation, cargo and craft apart from each other too. The ship's **total tonnage** (`hullTons`) is edited from Perfil only: that number is the whole ship, not a component, which is why Detalles carries no copy of it. **Tripulación** holds, in that order, the crew the *design* requires (a text line, from the template — it is what the player reads their own list against) and then the roster of who is actually aboard — a real `<table class="traveller-table crew-table">` of name, post and monthly salary, one row per person. Perfil and Detalles lay their content on the same `two-col-grid`, so neither looks wider than the other, but the roster deliberately takes the **whole page width**: it is the ship's muster list, and the more screen there is the more names fit without cramping. Below 640px the table stops being a table (`.crew-table` in `index.css`): the header goes, each row stacks — the name with its bin beside it, the post and the salary underneath — and the placeholders say what each cell is. It is a **sheet, not a designer**: nothing is validated, so a line's tonnage never has to agree with the hull. It carries **almost no money** — no per-line price, no purchase price, no maintenance cost; what the ship cost is not played from here. The one exception is the crew's salary, which is paid every month whether or not the freight pays. Any of the 24 "Common Spacecraft" designs (pp. 189-228) can be the ship's type, from `constants/shipTemplates.ts`, and `constants/shipParts.ts`, a catalogue harvested from those same 24 designs, feeds both each section's "add" menu and the suggestions of every component field. Hull, armour, M-drive, J-drive, power plant, fuel, bridge, computer and sensors (`FIXED_SECTIONS`) have no "add" menu: a ship carries one set of each, so those lines are edited, not added — the section that takes extras one at a time is `systems`, which is why it has a card of its own (**Otros sistemas**) instead of sharing one with the bridge, the computer and the sensors: next to three lines that can only be corrected, the one place where something can be added did not read as one. The delete buttons are off by default behind a **Eliminar filas** toggle that belongs to **one card**, not to the tab: a small bin sitting right beside that section's "+ Añadir" menu (`ShipSectionEditor`'s `removeToggle` slot), because putting a line in and taking one out are the same job and are done from the same place. `removeIn` holds the set of cards currently switched on — removing a line is business of the card the line is in, so a single switch at the top lit bins in all ten to delete one. Every section with a row that can actually go (`sectionCanRemove`) draws the switch beside its own add menu, so nobody has to travel up to another section's line to turn the bins on. They all switch the same thing and light up together, because the column belongs to the card (`showRemove` is the card's, since `ShipRowHeader` is one header for all its rows). A card with nothing to remove — the fixed set: hull, drives, power, core systems — carries no switch at all and never reflows. Hidden, the bins give up their column (`.ship-sheet-row--removable` in `index.css`) so the component name runs the full width and the tonnage sits flush right. Each card decides its three optional columns (remove, power, quantity) **as a card**, because `ShipRowHeader` is one header for all of its rows; a section that drew a column its header lacks would sit out of line. **Bodega** is the manifest: three metrics at the top —the hold the ship has, what is in it and what is left— and under them a table the player fills with what is being carried right now. `ShipSheet.cargoHold` (a `CargoItem[]`) is that list, and it is **not** `sections.cargo`: that row is the *hole*, the tonnage the design gives over to freight, while this is what is inside it this week — which is why loading a design does not touch it, the same reason a new hull does not come crewed. Free space is the hold (`cargoCapacityTons`, summed from Detalles' cargo rows) minus the sum of the manifest, it is allowed to go **negative**, and when it does it turns `COLORS.warning`: overloading is the player's business and the sheet only says so. Perfil repeats the used/free pair in a card of its own, because that is the number looked at before accepting a lot. The sheet also owns the **cargo bay** and the **passenger berths**, but does not edit them: they are typed into the calculator that uses them, and the cargo bay is read back everywhere from Detalles' own rows — see *Ship data ownership* below.
 
 **UI terminology**: user-facing copy uses "world" (Traveller-native term). Code identifiers (`RecentPlanet`, `useRecentPlanets`, `planet` route, `planetName` translation key, `PlanetView`) keep the "planet" naming to avoid a cross-file rename — this asymmetry is intentional.
 
@@ -53,7 +53,7 @@ src/
 │   ├── mail.ts               # MailInputs, MailResult, MailRank (Mail Run)
 │   ├── contract.ts           # ContractData, ContractLine, ContractParty, ContractTotal
 │   ├── passenger.ts          # PassengerInputs, PassengerResult, PassengerClass, ShipBerths
-│   └── ship.ts               # ShipSheet, ShipComponent, CrewMember, ShipSectionKey, ShipPower, ShipCapacity
+│   └── ship.ts               # ShipSheet, Fleet, TurretBuild, TurretMountId, TurretWeaponId, ShipComponent, CrewMember, CargoItem, ShipSectionKey, ShipRatings, ShipPower, ShipCapacity
 ├── components/
 │   ├── icons/
 │   │   └── index.tsx         # SVG icon components (IconSearch, IconPin, IconBox, IconClock, IconUsers, IconMail, IconSettings, IconTrash, IconRefresh, IconRadar, IconShip, IconMenu, IconClose, IconFileText, IconDownload, IconShare)
@@ -70,13 +70,15 @@ src/
 │   │   ├── JumpsEditor.tsx   # JumpCountField + JumpsBreakdown + distributeJumps (Freight/Passenger)
 │   │   └── WorldPicker.tsx   # Visited-worlds dropdown + inline Traveller Map search
 │   ├── ContractModal.tsx     # Printable contract/invoice sheet built from a ContractData
+│   ├── ShipCreateModal.tsx   # New-ship form: name + type (the only place the type is chosen)
+│   ├── TurretBuilderModal.tsx # Fits a turret: mount + pop-up + one weapon per slot
 │   ├── ShipSectionEditor.tsx # One stat-block row of the My Ship sheet (+ ShipRowHeader)
 │   ├── NearbyJumpMap.tsx     # Traveller Map jump-map image + filter-match ring overlay
 │   ├── Navbar.tsx            # Navigation bar (desktop + mobile, with a11y)
 │   ├── Footer.tsx            # Disclaimer footer
 │   └── ErrorBoundary.tsx     # Error boundary with fallback UI
 ├── views/
-│   ├── HomeView.tsx          # Tools list (cards) — landing page at "/"
+│   ├── HomeView.tsx          # Tools list (cards in three groups) — landing page at "/"
 │   ├── SearchView.tsx        # World search (Traveller Map) — "/search"
 │   ├── RecentWorldsView.tsx  # Visited Worlds tool (sort + edit mode) — "/recent"
 │   ├── NearbyView.tsx        # Worlds Near Me (jumpworlds + UWP filters) — "/nearby"
@@ -92,16 +94,17 @@ src/
 │   ├── freight.ts            # POPULATION_DM, STARPORT_DM, TONS_PER_LOT_DIE, lotsFromTraffic, etc.
 │   ├── mail.ts               # Mail Run constants (rank/soc DMs, container size, etc.)
 │   ├── nearby.ts             # Distance/starport/TL/population filter options, jump + fuel + policy options, DEFAULT_FILTERS, DEFAULT_SHIP
-│   ├── storage.ts            # STORAGE_KEYS for every localStorage key + isFiniteNumber / isString guards
-│   ├── ship.ts               # SHIP_SECTIONS, SHIP_SECTION_GROUPS, SHIP_TABS, CrewRole, CREW_ROLES, emptySections
-│   ├── shipParts.ts          # Component catalogue for the My Ship "add" menus
+│   ├── storage.ts            # STORAGE_KEYS for every localStorage key (`fleet`; `ship`/`shipName` are legacy) + isFiniteNumber / isString guards
+│   ├── ship.ts               # SHIP_SECTIONS, SHIP_SECTION_GROUPS, FIXED_SECTIONS, QTY_SECTIONS, SENSOR_GRADES, SHIP_TABS, emptySections
+│   ├── shipParts.ts          # Component catalogue: My Ship "add" menus + field suggestions
+│   ├── turrets.ts            # TURRET_MOUNTS + POP_UP_MOUNT + TURRET_WEAPONS (the two rulebook tables)
 │   ├── shipTemplates.ts      # The 24 rulebook designs, as i18n keys + printed numbers
 │   └── passenger.ts          # Passenger DMs, class prices, options
 ├── hooks/
 │   ├── usePersistentState.ts # Generic localStorage-backed state (needs a type guard)
 │   ├── useThemeMode.ts       # Theme management with localStorage
 │   ├── useRecentPlanets.ts   # CRUD for recent planets (MAX_RECENT_PLANETS inlined)
-│   └── useShip.ts            # The player's ship: sheet + shared name + cargo/berths
+│   └── useShip.ts            # The fleet: create/select/delete + the active ship's sheet
 ├── utils/
 │   ├── routing.ts            # URL parsing and building (home, search, freight, passengers, settings, planet)
 │   ├── uwp.ts                # UWP parsing and validation (`parseUwp`)
@@ -109,10 +112,13 @@ src/
 │   ├── mail.ts               # calculateMail (Mail Run)
 │   ├── nearby.ts             # hexDistance, uwpFacts, withDistance, filterWorlds, canRefuel, jumpsFromOrigin
 │   ├── passenger.ts          # calculatePassengers
-│   ├── ship.ts               # emptyShip, shipFromTemplate, componentFromPart, crewMemberFromRole, shipTotals, isShipSheet
+│   ├── turret.ts             # turretTotals, turretLabel, turretComponent → a fitted turret as a sheet row
+│   ├── ship.ts               # emptyShip, newShip, shipFromTemplate, shipTypeName, componentFromPart, withQuantity, cargoCapacityTons, withCargoTons, newCargoItem, cargoUsedTons, shipPowerRequirements, isShipSheet, isFleet
 │   ├── travellerMap.ts       # searchWorlds() + fetchWorldZone() + fetchJumpWorlds() → Traveller Map API
 │   ├── jumpMapImage.ts       # jumpMapUrl() + jumpMapScale() + projectOnJumpMap() → /api/jumpmap image geometry
 │   ├── contractImage.ts      # renderContractImage() → paints a ContractData onto a canvas, returns a PNG blob
+│   ├── download.ts           # saveFile() — the one anchor dance, shared by the contract image and the ship export
+│   ├── shipExport.ts         # shipFileName() + shipJsonFile() → the sheet as a .json download
 │   ├── format.ts             # localeFor() + formatCredits() + formatTons() — the only number formatting in the app
 │   ├── planetToWorldInputs.ts # Maps a RecentPlanet to Passenger/Freight world inputs
 │   └── i18n-helpers.ts       # isNoneValue, requiresWarning
@@ -180,45 +186,242 @@ Lives in `src/views/ShipView.tsx`, `src/components/ShipSectionEditor.tsx`,
 `src/hooks/useShip.ts`, `src/utils/ship.ts`, `src/constants/{ship,shipParts,shipTemplates}.ts`,
 `src/types/ship.ts`.
 
-**It is a sheet, not a designer.** It reproduces the layout of the rulebook's
-stat block and lets the player edit every cell, and that is all: no rule is
-applied, no total is enforced. A row's tonnage does not have to agree with the
-hull. The `Totales` card sums the rows purely so the player can see the drift —
-treat any request to "fix" a total by computing it as a change of scope, not a
-bug fix.
+**A ship is created, then edited.** `ShipCreateModal` asks for the two things
+that have to exist before there is a ship at all: a name and a type. The type is
+one of the 24 rulebook designs — which fills the whole sheet in — or *nothing*
+(`templateId: null`), which starts it blank. It is chosen **once**: the sheet
+then prints it as a read-only row with a hint saying so, and there is no design
+loader any more. Changing it would replace every component of a sheet the player
+has already edited, which is not editing a ship, it is creating another one — so
+that is exactly what the UI offers. Do not re-add a template picker to the sheet.
 
-**There is no money on the sheet.** No price per line, no purchase price, no
-maintenance cost, and `ShipComponent` has no `price` field to put one in. This is
-a deliberate product decision, not an omission: the sheet answers "what does the
-ship carry, and how much room does it take". Do not reintroduce a price column,
-and do not transcribe the rulebook's prices into `shipTemplates.ts`.
+**There is a fleet, and one active ship.** `Fleet` (`types/ship.ts`) is
+`{ ships, activeId }` under `STORAGE_KEYS.fleet`, and `useShip()` is the only
+door to it: `createShip` / `selectShip` / `deleteShip`, plus `setShip` and the
+capacity setters, which all act on the **active** ship. `ship` is `null` while
+the fleet is empty — `ShipView` then shows nothing but the invitation to create
+one, and the two calculators replace their **Nave** fields with the same button.
+There is one active ship rather than a per-calculator choice because Freight and
+Passenger ask "how big is my hold?", and that question has to have one answer.
+
+The fleet is listed, switched and created **from the home page**. `ShipView` is
+the sheet of the active ship and nothing else: it never lists the other ships,
+and its only call to `createShip` is the empty-fleet invitation, because until a
+ship exists there is no sheet to draw. Do not put a ship switcher or a "new
+ship" button back into the sheet.
+
+The two actions that belong to **this** ship rather than to the fleet live in
+**Perfil only**, right-aligned just above the Notas card, as small `ghost`
+buttons: they are used once in a while, and at full width across the foot of
+every tab they shouted over the sheet. **Exportar nave** downloads it and
+**Eliminar nave** (the only one carrying `COLORS.danger`, on its text) removes
+it. Deleting activates the next ship, or —if it was the last one— drops the view
+back to the create screen on its own, because there is then no sheet to draw.
+
+**It is a sheet, not a designer.** It reproduces the layout of the rulebook's
+stat block and lets the player edit every cell: no tonnage rule is applied, no
+total is enforced, and a row's tonnage does not have to agree with the hull.
+There is no card adding the rows up either — `shipTotals` existed for one and
+went with it — so treat any request to "fix" a tonnage total by computing it as
+a change of scope, not a bug fix.
+
+**The one exception is the power requirements**, which the sheet does compute
+(`shipPowerRequirements` in `utils/ship.ts`), because the rulebook states them as
+closed formulas rather than as a design budget: 20% of hull tonnage for basic
+ship systems, 10% of hull tonnage per point of Thrust (×0.25 at Thrust 0, nothing
+at all for a reaction drive) and per jump number, plus whatever the sensor grade
+and the individual weapons draw. The result is rounded **up** — that is what the
+book does (the 95 t passenger shuttle needs 9.5 and its sheet prints 10). It is
+still a read-out: it answers "does the plant cover this?" but enforces nothing —
+a ship that does not power its own drives saves and loads like any other — and
+the box is not editable, because every input it needs is a field of its own.
+
+The box reads as a row of **metrics**, not label-value rows: what the plant
+produces — its tonnage times the energy per ton of its type (`POWER_PLANTS`) — as
+one large orange figure on the `.metric-grid--lead` tile, with the five-way
+breakdown of what each system draws plain underneath. That breakdown asks for
+five columns by number (`.metric-grid--breakdown`), not by minimum width: sized
+by width, the card's own width decided how many fitted and the sensors dropped to
+a second row on their own.
+
+**There is deliberately no single total of what the ship needs**, and `ShipPower`
+has no `total` field to render one. Adding the five up would assume the ship runs
+everything at once, which it does not: the rulebook expects power to be diverted
+from the rest of the ship in order to jump, so the sum would be wrong the moment
+the ship did anything.
+
+What the box does total is `ShipPower.modes`, the **two configurations the ship
+is actually flown in**, each with what the plant produces printed beside it:
+
+| Mode | What draws power |
+|------|------------------|
+| **Modo combate** | everything except the jump: basic + m-drive + sensors + weapons |
+| **Modo salto** | the jump drive and basic systems, with the rest shut down |
+
+Those two, and only those two, are compared against the plant (`powerMode` in
+`ShipView`): within it the figure is `COLORS.success`, over it `COLORS.warning`
+(amber, not red: a ship that cannot jump with its guns hot is an ordinary ship,
+and `COLORS.primary` is spoken for as the sheet's accent), and with no power
+plant chosen it stays `theme.text`, because a blank sheet has nothing to fail
+against. It is the one comparison on the whole sheet and it is
+still not a validation — nothing stops the player saving a ship that cannot power
+its own jump. Do not add a third mode, a sum of the five, or a warning that
+blocks anything.
+
+The inputs live in `ShipSheet.ratings` (`thrust`, `reaction`, `jump`, `sensors`,
+`powerPlant`), edited from those sections' own rows in Detalles, plus `hullTons`
+and the `power` on each weapon/ammunition row — which a fitted turret computes
+from the mount and weapon tables, and which `ShipPart.power` seeds on the lines
+that are still free text. `ShipSheet`
+no longer stores a `power` block and `ShipTemplate` no longer transcribes one:
+the numbers the book prints are reproduced from the ratings instead of copied.
+All 24 reproduce their printed plant output exactly, and every design whose
+printed sheet gives a weapons figure comes out exactly right (patrol corvette 28,
+mercenary cruiser 8, launch 1); the handful that differ are listed, with the
+reason, at the top of `shipTemplates.ts`.
+
+The rows of the drives, the power plant and the sensors carry **no free-text
+name**: a selector fills that cell (`ratingCell` in `ShipSectionEditor`), because
+those lines *are* their rating ("Propulsión 2", "Salto-2", "Fusión (NT12)",
+"Grado militar") and a text field beside the selector could only contradict the
+number the calculation uses. Picking an option writes that same name as the row's
+label, and `shipFromTemplate` writes it too, so a loaded design and a hand-picked
+one read identically.
+
+Picking a Thrust or a jump number also **prefills that row's tonnage** from the
+drive-potential tables (`M_DRIVE_RATINGS` / `J_DRIVE_RATINGS`): a percentage of
+the hull, plus `J_DRIVE_BASE_TONS` for the jump drive. That is a prefill, not a
+rule — the cell stays editable, and nothing recomputes it behind the player's
+back, not even a later change to `hullTons`. The percentages reproduce 23 of the
+24 printed m-drive tonnages and 12 of the 13 jump ones (the odd one out is the
+donosev, whose own line contradicts itself); the flat 5 t is not in the table but
+is what every one of those twelve sheets adds.
+
+`hullTons` is the ship's whole tonnage, not a component's, so it is **not** one
+of the rows: it is a field of its own, edited from Perfil. Putting it in the hull
+row's `tons` cell would count the ship twice.
+
+**Exporting is the sheet itself, not a rendering of it.** `shipJsonFile`
+(`utils/shipExport.ts`) writes the stored `ShipSheet` as JSON with no wrapper
+around it, so the file is exactly what `isShipSheet` already validates — which
+is all an import button would need the day there is one. There is no import yet.
+
+**Weapons are fitted, not picked off a list.** The rulebook crosses two tables —
+four mounts (fixed, single, double, triple, `TURRET_MOUNTS`) plus the pop-up
+extra, and five turret weapons (`TURRET_WEAPONS`), both in `constants/turrets.ts`
+— and a turret holds up to three of them, which may differ. The **barbette** is
+a fifth entry in the same mount list, but it is not a mount that gets filled: it
+is five tons that *are* a weapon, chosen from its own table
+(`BARBETTE_WEAPONS`, the eight the manual prints). That is what `weapons:
+"barbette"` selects and what `namedByWeapon` means — the row is called "Barbeta
+de partículas", not "Barbeta (barbeta de partículas)", and it has no weapon
+line under it because its weapon is already its name. A menu of ready-made
+pieces cannot offer that, so the weapons section's **+ Añadir** is the same
+control every other section has with different entries inside it: **Montar
+torreta** and **Montar barbeta** (`builders`), which open the same dialog
+(`TurretBuilderModal`) on one table or the other instead of inserting a part.
+Pick the mount, fill each slot, and `utils/turret.ts` turns it into a row. Adding
+is adding — two orange buttons where every other card has a menu made the weapons
+card read as something else — but the rule holds: a section that passes
+`builders` never offers the catalogue, because that is not how a weapon gets onto
+the sheet. The prices of both tables are **not**
+transcribed, for the same reason as everywhere else on this sheet.
+
+**A fitted turret is the one row on the sheet that is not free text.** The row
+keeps the whole choice in `ShipComponent.turret` (a `TurretBuild`), and Detalles
+draws it read-only **in the same field boxes as every other row** —same
+background, same border, the text greyed to say it is not typed (`readOnlyCell`)—:
+the mount on its own line with the tonnage and the *total* power, and under it one
+line per weapon fitted, dimmed and box-less (`subCell`), each with its own power.
+Without those boxes its numbers floated loose beside the ones that are written by
+hand, and the weapons card read as if it came from another sheet.
+Clicking the mount reopens the same dialog on that turret and saving replaces the
+row in place, keeping its id. Nothing about it is typed by hand, because the
+name, the tonnage and the power all come out of the choice — a text field beside
+them could only contradict it, which is the same reason the drives carry a
+selector instead of a name. Every other weapon line (from a template, from the
+catalogue, written by hand) stays free text, and `ShipComponent.turret` is
+`undefined` there.
+
+The pop-up mount is a `+1 t, +0 Power, TL10` on top of a turret, and that is how
+`POP_UP_MOUNT` stores it — but it is **not** a checkbox in the dialog. What a
+player buys is "a pop-up double turret", so each turret appears twice in the one
+mount list, and the variant's name is a translation key of its own
+(`popUpLabelKey`): Spanish puts the adjective after the noun and English before
+it, so a "{mount} + suffix" assembled in code could only be right in one of
+them. The fixed mount has no variant — it is built into the hull, which is the
+opposite of popping out to shoot.
+
+**There is no money on the component sheet.** No price per line, no purchase
+price, no maintenance cost, and `ShipComponent` has no `price` field to put one
+in. This is a deliberate product decision, not an omission: the sheet answers
+"what does the ship carry, and how much room does it take". Do not reintroduce a
+price column, and do not transcribe the rulebook's prices into
+`shipTemplates.ts`.
+
+The **crew's salary** (`CrewMember.salary`, in credits per month) is the single
+exception, and it is not the same kind of number: what the hull cost is a fact
+about a purchase nobody at the table replays, while the payroll comes due every
+month whether or not the run paid. Nothing sums it and nothing compares it with
+the freight income — it is a datum of each person, like their post.
 
 Three layers, and they only meet once:
 
 1. `constants/shipTemplates.ts` — the 24 rulebook designs as **i18n keys plus the
-   printed numbers**. No prose is written in Spanish here.
-2. `constants/shipParts.ts` — the catalogue behind each section's "add" menu,
-   harvested from those same 24 designs. `tons`/`price` are **per unit** and only
+   printed numbers**, plus each design's `thrust`/`jump`/`sensors` ratings. No
+   prose is written in Spanish here.
+2. `constants/shipParts.ts` — the catalogue behind each section's "add" menu
+   and behind the `<datalist>` suggestions of every component field, harvested
+   from those same 24 designs. `tons`/`price` are **per unit** and only
    prefill a new row.
 3. `types/ship.ts` — the saved sheet, where every label is **plain text**.
 
 `shipFromTemplate` / `componentFromPart` (in `utils/ship.ts`) are the bridge:
 they translate once, at load or insert time, and from then on the sheet is the
-player's own document. This is why **switching language does not retranslate a
+player's own document. The weapons section takes a different road at that same
+moment (`materialiseWeapon`): a catalogue part that carries a `turret` recipe
+(`ShipPart.turret`) becomes a **fitted turret**, not text — the mount from the
+recipe, the named weapon repeated in *every* slot the mount has (a triple
+pulse-laser turret is three pulse lasers, which is how the book prints it), and
+one row per unit of the `×N`. A design that carries an empty mount keeps it
+empty: the manual sells them that way, and the player decides what goes in.
+The one figure this moved is the gazelle's weapons power, 26 → 56, because its
+two particle barbettes now draw the 15 each that their own table gives them. This is why **switching language does not retranslate a
 saved sheet** — the same reason it does not rewrite the name the player gave the
 ship. Do not add render-time translation of component labels.
 
 **Two different crews.** `ShipSheet.crew` is a text line saying what the *design*
 requires ("Piloto, astronavegante, ingeniero") and comes from the template;
-`ShipSheet.crewList` is the roster of who is actually aboard, which only the
-player fills in. Loading a template overwrites the first and leaves the second
+`ShipSheet.crewList` is the roster of who is actually aboard —name, post and
+monthly salary per person— which only the player fills in. Loading a template overwrites the first and leaves the second
 alone — a new hull does not fire anybody. Do not collapse the two: a ship flown
 short-handed is the normal case at the table, and the sheet has to be able to
 say so.
 
-`ShipComponent` deliberately has **no quantity field**: the "×10" is part of the
-label, as the manual prints it, and the tonnage and price are the line's totals.
-A separate multiplier could only contradict them.
+**Only the accommodation counts units.** `ShipComponent.qty` exists for the two
+sections in `QTY_SECTIONS` (`staterooms`, `commonAreas`) and nowhere else:
+staterooms, luxury staterooms and low berths are identical repeated pieces — 4 t
+each, 0.5 t a low berth — and what changes at the table is *how many*, not what
+one takes up. Those rows get a **Cant.** column in Detalles, and the "×10" the
+manual prints inside the name becomes that cell instead of part of the label
+(`templateComponentLabel(…, withCount: false)`).
+
+`ShipComponent.tons` is still the line's **total**, there as everywhere else.
+Typing a quantity multiplies it by what one unit took up, and that unit tonnage
+is **not stored**: it comes from dividing the line's total by the quantity it had
+("Camarote ×4 · 16 t" → 4 t each), a sum that always agrees because both figures
+are saved. A third field could contradict the other two, which is what the rest
+of the sheet avoids. It is a calculation on keystroke, not a rule: the total cell
+stays editable, a hand-corrected total survives the next quantity change, and
+nothing recomputes either number behind the player's back. See `withQuantity` in
+`utils/ship.ts`; a sheet saved before the column existed gets its quantity parsed
+out of the label once, by `withCountFromLabel`, from `useShip`'s `normalise`.
+
+Everywhere else there is deliberately **no quantity**: the "×2" is part of the
+label, as the manual prints it, and a separate multiplier could only contradict
+the line's tonnage. Weapons resolve it the other way still: a template's "Torreta
+triple (láser de pulsos) ×2" is *two turrets*, so it materialises as two rows of
+one turret each. A turret is a thing you fit, aim and lose, not a quantity.
 
 Template data is transcribed **as printed**, not as it should add up. 19 of the
 24 designs sum to exactly their hull tonnage; the other five leave space
@@ -231,24 +434,52 @@ pinnace's M-drive columns, for one — and each carries a comment saying so.
 ### Ship data ownership
 
 The ship's **name**, **cargo bay** and **passenger berths** are properties of the
-ship, not of the route being calculated, so there is exactly one copy of each:
+ship, not of the route being calculated, so there is exactly one copy of each —
+and since there is a fleet, all three live *inside* the ship they belong to:
 
 | Datum | Lives in | Edited from |
 |-------|----------|-------------|
-| Name | `STORAGE_KEYS.shipName` | My Ship, Freight, Passenger |
-| Cargo bay (tons) | `ShipSheet.capacity.cargoTons` (`STORAGE_KEYS.ship`) | My Ship, Freight |
-| Berths per class | `ShipSheet.capacity.berths` (`STORAGE_KEYS.ship`) | My Ship, Passenger |
+| Name | `ShipSheet.name` | My Ship, Freight, Passenger |
+| Cargo bay (tons) | `ShipSheet.sections.cargo` — summed, not stored | My Ship (Detalles), Freight |
+| Berths per class | `ShipSheet.capacity.berths` | Passenger |
 
-All three read and write through `useShip()`. The calculators kept their own
-input fields, but those fields now edit the ship — typing a cargo bay in Freight
-changes the sheet. `STORAGE_KEYS.freightCargoBay` and
+All three belong to the **active** ship, all three read and write through
+`useShip()`, and the whole fleet is one `STORAGE_KEYS.fleet` entry. The
+calculators kept their own input fields, but those fields edit the ship — typing
+a cargo bay in Freight changes the sheet.
+
+**The cargo bay is not a stored number.** It is `cargoCapacityTons(ship)`, the
+sum of the rows in the `cargo` section — the line the rulebook prints, "Bodega
+81 t". It used to be a field of its own *as well*, and that meant two numbers for
+one thing: editing the row left the field lying, and nobody could tell which of
+the two they were reading. Perfil, the Bodega tab and the Freight calculator all
+read that sum now, so changing the row in Detalles changes all three at once.
+
+Freight still has its input, and typing in it writes `withCargoTons` into the
+**first** cargo row (creating it, named, if the ship had none). The first and not
+all of them: a player who has split the hold into several lines —hold, cold
+hold— has a split of their own, and spreading a total over it would be inventing
+one. The first row takes whatever the others do not, never below zero.
+
+`ShipTemplate` no longer carries a `cargoTons` either, for the same reason: all
+24 designs printed it identically to their own cargo row.
+
+The berths stay a field, because a stateroom cannot be summed into passage
+classes: the rulebook does not split one. My Ship has no Capacidades card — it
+printed the same numbers a second time, in the one tab where nothing else is a
+calculator input. Do not put it back.
+
+`STORAGE_KEYS.ship`, `STORAGE_KEYS.shipName`, `STORAGE_KEYS.freightCargoBay` and
 `STORAGE_KEYS.passengerBerths` are **legacy**: `useShip` reads them once, when no
-sheet exists yet, so a player who used the app before this tool does not find
-their settings reset. Never write to them again.
+fleet exists yet, and turns whatever it finds into the player's first ship, so
+nobody who used an earlier version finds their ship gone. A sheet nobody ever
+touched (the blank one that saved itself just by opening the tool) is *not*
+migrated — it would start the fleet with a ship the player never created. Never
+write to those four keys again.
 
-Loading a template keeps the name, the berths and the notes: the rulebook does
-not split staterooms between passage classes, so seeding berths from a design
-would be inventing a rule the sheet does not have.
+Picking a design as the ship's type keeps the berths it was created with: the
+rulebook does not split staterooms between passage classes, so seeding berths
+from a design would be inventing a rule the sheet does not have.
 
 ### i18n System
 - Auto-detects language from `navigator.language`
@@ -257,6 +488,8 @@ would be inventing a rule the sheet does not have.
 - Translations in `src/i18n/` with `useTranslation()` hook
 
 ### Data Persistence
+- The fleet (every ship's sheet plus which one is active) is stored in `localStorage` key: `traveller-fleet`
+- `usePersistentState` writes through on `set`, not only in its effect: deleting a ship and going home in the same click unmounts the component in that commit, and neither its effect nor a queued state updater it never re-renders to apply would run. A **plain value** is therefore written to `localStorage` outside React, at event time; only a functional update writes from inside the updater, since it needs the previous value. `useShip`'s `createShip`/`selectShip`/`deleteShip` pass plain values for exactly this reason
 - Recent planets stored in `localStorage` key: `traveller-recent`
 - Auto-saves when viewing/editing a planet
 - Synced via React effect when `recentPlanets` state changes
@@ -396,12 +629,33 @@ import { Button } from "../components/ui/Button";
 ```tsx
 import { Footer } from "../components/Footer";
 
-// All views MUST use this for the disclaimer
+// All views MUST use this for the disclaimer, and it goes OUTSIDE <main>, in a
+// root that carries `className="page-shell"`:
+//   <div className="page-shell" style={{ background: theme.bg, ... }}>
+//     <Navbar … />
+//     <main className="wide-main"> … </main>
+//     <Footer theme={theme} t={t} />
+//   </div>
+// `.page-shell` (index.css) makes the view a flex column of 100dvh whose <main>
+// takes the slack, which is what keeps the footer at the bottom of the window on
+// a short page instead of floating halfway up it. A view root without that class
+// gets a footer that hangs wherever the content ends. The rule gives <main>
+// `width: 100%` too, and that line is load-bearing: `.wide-main` centres itself
+// with `margin: 0 auto`, and a flex item with both cross-axis margins on `auto`
+// does not stretch — it shrinks to its content. Without it every page was as
+// wide as whatever it happened to contain.
+// It is a full-width band (top rule, card background, centered inner block of
+// 720px) and it centres itself, so inside `.wide-main` it would shrink to the
+// content column and stop reading as a page footer.
 <Footer theme={theme} t={t} />
-
-// With version number (only in Settings)
-<Footer theme={theme} t={t} showVersion />
 ```
+
+The band carries, centered: the app name in
+uppercase orange with the version beside it in a pill (`sr-only` reads it as
+"Versión 3.9.5", the pill shows "v3.9.5"), and the disclaimer. **The version is
+always on**, in every view — there is no `showVersion` prop any more, because
+Settings was the one place nobody looks when they want to say which version they
+have open.
 
 ### Section & Row (`components/ui/Section.tsx`, `Row.tsx`)
 ```tsx
@@ -536,15 +790,18 @@ import {
 //   IconBox     → Freight Calculator (home card, freight header, navbar entry, calculate button)
 //   IconUsers   → Passenger Traffic (home card, passenger header, navbar entry)
 //   IconSettings→ Settings (navbar entry, settings view header)
-//   IconTrash   → Delete-world action inside RecentWorldsView edit mode
-//   IconShip    → My Ship (home card, ship view header, navbar entry, load-design button)
+//   IconTrash   → Delete actions: a world in RecentWorldsView edit mode, a ship
+//                 or a crew member in ShipView, a row in the Detalles sheet
+//   IconShip    → My Ship (fleet cards on home, ship view header, navbar entry,
+//                 create-ship button and the create form's confirm button)
 //   IconRadar   → Worlds Near Me (home card, nearby view header, navbar entry, search button)
 //   IconRefresh → "New search" reset button at the bottom of FreightView and PassengerView
 //   IconClock   → Currently unused in the UI; kept exported for future use
 //   IconMail    → Currently unused: `Section` takes a plain string title, so the
 //                 Mail Run block inside FreightView carries no icon
 //   IconFileText→ "View contract" button at the bottom of FreightView and PassengerView
-//   IconDownload→ Download-as-image action inside ContractModal
+//   IconDownload→ Download actions: the contract image in ContractModal, the
+//                 ship's .json at the bottom of ShipView
 //   IconShare   → Share-as-image action inside ContractModal
 ```
 
@@ -648,9 +905,10 @@ const { themeMode, setThemeMode, theme }: {
   theme: Theme;
 } = useThemeMode();
 
-// The ship name lives in STORAGE_KEYS.shipName and is SHARED by the freight and
-// passenger calculators — it is the same ship, so naming it in one names it in
-// the other. Like the rest of the ship/crew data it survives the reset button.
+// The ship name belongs to the ACTIVE ship inside STORAGE_KEYS.fleet, and the
+// freight and passenger calculators read it from there — it is the same ship, so
+// naming it in one names it in the other. Like the rest of the ship/crew data it
+// survives the reset button.
 
 // Recent planets CRUD - persists to localStorage
 const {
@@ -720,14 +978,15 @@ import { calculateFreight } from "../utils/freight";
 8. **NO ad-hoc Traveller Map calls** - Use `searchWorlds()` from `utils/travellerMap.ts` (handles URL, `AbortController`, and Sector/Subsector filtering), and `jumpMapUrl()` from `utils/jumpMapImage.ts` for `/api/jumpmap` image URLs
 9. **NO duplicating theme/localStorage logic** - Use `useThemeMode` and `useRecentPlanets` hooks
 10. **NO missing ErrorBoundary** - App must be wrapped in ErrorBoundary in main.tsx
-11. **NO ad-hoc page titles** - Use `<PageHeader title=... icon=... />` so every page shares the same gradient h1 (PlanetView is the only exception — it has an editable name input header)
+11. **NO ad-hoc page titles** - Use `<PageHeader title=... icon=... />` so every page shares the same gradient h1 (PlanetView is the only exception — it has an editable name input header). The title is normally the tool's name; My Ship passes the **active ship's name** instead, falling back to the tool's when it has none, because that page is the sheet of one ship and the navbar already says which tool it is
 12. **NO hardcoded freight tables** - Use `TONS_PER_LOT_DIE`, `POPULATION_DM`, `lotsFromTraffic`, etc. from `constants/freight.ts`
 13. **NO live re-rolling of dice during render** - The freight lot d6 are rolled once inside `handleCalculate` on button click; do not call `Math.random` inside `useMemo` or render
 14. **NO ad-hoc number formatting** - Use `formatCredits`/`formatTons` from `utils/format.ts`; never call `toLocaleString` in a view
 15. **NO `<label>` next to its control** - A `<label>` that neither wraps its control nor carries `htmlFor` leaves the control with no accessible name. Use `<Field>`; wrap the control only for checkboxes
-16. **NO computing anything on the ship sheet** - My Ship validates nothing and derives nothing (see *My Ship* above). Its total is a read-out, not a constraint
+16. **NO computing anything on the ship sheet except the power requirements (including the two mode totals it checks against the plant) and the accommodation quantity** - My Ship validates nothing and derives nothing else (see *My Ship* above). The tonnage total is a read-out, not a constraint; the power box is computed from `ShipSheet.ratings` and is not editable; the only other sum is `withQuantity`, which multiplies an accommodation line's tons when the player types a quantity and leaves the cell editable afterwards
 17. **NO money on the ship sheet** - No price column, no purchase price, no maintenance. `ShipComponent` has no `price` field on purpose
-18. **NO second copy of the ship's name, cargo bay or berths** - They belong to `useShip()`; see *Ship data ownership*. Never re-add a `usePersistentState` for them in a calculator
+18. **NO second copy of the ship's name, cargo bay or berths** - They belong to the active ship, through `useShip()`; see *Ship data ownership*. Never re-add a `usePersistentState` for them in a calculator
+18b. **NO way to change a ship's type after it is created** - The type is `ShipCreateModal`'s job and nothing else's. The sheet prints it locked; a different type is a different ship
 19. **NO Spanish prose in `shipTemplates.ts`** - Template labels are i18n keys, materialised once by `shipFromTemplate`
 
 ### TypeScript-Specific
