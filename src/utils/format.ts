@@ -12,7 +12,7 @@ const LOCALES: Record<Language, string> = {
   en: "en-US",
 };
 
-export const localeFor = (lang: Language): string => LOCALES[lang];
+const localeFor = (lang: Language): string => LOCALES[lang];
 
 // `es-ES` y `ca-ES` traen minimumGroupingDigits = 2 en CLDR: agrupan a partir
 // de cinco cifras, así que 9000 salía "9000" y 14000 "14.000" en la misma

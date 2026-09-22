@@ -30,7 +30,7 @@ const COL_QTY = 90;
 const COL_RATE = 110;
 const COL_AMOUNT = 120;
 
-export interface ContractImageLabels {
+interface ContractImageLabels {
   // Referencia, fecha de emisión y nave: lo que va bajo el título.
   header: ContractMetaItem[];
   colItem: string;

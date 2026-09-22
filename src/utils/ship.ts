@@ -48,7 +48,7 @@ const fill = (pattern: string, vars: Record<string, string | number> | undefined
  * de cantidad (el alojamiento) ese número es una celda, y repetirlo dentro del
  * nombre sería escribirlo dos veces en la misma fila.
  */
-export const templateComponentLabel = (
+const templateComponentLabel = (
   component: TemplateComponent,
   t: TranslationFunction,
   withCount = true,
@@ -116,7 +116,7 @@ const materialiseComponent = (
  * Solo el primer oficio va en mayúscula, como en el manual: los nombres de los
  * oficios están traducidos en mayúscula porque también se usan solos.
  */
-export const crewLabel = (crew: CrewEntry[], t: TranslationFunction): string =>
+const crewLabel = (crew: CrewEntry[], t: TranslationFunction): string =>
   crew
     .map((entry, index) => {
       const role = t(`shipCrew_${entry.role}`);
@@ -151,7 +151,7 @@ export const emptyShip = (): ShipSheet => ({
  * los camarotes entre clases de pasaje, así que inventar un reparto sería
  * meterle reglas a una ficha que no las tiene.
  */
-export const shipFromTemplate = (
+const shipFromTemplate = (
   template: ShipTemplate,
   t: TranslationFunction,
   previous: ShipSheet,
@@ -389,9 +389,6 @@ export const shipPowerRequirements = (ship: ShipSheet): ShipPower => {
   return { basic, mDrive, jDrive, sensors, weapons, modes, available: Math.round(available) };
 };
 
-
-export const isShipEmpty = (ship: ShipSheet): boolean =>
-  SHIP_SECTION_KEYS.every(key => ship.sections[key].length === 0);
 
 // --- Type guard de localStorage ------------------------------------------
 

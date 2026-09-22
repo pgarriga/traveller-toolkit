@@ -55,11 +55,3 @@ export interface NearbyFilters {
   minPopulation: number | null; // null = any
   zones: ZoneCode[];           // travel zones to include
 }
-
-export interface NearbySearchState {
-  loading: boolean;
-  error: string | null;
-  origin: NearbyWorld | null;
-  worlds: NearbyWorld[];    // every world in range, already sorted by distance
-  matches: NearbyWorld[];   // the subset passing the filters
-}

@@ -3,7 +3,7 @@ import { useRef } from "react";
 import type { Theme } from "../../types/theme";
 import { COLORS } from "../../constants/colors";
 
-export interface TabItem {
+interface TabItem {
   id: string;
   label: string;
   icon?: ReactNode;

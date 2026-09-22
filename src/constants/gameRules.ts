@@ -30,7 +30,7 @@ export const LAW_RULES = {
 } as const;
 
 // Tech level ranges for descriptions
-export const TECH_LEVELS = {
+const TECH_LEVELS = {
   PRIMITIVE_MAX: 0,
   PREINDUSTRIAL_MAX: 3,
   INDUSTRIAL_MAX: 5,

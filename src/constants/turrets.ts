@@ -12,7 +12,7 @@
 
 import type { TurretMountId, TurretWeaponId } from "../types/ship";
 
-export interface TurretMount {
+interface TurretMount {
   id: TurretMountId;
   labelKey: string;
   /** null en la montura fija, que el manual imprime sin NT. */
@@ -37,7 +37,7 @@ export interface TurretMount {
   namedByWeapon?: boolean;
 }
 
-export interface TurretWeapon {
+interface TurretWeapon {
   id: TurretWeaponId;
   labelKey: string;
   tl: number;

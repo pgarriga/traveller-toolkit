@@ -14,7 +14,7 @@
 
 import type { ShipSectionKey, TurretMountId, TurretWeaponId } from "../types/ship";
 
-export interface ShipPart {
+interface ShipPart {
   id: string;
   section: ShipSectionKey;
   /** Clave de i18n; se traduce al insertar y a partir de ahí es texto de la ficha. */
@@ -46,7 +46,7 @@ export interface ShipPart {
   turret?: { mount: TurretMountId; weapon: TurretWeaponId | null };
 }
 
-export const SHIP_PARTS = [
+const SHIP_PARTS = [
   // --- Casco -------------------------------------------------------------
   { id: "hullStreamlined", section: "hull", labelKey: "shipPartHullStreamlined", tons: null },
   { id: "hullStandard", section: "hull", labelKey: "shipPartHullStandard", tons: null },

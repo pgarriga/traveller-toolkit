@@ -16,13 +16,13 @@ export type ToolViewId = "search" | "nearby" | "recent" | "passenger" | "freight
 /** El icono de cada una, por nombre: los constantes no pintan JSX. */
 export type ToolIconId = "search" | "radar" | "pin" | "users" | "box" | "ship";
 
-export interface ToolEntry {
+interface ToolEntry {
   view: ToolViewId;
   icon: ToolIconId;
   titleKey: string;
 }
 
-export interface ToolGroupDef {
+interface ToolGroupDef {
   key: string;
   titleKey: string;
   tools: readonly ToolEntry[];

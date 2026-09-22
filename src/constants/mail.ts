@@ -15,8 +15,6 @@ export const MAIL_AVAILABILITY_TARGET = 12;
 export const MAIL_LOW_TL_DM = -4;
 export const MAIL_ARMED_DM = 2;
 
-export const MAIL_RANK_MIN = 0;
-export const MAIL_RANK_MAX = 6;
 export const MAIL_SOC_DM_MIN = -3;
 export const MAIL_SOC_DM_MAX = 3;
 

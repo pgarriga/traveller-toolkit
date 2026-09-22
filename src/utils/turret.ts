@@ -10,7 +10,7 @@ import type { TranslationFunction } from "../types/i18n";
 import { POP_UP_MOUNT, findMount, findTurretWeapon } from "../constants/turrets";
 import { componentId } from "./id";
 
-export interface TurretTotals {
+interface TurretTotals {
   tons: number;
   power: number;
   /** El NT que la nave necesita: el más alto de la montura y de sus armas. */
@@ -42,7 +42,7 @@ export const turretTotals = (build: TurretBuild): TurretTotals => {
  * La barbeta se llama como su arma —"Barbeta de partículas" ya lo dice todo— y
  * solo cae en el nombre genérico mientras está vacía.
  */
-export const turretMountLabel = (build: TurretBuild, t: TranslationFunction): string => {
+const turretMountLabel = (build: TurretBuild, t: TranslationFunction): string => {
   const mount = findMount(build.mount);
   if (mount === undefined) return "";
 

@@ -56,7 +56,7 @@ src/
 │   └── ship.ts               # ShipSheet, Fleet, TurretBuild, TurretMountId, TurretWeaponId, ShipComponent, CrewMember, CargoItem, ShipSectionKey, ShipRatings, ShipPower, ShipCapacity
 ├── components/
 │   ├── icons/
-│   │   └── index.tsx         # SVG icon components (IconSearch, IconPin, IconBox, IconClock, IconUsers, IconMail, IconSettings, IconTrash, IconRefresh, IconRadar, IconShip, IconMenu, IconClose, IconFileText, IconDownload, IconShare)
+│   │   └── index.tsx         # SVG icon components (IconSearch, IconPin, IconBox, IconUsers, IconSettings, IconTrash, IconRefresh, IconRadar, IconShip, IconMenu, IconClose, IconFileText, IconDownload, IconUpload, IconShare) + toolIcon()
 │   ├── banners/
 │   │   └── index.tsx         # Decorative per-tool SVG headers (SearchBanner, RecentBanner, NearbyBanner, PassengerBanner, FreightBanner, ShipBanner)
 │   ├── ui/
@@ -96,7 +96,7 @@ src/
 │   ├── nearby.ts             # Distance/starport/TL/population filter options, jump + fuel + policy options, DEFAULT_FILTERS, DEFAULT_SHIP
 │   ├── tools.ts              # TOOL_GROUPS: the tool list the home index and the navbar menu share
 │   ├── storage.ts            # STORAGE_KEYS for every localStorage key (`fleet`, `theme`, `lang`; `ship`/`shipName` are legacy) + isFiniteNumber / isString guards
-│   ├── ship.ts               # SHIP_SECTIONS, SHIP_SECTION_GROUPS, FIXED_SECTIONS, QTY_SECTIONS, SENSOR_GRADES, SHIP_TABS, emptySections
+│   ├── ship.ts               # SHIP_SECTION_GROUPS, FIXED_SECTIONS, QTY_SECTIONS, SENSOR_GRADES, SHIP_TABS, emptySections
 │   ├── shipParts.ts          # Component catalogue: My Ship "add" menus + field suggestions
 │   ├── turrets.ts            # TURRET_MOUNTS + POP_UP_MOUNT + TURRET_WEAPONS (the two rulebook tables)
 │   ├── shipTemplates.ts      # The 24 rulebook designs, as i18n keys + printed numbers
@@ -111,16 +111,16 @@ src/
 │   ├── uwp.ts                # UWP parsing and validation (`parseUwp`)
 │   ├── freight.ts            # calculateFreight (DM breakdown + lot rolling)
 │   ├── mail.ts               # calculateMail (Mail Run)
-│   ├── nearby.ts             # hexDistance, uwpFacts, withDistance, filterWorlds, canRefuel, jumpsFromOrigin
+│   ├── nearby.ts             # hexDistance, withDistance, filterWorlds, jumpsFromOrigin
 │   ├── passenger.ts          # calculatePassengers
 │   ├── turret.ts             # turretTotals, turretLabel, turretComponent → a fitted turret as a sheet row
-│   ├── ship.ts               # emptyShip, newShip, shipFromTemplate, shipTypeName, componentFromPart, withQuantity, cargoCapacityTons, withCargoTons, newCargoItem, cargoUsedTons, shipPowerRequirements, isShipSheet, isFleet
+│   ├── ship.ts               # emptyShip, newShip, shipTypeName, componentFromPart, withQuantity, cargoCapacityTons, withCargoTons, newCargoItem, cargoUsedTons, shipPowerRequirements, isShipSheet, isFleet
 │   ├── travellerMap.ts       # searchWorlds() + fetchWorldZone() + fetchJumpWorlds() → Traveller Map API
 │   ├── jumpMapImage.ts       # jumpMapUrl() + jumpMapScale() + projectOnJumpMap() → /api/jumpmap image geometry
 │   ├── contractImage.ts      # renderContractImage() → paints a ContractData onto a canvas, returns a PNG blob
 │   ├── download.ts           # saveFile() — the one anchor dance, shared by the contract image and the ship export
-│   ├── shipExport.ts         # shipFileName() + shipJsonFile() + shipFromJson() → the sheet as a .json, and back
-│   ├── format.ts             # localeFor() + formatCredits() + formatTons() — the only number formatting in the app
+│   ├── shipExport.ts         # shipJsonFile() + shipFromJson() → the sheet as a .json, and back
+│   ├── format.ts             # formatCredits() + formatTons() — the only number formatting in the app
 │   ├── planetToWorldInputs.ts # Maps a RecentPlanet to Passenger/Freight world inputs
 │   └── i18n-helpers.ts       # isNoneValue, requiresWarning
 ├── i18n/
@@ -805,7 +805,7 @@ const color: string = getZoneColor(planet.zone);
 ### Icons (`components/icons/index.tsx`)
 ```tsx
 import {
-  IconSearch, IconPin, IconBox, IconClock, IconUsers, IconMail,
+  IconSearch, IconPin, IconBox, IconUsers,
   IconSettings, IconTrash, IconMenu, IconClose,
 } from "../components/icons";
 
@@ -822,9 +822,6 @@ import {
 //                 create-ship button and the create form's confirm button)
 //   IconRadar   → Worlds Near Me (home card, nearby view header, navbar entry, search button)
 //   IconRefresh → "New search" reset button at the bottom of FreightView and PassengerView
-//   IconClock   → Currently unused in the UI; kept exported for future use
-//   IconMail    → Currently unused: `Section` takes a plain string title, so the
-//                 Mail Run block inside FreightView carries no icon
 //   IconFileText→ "View contract" button at the bottom of FreightView and PassengerView
 //   IconDownload→ Download actions: the contract image in ContractModal, the
 //                 ship's .json in My Ship's Perfil tab

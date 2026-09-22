@@ -47,7 +47,7 @@ const hexDigit = (c: string | undefined): number | null => {
  * worlds as e.g. "X???????-?". Here each field degrades to null on its own so a
  * partially unknown world still shows up.
  */
-export const uwpFacts = (uwp: string): NearbyUwpFacts => {
+const uwpFacts = (uwp: string): NearbyUwpFacts => {
   const clean = uwp.replace(/\s/g, "").toUpperCase();
   const sp = clean[0] as StarportClass | undefined;
   const starport = sp && STARPORT_RANK.includes(sp) ? sp : null;
@@ -73,7 +73,7 @@ export const worldKey = (w: { sector: string; hex: string }): string =>
  * ocean to crack. Unsurveyed digits count as nothing — a route must not be
  * promised on data the map does not have.
  */
-export const canRefuel = (w: NearbyWorld, policy: FuelPolicy): boolean => {
+const canRefuel = (w: NearbyWorld, policy: FuelPolicy): boolean => {
   const facts = uwpFacts(w.uwp);
   if (facts.starport !== null) {
     if (REFINED_STARPORTS.includes(facts.starport)) return true;

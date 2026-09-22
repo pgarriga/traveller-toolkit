@@ -17,7 +17,7 @@ const slug = (text: string): string =>
     .replace(/^-+|-+$/g, "");
 
 /** El nombre del fichero; `fallback` cubre la nave sin nombre, ya traducido. */
-export const shipFileName = (ship: ShipSheet, fallback: string): string =>
+const shipFileName = (ship: ShipSheet, fallback: string): string =>
   `${slug(ship.name) || slug(fallback) || "ship"}.json`;
 
 export const shipJsonFile = (ship: ShipSheet, fallback: string): File =>

@@ -32,7 +32,7 @@ export interface ContractLine {
 
 // Fila de cierre de la tabla de conceptos: suma de lo facturado, en unidades
 // (toneladas o asientos) y en créditos.
-export interface ContractLineTotal {
+interface ContractLineTotal {
   qty: string;
   amount: string;
 }

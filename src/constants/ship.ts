@@ -52,7 +52,7 @@ export const SHIP_TABS = [
 export type ShipTabId = (typeof SHIP_TABS)[number]["id"];
 
 /** Las filas del bloque de estadísticas, en el orden en que las imprime el manual. */
-export const SHIP_SECTIONS: readonly { key: ShipSectionKey; titleKey: string }[] = [
+const SHIP_SECTIONS: readonly { key: ShipSectionKey; titleKey: string }[] = [
   { key: "hull", titleKey: "shipSecHull" },
   { key: "armour", titleKey: "shipSecArmour" },
   { key: "mDrive", titleKey: "shipSecMDrive" },
@@ -278,7 +278,7 @@ export const J_DRIVE_RATINGS: Readonly<Record<number, DriveRating>> = {
  * porcentaje —la scout son 5 % de 100 t más 5, y su ficha imprime 10—. El que
  * falta es el donosev, cuya línea de motores ya se contradice a sí misma.
  */
-export const J_DRIVE_BASE_TONS = 5;
+const J_DRIVE_BASE_TONS = 5;
 
 export const THRUST_OPTIONS: readonly number[] = Object.keys(M_DRIVE_RATINGS).map(Number);
 export const JUMP_OPTIONS: readonly number[] = Object.keys(J_DRIVE_RATINGS).map(Number);

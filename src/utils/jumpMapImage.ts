@@ -44,7 +44,7 @@ export type JumpMapStyle =
   | "poster" | "print" | "atlas" | "candy"
   | "draft" | "fasa" | "terminal" | "mongoose";
 
-export interface JumpMapRequest {
+interface JumpMapRequest {
   sector: string;
   hex: string;   // "XXYY", as the map formats it
   jump: number;  // radius in parsecs
@@ -53,7 +53,7 @@ export interface JumpMapRequest {
 }
 
 /** Position within the returned image, in its own natural pixels. */
-export interface JumpMapPoint {
+interface JumpMapPoint {
   x: number;
   y: number;
 }

@@ -18,7 +18,7 @@ export const distributeJumps = (parsecs: number, jumpCount: number): ParsecDista
   return result;
 };
 
-export const clampJumpCount = (parsecs: number, jumpCount: number): number =>
+const clampJumpCount = (parsecs: number, jumpCount: number): number =>
   Math.max(1, Math.min(MAX_JUMP_COUNT, parsecs, jumpCount));
 
 interface JumpCountFieldProps {
