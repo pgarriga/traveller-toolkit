@@ -4,6 +4,9 @@
 
 export const STORAGE_KEYS = {
   recentPlanets: "traveller-recent",
+  // Preferencias de la aplicación, no de la partida.
+  theme: "traveller-theme",
+  lang: "traveller-lang",
   // La flota de "Mi nave": todas las naves creadas y cuál está activa. La nave
   // activa es la que leen las dos calculadoras, así que su nombre, su bodega y
   // sus plazas de pasajero viven aquí dentro.

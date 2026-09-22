@@ -1,8 +1,22 @@
 import { useState, useEffect } from "react";
 import type { Theme, ThemeMode } from "../types/theme";
 import { THEMES } from "../constants/colors";
+import { STORAGE_KEYS } from "../constants/storage";
 
-const STORAGE_KEY = "traveller-theme";
+const STORAGE_KEY = STORAGE_KEYS.theme;
+
+const THEME_MODES: readonly string[] = ["auto", "dark", "light"];
+
+/** Lo guardado, o "auto". Se lee ANTES del primer pintado; ver abajo. */
+const savedThemeMode = (): ThemeMode => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved !== null && THEME_MODES.includes(saved) ? (saved as ThemeMode) : "auto";
+  } catch {
+    // localStorage no disponible (modo privado, cuota llena): "auto" y a correr.
+    return "auto";
+  }
+};
 
 interface UseThemeModeReturn {
   themeMode: ThemeMode;
@@ -16,19 +30,14 @@ const getSystemTheme = (): "dark" | "light" => {
 };
 
 export const useThemeMode = (): UseThemeModeReturn => {
-  const [themeMode, setThemeMode] = useState<ThemeMode>("auto");
+  // Inicializador perezoso y no un efecto: leerlo después del montaje pintaba
+  // un fotograma con el tema por defecto antes de cambiar al guardado, y en una
+  // app que es casi toda fondo, ese parpadeo se ve.
+  const [themeMode, setThemeMode] = useState<ThemeMode>(savedThemeMode);
   // The OS preference has to live in state, not just be read at render time:
   // every view paints its own full-height `theme.bg` over the body, so nudging
   // document.body alone left "auto" showing the old theme until a reload.
   const [systemTheme, setSystemTheme] = useState<"dark" | "light">(getSystemTheme);
-
-  // Load theme from localStorage on mount
-  useEffect(() => {
-    const savedTheme = localStorage.getItem(STORAGE_KEY);
-    if (savedTheme && ["auto", "dark", "light"].includes(savedTheme)) {
-      setThemeMode(savedTheme as ThemeMode);
-    }
-  }, []);
 
   // Listen for system theme changes. Registered whatever the mode, so switching
   // back to "auto" already knows the current preference.

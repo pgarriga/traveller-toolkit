@@ -95,7 +95,7 @@ src/
 │   ├── mail.ts               # Mail Run constants (rank/soc DMs, container size, etc.)
 │   ├── nearby.ts             # Distance/starport/TL/population filter options, jump + fuel + policy options, DEFAULT_FILTERS, DEFAULT_SHIP
 │   ├── tools.ts              # TOOL_GROUPS: the tool list the home index and the navbar menu share
-│   ├── storage.ts            # STORAGE_KEYS for every localStorage key (`fleet`; `ship`/`shipName` are legacy) + isFiniteNumber / isString guards
+│   ├── storage.ts            # STORAGE_KEYS for every localStorage key (`fleet`, `theme`, `lang`; `ship`/`shipName` are legacy) + isFiniteNumber / isString guards
 │   ├── ship.ts               # SHIP_SECTIONS, SHIP_SECTION_GROUPS, FIXED_SECTIONS, QTY_SECTIONS, SENSOR_GRADES, SHIP_TABS, emptySections
 │   ├── shipParts.ts          # Component catalogue: My Ship "add" menus + field suggestions
 │   ├── turrets.ts            # TURRET_MOUNTS + POP_UP_MOUNT + TURRET_WEAPONS (the two rulebook tables)
@@ -498,9 +498,20 @@ from a design would be inventing a rule the sheet does not have.
 
 ### i18n System
 - Auto-detects language from `navigator.language`
-- Spanish: es, ca, gl, eu (Spanish regional languages)
-- English: all other languages
+- Catalan: ca · Spanish: es, gl, eu · English: everything else
 - Translations in `src/i18n/` with `useTranslation()` hook
+- **`TranslationKey` is derived, not written.** It is `keyof typeof es` in
+  `i18n/translations.ts`, and `types/i18n.ts` only re-exports it. The Spanish
+  block is where the UI is written, so its keys *are* the app's keys. English and
+  Catalan are annotated `Record<TranslationKey, string>`, so a forgotten
+  translation does not compile. (The hand-written union that used to live in
+  `types/i18n.ts` was a second copy of the same list, nothing enforced it —`t`
+  takes a `string`— and it had drifted 63 keys behind.)
+- `t` still takes a `string`, because half the app composes its key
+  (`shipCrew_${role}`, a catalogue part's `labelKey`, a section's title). The
+  widening happens once, inside `useTranslation`, where a loose key meets the
+  typed table. Tightening `t` to `TranslationKey` would mean typing every
+  `labelKey` in the constants too — worth doing, not yet done.
 
 ### Data Persistence
 - The fleet (every ship's sheet plus which one is active) is stored in `localStorage` key: `traveller-fleet`
