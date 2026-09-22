@@ -465,6 +465,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Mi nave — herramienta
     shipTitle: "Mi nave",
     homeShipCreateDesc: "Ponle nombre, elige uno de los 24 diseños del manual —o empiézala en blanco— y edita su ficha desde ahí.",
+    homeShipImportDesc: "Trae una ficha que exportaste, o la de otro jugador.",
     shipSourceNote: "Diseños de «Naves espaciales comunes», Manual Básico de Traveller 2.ª edición.",
     // Mi nave — pestañas y tripulación
     shipTabProfile: "Perfil",
@@ -511,6 +512,8 @@ export const translations: Record<Language, Record<string, string>> = {
     shipActiveBadge: "Activa",
     shipCreateTitle: "Crear nave",
     shipCreateAction: "Crear nave",
+    shipImportAction: "Importar nave",
+    shipImportError: "Ese fichero no es una ficha de nave. Importa el .json que exportaste desde Mi nave.",
     shipCreateHint: "El tipo se elige ahora y ya no cambia: con un diseño del manual la ficha arranca completa, y personalizada arranca en blanco. Todo lo demás se edita después.",
     shipTypeLabel: "Tipo",
     shipTypeCustom: "Personalizada",
@@ -1252,6 +1255,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Mi nave — herramienta
     shipTitle: "My Ship",
     homeShipCreateDesc: "Name it, pick one of the 24 designs in the rulebook — or start it blank — and edit its sheet from there.",
+    homeShipImportDesc: "Bring in a sheet you exported, or another player's.",
     shipSourceNote: "Designs from “Common Spacecraft”, Traveller 2nd Edition Core Rulebook.",
     // Mi nave — pestañas y tripulación
     shipTabProfile: "Profile",
@@ -1298,6 +1302,8 @@ export const translations: Record<Language, Record<string, string>> = {
     shipActiveBadge: "Active",
     shipCreateTitle: "Create ship",
     shipCreateAction: "Create ship",
+    shipImportAction: "Import ship",
+    shipImportError: "That file is not a ship sheet. Import the .json you exported from My Ship.",
     shipCreateHint: "The type is chosen now and does not change afterwards: a rulebook design starts the sheet complete, custom starts it blank. Everything else is edited later.",
     shipTypeLabel: "Type",
     shipTypeCustom: "Custom",
@@ -2039,6 +2045,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Mi nave — herramienta
     shipTitle: "La meva nau",
     homeShipCreateDesc: "Posa-li nom, tria un dels 24 dissenys del manual —o comença-la en blanc— i edita'n la fitxa des d'aquí.",
+    homeShipImportDesc: "Porta una fitxa que vas exportar, o la d'un altre jugador.",
     shipSourceNote: "Dissenys de «Naus espacials comunes», Manual Bàsic de Traveller 2a edició.",
     // Mi nave — pestañas y tripulación
     shipTabProfile: "Perfil",
@@ -2085,6 +2092,8 @@ export const translations: Record<Language, Record<string, string>> = {
     shipActiveBadge: "Activa",
     shipCreateTitle: "Crear nau",
     shipCreateAction: "Crear nau",
+    shipImportAction: "Importar nau",
+    shipImportError: "Aquest fitxer no és una fitxa de nau. Importa el .json que vas exportar des de La meva nau.",
     shipCreateHint: "El tipus es tria ara i ja no canvia: amb un disseny del manual la fitxa arrenca completa, i personalitzada arrenca en blanc. Tota la resta s'edita després.",
     shipTypeLabel: "Tipus",
     shipTypeCustom: "Personalitzada",

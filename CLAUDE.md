@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Traveller Toolkit - A multi-tool web app for the Mongoose Traveller 2nd Edition tabletop RPG. The home page lists the available tools in three blocks — **Navegación** (Search World, Worlds Near Me, Visited Worlds), **Tránsito** (Passenger Traffic, Freight Calculator) and **Naves** — and the user navigates between them. **Naves** is the odd one out: it does not list a tool, it lists the player's fleet — one card per ship, with its name and its type, the active one badged — plus a last card that creates a new ship. The fleet is governed from there and **only** from there: `/ship` is the sheet of one ship, not a ship manager, so it carries no list of the others. A block with a single tool is fine; the grouping says what each tool is for, not how many there are. Current tools:
+Traveller Toolkit - A multi-tool web app for the Mongoose Traveller 2nd Edition tabletop RPG. The home page lists the available tools in three blocks — **Navegación** (Search World, Worlds Near Me, Visited Worlds), **Tránsito** (Passenger Traffic, Freight Calculator) and **Naves** — and the user navigates between them. **Naves** is the odd one out: it does not list a tool, it lists the player's fleet — one card per ship, with its name and its type, the active one badged — plus two last cards: one creates a new ship and one **imports** a `.json` exported from a sheet (`shipFromJson` validates it; anything else leaves a message under the block and nothing enters the fleet). The fleet is governed from there and **only** from there: `/ship` is the sheet of one ship, not a ship manager, so it carries no list of the others. A block with a single tool is fine; the grouping says what each tool is for, not how many there are. Current tools:
 - **Search World** — searches official Traveller worlds by name via the [Traveller Map](https://travellermap.com) API (`/api/search`). Selecting a result jumps to World Detail and auto-saves the world to Visited Worlds.
 - **Visited Worlds** — standalone tool at `/recent` listing the worlds you've visited (persisted in `localStorage`). Sortable dropdown, Edit/Done toggle for per-card deletion, colored tags per UWP attribute.
 - **Worlds Near Me** — standalone tool at `/nearby`. Pick the world you are on, describe your ship (jump rating, fuel range, fuel it accepts), set UWP filters (max distance, minimum starport, TL, population, travel zones) and get the matching worlds, sorted by number of jumps (parsec distance and name break ties, unreachable worlds last). Each result also shows the minimum number of jumps to reach it along a route where the ship never runs out of fuel. `jumpsFromOrigin` searches over `(world, fuel left)` states, not just worlds, so a ship with tankage for several jumps can cross a system with no fuel in it. The `FuelPolicy` (`refined` = starports A/B, `unrefined` = also C/D, `wilderness` = also gas giants and oceans) decides where the ship will refuel; a world it cannot refuel at is still crossed when the fuel range allows. Data comes from the Traveller Map `/api/jumpworlds` endpoint. Below the results table sits a **jump map**: the official `/api/jumpmap` PNG with an SVG ring overlaid on each world that passed the filters (see `utils/jumpMapImage.ts`).
@@ -104,7 +104,7 @@ src/
 │   ├── usePersistentState.ts # Generic localStorage-backed state (needs a type guard)
 │   ├── useThemeMode.ts       # Theme management with localStorage
 │   ├── useRecentPlanets.ts   # CRUD for recent planets (MAX_RECENT_PLANETS inlined)
-│   └── useShip.ts            # The fleet: create/select/delete + the active ship's sheet
+│   └── useShip.ts            # The fleet: create/import/select/delete + the active ship's sheet
 ├── utils/
 │   ├── routing.ts            # URL parsing and building (home, search, freight, passengers, settings, planet)
 │   ├── uwp.ts                # UWP parsing and validation (`parseUwp`)
@@ -118,7 +118,7 @@ src/
 │   ├── jumpMapImage.ts       # jumpMapUrl() + jumpMapScale() + projectOnJumpMap() → /api/jumpmap image geometry
 │   ├── contractImage.ts      # renderContractImage() → paints a ContractData onto a canvas, returns a PNG blob
 │   ├── download.ts           # saveFile() — the one anchor dance, shared by the contract image and the ship export
-│   ├── shipExport.ts         # shipFileName() + shipJsonFile() → the sheet as a .json download
+│   ├── shipExport.ts         # shipFileName() + shipJsonFile() + shipFromJson() → the sheet as a .json, and back
 │   ├── format.ts             # localeFor() + formatCredits() + formatTons() — the only number formatting in the app
 │   ├── planetToWorldInputs.ts # Maps a RecentPlanet to Passenger/Freight world inputs
 │   └── i18n-helpers.ts       # isNoneValue, requiresWarning
@@ -197,8 +197,8 @@ that is exactly what the UI offers. Do not re-add a template picker to the sheet
 
 **There is a fleet, and one active ship.** `Fleet` (`types/ship.ts`) is
 `{ ships, activeId }` under `STORAGE_KEYS.fleet`, and `useShip()` is the only
-door to it: `createShip` / `selectShip` / `deleteShip`, plus `setShip` and the
-capacity setters, which all act on the **active** ship. `ship` is `null` while
+door to it: `createShip` / `importShip` / `selectShip` / `deleteShip`, plus
+`setShip` and the capacity setters, which all act on the **active** ship. `ship` is `null` while
 the fleet is empty — `ShipView` then shows nothing but the invitation to create
 one, and the two calculators replace their **Nave** fields with the same button.
 There is one active ship rather than a per-calculator choice because Freight and
@@ -303,8 +303,15 @@ row's `tons` cell would count the ship twice.
 
 **Exporting is the sheet itself, not a rendering of it.** `shipJsonFile`
 (`utils/shipExport.ts`) writes the stored `ShipSheet` as JSON with no wrapper
-around it, so the file is exactly what `isShipSheet` already validates — which
-is all an import button would need the day there is one. There is no import yet.
+around it, so the file is exactly what `isShipSheet` already validates — and that
+is all the import needs to know. `shipFromJson`, in the same file, is the way
+back: parse, validate, and hand the sheet a **new id**, because importing another
+player's ship —or your own twice— would otherwise put two ships under one key in
+the fleet, and then neither the list nor `activeId` knows which one it means.
+What the file lacks (a section, the hold, the salary: whatever was added since it
+was exported) is not filled in there — `normalise` in `useShip` already does that
+for every ship in the fleet. Exporting is an action of **this** ship, so it lives
+in Perfil; importing founds a ship, so it lives with the fleet, on the home page.
 
 **Weapons are fitted, not picked off a list.** The rulebook crosses two tables —
 four mounts (fixed, single, double, triple, `TURRET_MOUNTS`) plus the pop-up
@@ -801,7 +808,8 @@ import {
 //                 Mail Run block inside FreightView carries no icon
 //   IconFileText→ "View contract" button at the bottom of FreightView and PassengerView
 //   IconDownload→ Download actions: the contract image in ContractModal, the
-//                 ship's .json at the bottom of ShipView
+//                 ship's .json in My Ship's Perfil tab
+//   IconUpload  → Import a ship: the fleet card on the home page
 //   IconShare   → Share-as-image action inside ContractModal
 ```
 

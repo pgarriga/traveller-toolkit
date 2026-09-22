@@ -1,5 +1,5 @@
-import type { FC, ReactNode } from "react";
-import { useState } from "react";
+import type { ChangeEvent, FC, ReactNode } from "react";
+import { useRef, useState } from "react";
 import type { Theme } from "../types/theme";
 import type { Language, TranslationFunction } from "../types/i18n";
 import type { ShipSheet } from "../types/ship";
@@ -8,10 +8,11 @@ import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { PageHeader } from "../components/ui/PageHeader";
 import { ShipCreateModal } from "../components/ShipCreateModal";
-import { IconBox, IconUsers, IconSearch, IconPin, IconRadar, IconShip } from "../components/icons";
+import { IconBox, IconUsers, IconSearch, IconPin, IconRadar, IconShip, IconUpload } from "../components/icons";
 import { COLORS } from "../constants/colors";
 import { useShip } from "../hooks/useShip";
 import { shipTypeName } from "../utils/ship";
+import { shipFromJson } from "../utils/shipExport";
 import { formatTons } from "../utils/format";
 
 type ViewType = "home" | "settings" | "planet" | "freight" | "passenger" | "search" | "recent" | "nearby" | "ship";
@@ -48,6 +49,8 @@ interface ToolGroup {
   key: string;
   titleKey: string;
   tools: ToolCard[];
+  /** Un aviso bajo la rejilla del bloque. Solo lo usa la flota, al importar. */
+  error?: string;
 }
 
 export const HomeView: FC<HomeViewProps> = ({
@@ -60,8 +63,33 @@ export const HomeView: FC<HomeViewProps> = ({
   setMenuOpen,
   t,
 }) => {
-  const { ships, activeId, createShip, selectShip } = useShip();
+  const { ships, activeId, createShip, importShip, selectShip } = useShip();
   const [createOpen, setCreateOpen] = useState<boolean>(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  // El <input type="file"> va escondido: quien abre el diálogo es la tarjeta,
+  // que tiene que parecerse a las otras y no a un campo de formulario.
+  const fileInput = useRef<HTMLInputElement>(null);
+
+  /**
+   * Importar una nave: se lee el fichero, se valida y entra en la flota como
+   * activa. Lo que no pase `isShipSheet` no entra, y el bloque lo dice debajo.
+   */
+  const handleImport = async (e: ChangeEvent<HTMLInputElement>): Promise<void> => {
+    const file = e.target.files?.[0];
+    // Se limpia siempre: si no, elegir el mismo fichero dos veces no dispara
+    // el evento y la segunda importación no llega a pasar.
+    e.target.value = "";
+    if (file === undefined) return;
+
+    const sheet = shipFromJson(await file.text());
+    if (sheet === null) {
+      setImportError(t("shipImportError"));
+      return;
+    }
+    setImportError(null);
+    importShip(sheet);
+    navigateTo("ship");
+  };
 
   /** "Explorador Tipo S · 100 t · Salto-2": lo que distingue una nave de otra. */
   const shipSummary = (ship: ShipSheet): string =>
@@ -98,6 +126,14 @@ export const HomeView: FC<HomeViewProps> = ({
       description: t("homeShipCreateDesc"),
       accent: COLORS.primary,
       onClick: () => setCreateOpen(true),
+    },
+    {
+      key: "ship-import",
+      icon: <IconUpload />,
+      title: t("shipImportAction"),
+      description: t("homeShipImportDesc"),
+      accent: COLORS.info,
+      onClick: () => fileInput.current?.click(),
     },
   ];
 
@@ -158,6 +194,7 @@ export const HomeView: FC<HomeViewProps> = ({
       key: "ships",
       titleKey: "homeGroupShips",
       tools: fleetCards,
+      ...(importError === null ? {} : { error: importError }),
     },
   ];
 
@@ -258,9 +295,28 @@ export const HomeView: FC<HomeViewProps> = ({
                 </button>
               ))}
             </div>
+            {group.error !== undefined && (
+              <div style={{ marginTop: 10, fontSize: 13, color: COLORS.danger }} role="alert">
+                {group.error}
+              </div>
+            )}
           </section>
         ))}
 
+        {/* El diálogo de ficheros lo abre la tarjeta de importar; el campo no se
+            ve, pero tiene que existir en el documento para poder abrirlo. */}
+        <input
+          ref={fileInput}
+          type="file"
+          accept="application/json,.json"
+          className="sr-only"
+          // Ni se ve ni se tabula: quien manda es la tarjeta, que es la que
+          // tiene nombre accesible. Un campo escondido en el orden de tabulación
+          // sería un segundo mando para lo mismo.
+          tabIndex={-1}
+          aria-hidden="true"
+          onChange={e => void handleImport(e)}
+        />
       </main>
       <Footer theme={theme} t={t} />
 

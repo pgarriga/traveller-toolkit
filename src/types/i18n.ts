@@ -371,6 +371,7 @@ export type TranslationKey =
   // My Ship — tool chrome
   | "shipTitle"
   | "homeShipCreateDesc"
+  | "homeShipImportDesc"
   | "shipSourceNote"
   | "shipTabProfile"
   | "shipTabDetails"
@@ -417,6 +418,8 @@ export type TranslationKey =
   | "shipActiveBadge"
   | "shipCreateTitle"
   | "shipCreateAction"
+  | "shipImportAction"
+  | "shipImportError"
   | "shipCreateHint"
   | "shipTypeLabel"
   | "shipTypeCustom"

@@ -31,6 +31,8 @@ interface UseShipReturn {
   setName: (name: string) => void;
   /** Crea la nave y la deja activa. El tipo se decide aquí y ya no se cambia. */
   createShip: (name: string, template: ShipTemplate | null, t: TranslationFunction) => void;
+  /** Mete en la flota una ficha que viene de un fichero y la deja activa. */
+  importShip: (sheet: ShipSheet) => void;
   selectShip: (id: string) => void;
   deleteShip: (id: string) => void;
   /** Edita la nave activa. Sin nave activa no hay nada que editar y no hace nada. */
@@ -187,6 +189,17 @@ export const useShip = (): UseShipReturn => {
     [setStored, stored],
   );
 
+  /**
+   * Importar es fundar una nave más: entra al final de la flota y se queda
+   * activa, como la recién creada, porque quien acaba de traerla es a la que va
+   * a mirar. `shipFromJson` ya le ha dado un id propio. Ver utils/shipExport.ts.
+   */
+  const importShip = useCallback(
+    (sheet: ShipSheet): void =>
+      setStored({ ships: [...stored.ships, sheet], activeId: sheet.id }),
+    [setStored, stored],
+  );
+
   const selectShip = useCallback(
     (id: string): void => setStored({ ...stored, activeId: id }),
     [setStored, stored],
@@ -248,6 +261,7 @@ export const useShip = (): UseShipReturn => {
     name: ship?.name ?? "",
     setName,
     createShip,
+    importShip,
     selectShip,
     deleteShip,
     setShip,
