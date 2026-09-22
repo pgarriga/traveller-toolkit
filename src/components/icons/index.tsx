@@ -1,4 +1,5 @@
-import type { FC } from "react";
+import type { FC, ReactNode } from "react";
+import type { ToolIconId } from "../../constants/tools";
 
 // Flat icons (decorative, hidden from screen readers)
 
@@ -138,3 +139,27 @@ export const IconShip: FC = () => (
     <path d="M12 18v3"/>
   </svg>
 );
+
+/**
+ * El icono de una herramienta, por nombre.
+ *
+ * `constants/tools.ts` es la lista única de herramientas y no puede pintar JSX,
+ * así que guarda el NOMBRE del icono y lo resuelve aquí quien la dibuja —el
+ * índice y el menú—, que es lo que evita que las dos listas vuelvan a separarse.
+ */
+export const toolIcon = (id: ToolIconId): ReactNode => {
+  switch (id) {
+    case "search":
+      return <IconSearch />;
+    case "radar":
+      return <IconRadar />;
+    case "pin":
+      return <IconPin />;
+    case "users":
+      return <IconUsers />;
+    case "box":
+      return <IconBox />;
+    case "ship":
+      return <IconShip />;
+  }
+};

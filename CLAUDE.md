@@ -94,6 +94,7 @@ src/
 │   ├── freight.ts            # POPULATION_DM, STARPORT_DM, TONS_PER_LOT_DIE, lotsFromTraffic, etc.
 │   ├── mail.ts               # Mail Run constants (rank/soc DMs, container size, etc.)
 │   ├── nearby.ts             # Distance/starport/TL/population filter options, jump + fuel + policy options, DEFAULT_FILTERS, DEFAULT_SHIP
+│   ├── tools.ts              # TOOL_GROUPS: the tool list the home index and the navbar menu share
 │   ├── storage.ts            # STORAGE_KEYS for every localStorage key (`fleet`; `ship`/`shipName` are legacy) + isFiniteNumber / isString guards
 │   ├── ship.ts               # SHIP_SECTIONS, SHIP_SECTION_GROUPS, FIXED_SECTIONS, QTY_SECTIONS, SENSOR_GRADES, SHIP_TABS, emptySections
 │   ├── shipParts.ts          # Component catalogue: My Ship "add" menus + field suggestions
@@ -161,7 +162,7 @@ A UWP code is 8 characters: `A123456-7`
 - `/settings` — Settings (`SettingsView`)
 - `/planet/{UWP}` — World detail (`PlanetView`, e.g. `/planet/A123456-7`)
 
-The router is hand-rolled (no library) in `utils/routing.ts` and `App.tsx` manages the `ViewType` state plus `popstate` for browser back/forward. The `ViewType` union is duplicated in every view file for locality — when you add a new route/view, update every union (App, Navbar, all view files) plus `parseUrl`/`buildUrl` in `utils/routing.ts`. The Navbar logo calls `goHome` (clears the working UWP/name/zone state and navigates to `/`).
+The router is hand-rolled (no library) in `utils/routing.ts` and `App.tsx` manages the `ViewType` state plus `popstate` for browser back/forward. The `ViewType` union is duplicated in every view file for locality — when you add a new route/view, update every union (App, Navbar, all view files) plus `parseUrl`/`buildUrl` in `utils/routing.ts`. A new **tool** goes in `constants/tools.ts` (`TOOL_GROUPS`), which is the one list behind both places navigation is shown: the home index and the navbar's dropdown. They had a copy each and drifted — the menu listed Visited Worlds last, beside Settings, while the index had it with the navigation tools. The index adds what only it needs (a description and an accent per card, in `TOOL_CARDS`), and overrides the **ships** group, where it lists the fleet instead of a tool; the menu keeps one entry there, the active ship's sheet, because the fleet is governed from the home page alone. Settings is in neither list: it is not a tool, so the menu puts it after a rule and the index does not show it at all. The Navbar logo calls `goHome` (clears the working UWP/name/zone state and navigates to `/`).
 
 ### Freight Calculator (Mongoose 2e rules)
 

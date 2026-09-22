@@ -2,7 +2,8 @@ import type { FC } from "react";
 import { useEffect, useRef } from "react";
 import type { Theme } from "../types/theme";
 import type { TranslationFunction } from "../types/i18n";
-import { IconSettings, IconBox, IconMenu, IconClose, IconUsers, IconSearch, IconPin, IconRadar, IconShip } from "./icons";
+import { IconSettings, IconMenu, IconClose, toolIcon } from "./icons";
+import { TOOL_GROUPS } from "../constants/tools";
 import { Button } from "./ui/Button";
 import { COLORS } from "../constants/colors";
 
@@ -146,81 +147,57 @@ export const Navbar: FC<NavbarProps> = ({ theme, view, goHome, navigateTo, menuO
             padding: 16,
             display: "flex",
             flexDirection: "column",
-            gap: 8
+            gap: 8,
+            // Con los rótulos de bloque la lista puede pasar del alto de la
+            // ventana en un móvil bajo; que ruede en vez de cortarse.
+            overflowY: "auto",
           }}
         >
-          <Button
-            variant="nav-mobile"
-            size="lg"
-            active={view === "search"}
-            theme={theme}
-            onClick={() => navigateTo("search")}
-            fullWidth
-            style={{ justifyContent: "flex-start" }}
-            role="menuitem"
-          >
-            <IconSearch />{t("searchTitle")}
-          </Button>
-          <Button
-            variant="nav-mobile"
-            size="lg"
-            active={view === "nearby"}
-            theme={theme}
-            onClick={() => navigateTo("nearby")}
-            fullWidth
-            style={{ justifyContent: "flex-start" }}
-            role="menuitem"
-          >
-            <IconRadar />{t("nearbyTitle")}
-          </Button>
-          <Button
-            variant="nav-mobile"
-            size="lg"
-            active={view === "passenger"}
-            theme={theme}
-            onClick={() => navigateTo("passenger")}
-            fullWidth
-            style={{ justifyContent: "flex-start" }}
-            role="menuitem"
-          >
-            <IconUsers />{t("passengerTitle")}
-          </Button>
-          <Button
-            variant="nav-mobile"
-            size="lg"
-            active={view === "freight"}
-            theme={theme}
-            onClick={() => navigateTo("freight")}
-            fullWidth
-            style={{ justifyContent: "flex-start" }}
-            role="menuitem"
-          >
-            <IconBox />{t("freightTitle")}
-          </Button>
-          <Button
-            variant="nav-mobile"
-            size="lg"
-            active={view === "ship"}
-            theme={theme}
-            onClick={() => navigateTo("ship")}
-            fullWidth
-            style={{ justifyContent: "flex-start" }}
-            role="menuitem"
-          >
-            <IconShip />{t("shipTitle")}
-          </Button>
-          <Button
-            variant="nav-mobile"
-            size="lg"
-            active={view === "recent"}
-            theme={theme}
-            onClick={() => navigateTo("recent")}
-            fullWidth
-            style={{ justifyContent: "flex-start" }}
-            role="menuitem"
-          >
-            <IconPin />{t("recentWorldsTitle")}
-          </Button>
+          {/* Las mismas herramientas, en los mismos bloques y en el mismo
+              orden que el índice de la portada: la lista es una sola y vive en
+              constants/tools.ts. Cuando cada uno llevaba la suya, se separaron.
+              La flota NO se lista aquí —se gobierna desde la portada—, así que
+              su bloque trae una sola entrada: la ficha de la nave activa. */}
+          {TOOL_GROUPS.map(group => (
+            <div
+              key={group.key}
+              role="group"
+              aria-label={t(group.titleKey)}
+              style={{ display: "flex", flexDirection: "column", gap: 8 }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 500,
+                  textTransform: "uppercase",
+                  letterSpacing: 1.5,
+                  color: COLORS.primary,
+                  padding: "4px 2px 0",
+                }}
+              >
+                {t(group.titleKey)}
+              </div>
+              {group.tools.map(tool => (
+                <Button
+                  key={tool.view}
+                  variant="nav-mobile"
+                  size="lg"
+                  active={view === tool.view}
+                  theme={theme}
+                  onClick={() => navigateTo(tool.view)}
+                  fullWidth
+                  style={{ justifyContent: "flex-start" }}
+                  role="menuitem"
+                >
+                  {toolIcon(tool.icon)}{t(tool.titleKey)}
+                </Button>
+              ))}
+            </div>
+          ))}
+
+          {/* Ajustes no es una herramienta: es la página de la aplicación, y por
+              eso va detrás de un filete y sin bloque que la encabece. */}
+          <div style={{ borderTop: `1px solid ${theme.border}`, margin: "8px 0 0" }} />
           <Button
             variant="nav-mobile"
             size="lg"

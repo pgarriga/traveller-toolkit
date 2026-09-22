@@ -8,8 +8,10 @@ import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { PageHeader } from "../components/ui/PageHeader";
 import { ShipCreateModal } from "../components/ShipCreateModal";
-import { IconBox, IconUsers, IconSearch, IconPin, IconRadar, IconShip, IconUpload } from "../components/icons";
+import { IconShip, IconUpload, toolIcon } from "../components/icons";
 import { COLORS } from "../constants/colors";
+import type { ToolViewId } from "../constants/tools";
+import { TOOL_GROUPS } from "../constants/tools";
 import { useShip } from "../hooks/useShip";
 import { shipTypeName } from "../utils/ship";
 import { shipFromJson } from "../utils/shipExport";
@@ -39,6 +41,24 @@ interface ToolCard {
   /** Rótulo al final del título: la nave que las calculadoras están usando. */
   badge?: string;
 }
+
+/**
+ * Lo que cada herramienta cuenta de sí misma en el índice, y con qué color.
+ *
+ * Cuáles hay, en qué bloque y en qué orden lo dice `TOOL_GROUPS`, que es la
+ * lista que comparte con el menú desplegable; esto es solo lo que el índice
+ * pinta de más, porque el menú no lleva ni descripción ni color.
+ */
+const TOOL_CARDS: Record<ToolViewId, { descKey: string; accent: string }> = {
+  search: { descKey: "homeSearchDesc", accent: COLORS.primary },
+  nearby: { descKey: "homeNearbyDesc", accent: COLORS.secondary },
+  recent: { descKey: "homeRecentDesc", accent: COLORS.info },
+  passenger: { descKey: "homePassengerDesc", accent: COLORS.success },
+  freight: { descKey: "homeFreightDesc", accent: COLORS.secondary },
+  // El bloque de naves no pinta esta tarjeta: lista la flota. La entrada está
+  // para que añadir una herramienta obligue a decir qué cuenta de sí misma.
+  ship: { descKey: "homeShipCreateDesc", accent: COLORS.warning },
+};
 
 /**
  * Las herramientas van en tres bloques —dónde estás, qué se mueve y con qué lo
@@ -137,66 +157,27 @@ export const HomeView: FC<HomeViewProps> = ({
     },
   ];
 
-  const groups: ToolGroup[] = [
-    {
-      key: "navigation",
-      titleKey: "homeGroupNavigation",
-      tools: [
-        {
-          key: "search",
-          icon: <IconSearch />,
-          title: t("searchTitle"),
-          description: t("homeSearchDesc"),
-          accent: COLORS.primary,
-          onClick: () => navigateTo("search"),
-        },
-        {
-          key: "nearby",
-          icon: <IconRadar />,
-          title: t("nearbyTitle"),
-          description: t("homeNearbyDesc"),
-          accent: COLORS.secondary,
-          onClick: () => navigateTo("nearby"),
-        },
-        {
-          key: "recent",
-          icon: <IconPin />,
-          title: t("recentWorldsTitle"),
-          description: t("homeRecentDesc"),
-          accent: COLORS.info,
-          onClick: () => navigateTo("recent"),
-        },
-      ],
-    },
-    {
-      key: "traffic",
-      titleKey: "homeGroupTraffic",
-      tools: [
-        {
-          key: "passenger",
-          icon: <IconUsers />,
-          title: t("passengerTitle"),
-          description: t("homePassengerDesc"),
-          accent: COLORS.success,
-          onClick: () => navigateTo("passenger"),
-        },
-        {
-          key: "freight",
-          icon: <IconBox />,
-          title: t("freightTitle"),
-          description: t("homeFreightDesc"),
-          accent: COLORS.secondary,
-          onClick: () => navigateTo("freight"),
-        },
-      ],
-    },
-    {
-      key: "ships",
-      titleKey: "homeGroupShips",
-      tools: fleetCards,
-      ...(importError === null ? {} : { error: importError }),
-    },
-  ];
+  /**
+   * Los bloques salen de la lista única (`constants/tools.ts`), la misma que
+   * pinta el menú desplegable, para que no se vuelvan a separar. El de naves es
+   * el que cambia: ahí el índice no lista una herramienta, lista la flota.
+   */
+  const groups: ToolGroup[] = TOOL_GROUPS.map(group => ({
+    key: group.key,
+    titleKey: group.titleKey,
+    tools:
+      group.key === "ships"
+        ? fleetCards
+        : group.tools.map(tool => ({
+            key: tool.view,
+            icon: toolIcon(tool.icon),
+            title: t(tool.titleKey),
+            description: t(TOOL_CARDS[tool.view].descKey),
+            accent: TOOL_CARDS[tool.view].accent,
+            onClick: () => navigateTo(tool.view),
+          })),
+    ...(group.key === "ships" && importError !== null ? { error: importError } : {}),
+  }));
 
   return (
     <div className="page-shell" style={{ background: theme.bg, color: theme.text, fontFamily: "inherit" }}>
