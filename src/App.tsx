@@ -269,5 +269,5 @@ export default function App() {
   }
 
   // Default: Home view (tool list)
-  return <HomeView {...commonProps} />;
+  return <HomeView {...commonProps} lang={lang} />;
 }

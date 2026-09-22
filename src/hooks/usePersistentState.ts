@@ -1,5 +1,13 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
+
+const write = (key: string, value: unknown): void => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Sin persistencia, pero la sesión sigue funcionando en memoria.
+  }
+};
 
 /**
  * Estado que sobrevive a recargas del navegador y al botón de "nueva búsqueda".
@@ -27,13 +35,37 @@ export const usePersistentState = <T>(
     }
   });
 
+  /**
+   * Se guarda al cambiar el valor, no solo en el efecto: quien borra una nave y
+   * vuelve al menú en el mismo clic desmonta este componente en ese mismo
+   * commit, y ni el efecto ni la actualización en cola de un componente que ya
+   * no se va a renderizar llegan a correr — el cambio se perdía.
+   *
+   * Por eso un valor ya calculado se escribe AQUÍ MISMO, fuera de React: pase lo
+   * que pase con el árbol, el dato está en disco. Con una función de
+   * actualización no se puede —hace falta el valor anterior—, así que esa se
+   * escribe dentro, que es el caso de quien se queda en la página escribiendo.
+   * En ambos casos el efecto de abajo vuelve a escribir lo mismo, sin daño.
+   */
+  const persist = useCallback<Dispatch<SetStateAction<T>>>(
+    action => {
+      if (typeof action !== "function") {
+        write(key, action);
+        setValue(action);
+        return;
+      }
+      setValue(prev => {
+        const next = (action as (previous: T) => T)(prev);
+        write(key, next);
+        return next;
+      });
+    },
+    [key],
+  );
+
   useEffect(() => {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch {
-      // Sin persistencia, pero la sesión sigue funcionando en memoria.
-    }
+    write(key, value);
   }, [key, value]);
 
-  return [value, setValue];
+  return [value, persist];
 };

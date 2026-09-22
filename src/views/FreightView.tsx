@@ -20,6 +20,7 @@ import type { ContractData, ContractLine, ContractParty, ContractTotal } from ".
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { ContractModal } from "../components/ContractModal";
+import { ShipCreateModal } from "../components/ShipCreateModal";
 import { Section } from "../components/ui/Section";
 import { Button } from "../components/ui/Button";
 import { JumpCountField, JumpsBreakdown, distributeJumps } from "../components/ui/JumpsEditor";
@@ -27,7 +28,7 @@ import { WorldPicker } from "../components/ui/WorldPicker";
 import { Field } from "../components/ui/Field";
 import { PageHeader } from "../components/ui/PageHeader";
 import { FreightBanner } from "../components/banners";
-import { IconBox, IconFileText, IconRefresh } from "../components/icons";
+import { IconBox, IconFileText, IconRefresh, IconShip } from "../components/icons";
 import { COLORS, SECTION_COLORS } from "../constants/colors";
 import {
   FREIGHT_RATES_PER_TON,
@@ -47,6 +48,7 @@ import {
   findMailRank,
   rollD6 as rollMailD6,
 } from "../constants/mail";
+import type { ShipTemplate } from "../constants/shipTemplates";
 import { STORAGE_KEYS, isFiniteNumber } from "../constants/storage";
 import { usePersistentState } from "../hooks/usePersistentState";
 import { useShip } from "../hooks/useShip";
@@ -201,7 +203,9 @@ export const FreightView: FC<FreightViewProps> = ({
   // Datos de nave/tripulación: persisten entre sesiones y sobreviven al reset.
   // El nombre y la bodega son de la nave, no de esta ruta, así que salen de la
   // ficha de "Mi nave": editarlos aquí es editarlos allí.
-  const { name: shipName, setName: setShipName, capacity, setCargoTons } = useShip();
+  const { ship, name: shipName, setName: setShipName, capacity, setCargoTons, createShip } = useShip();
+  // Sin nave activa no hay bodega que declarar: la sección invita a crearla.
+  const [createShipOpen, setCreateShipOpen] = useState<boolean>(false);
   const cargoBay = capacity.cargoTons;
   const [skillEffect, setSkillEffect] = usePersistentState<number>(
     STORAGE_KEYS.freightSkillEffect, 0, isFiniteNumber,
@@ -638,7 +642,7 @@ export const FreightView: FC<FreightViewProps> = ({
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: theme.bg, color: theme.text, fontFamily: "inherit" }}>
+    <div className="page-shell" style={{ background: theme.bg, color: theme.text, fontFamily: "inherit" }}>
       <Navbar
         theme={theme}
         view={view}
@@ -655,33 +659,55 @@ export const FreightView: FC<FreightViewProps> = ({
         <div className="two-col-grid">
         <div>
         <Section title={t("shipSection")} color={SECTION_COLORS.techLevel} theme={theme}>
-          <div style={fieldGridStyle}>
-            <Field label={t("shipNameLabel")} theme={theme}>
-              {id => (
-                <input
-                  id={id}
-                  type="text"
-                  style={inputStyle}
-                  placeholder={t("shipNamePlaceholder")}
-                  value={shipName}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setShipName(e.target.value)}
-                />
-              )}
-            </Field>
-            <Field label={t("freightCargoBay")} theme={theme}>
-              {id => (
-                <input
-                  id={id}
-                  type="number"
-                  min={0}
-                  style={inputStyle}
-                  value={cargoBay}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setCargoTons(Math.max(0, parseInt(e.target.value, 10) || 0))}
-                />
-              )}
-            </Field>
-          </div>
-          <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 8 }}>{t("shipFromSheetHint")}</div>
+          {ship === null ? (
+            <>
+              <div style={{ fontSize: 13, color: theme.textDimmed, lineHeight: 1.6 }}>{t("shipNoneHint")}</div>
+              <Button
+                variant="primary"
+                size="md"
+                theme={theme}
+                onClick={() => setCreateShipOpen(true)}
+                style={{ marginTop: 12 }}
+              >
+                <IconShip />
+                {t("shipCreateAction")}
+              </Button>
+            </>
+          ) : (
+            <>
+              <div style={fieldGridStyle}>
+                <Field label={t("shipNameLabel")} theme={theme}>
+                  {id => (
+                    <input
+                      id={id}
+                      type="text"
+                      style={inputStyle}
+                      placeholder={t("shipNamePlaceholder")}
+                      value={shipName}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => setShipName(e.target.value)}
+                    />
+                  )}
+                </Field>
+                <Field label={t("freightCargoBay")} theme={theme}>
+                  {id => (
+                    <input
+                      id={id}
+                      type="number"
+                      min={0}
+                      style={inputStyle}
+                      value={cargoBay}
+                      // Escribe en la fila de carga de la ficha: es la misma bodega, y
+                      // el nombre solo se usa si la nave aún no tenía esa línea.
+                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        setCargoTons(Math.max(0, parseInt(e.target.value, 10) || 0), t("shipSecCargo"))
+                      }
+                    />
+                  )}
+                </Field>
+              </div>
+              <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 8 }}>{t("shipFromSheetHint")}</div>
+            </>
+          )}
           <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", marginTop: 12 }}>
             <input
               type="checkbox"
@@ -1221,8 +1247,20 @@ export const FreightView: FC<FreightViewProps> = ({
           />
         )}
 
-        <Footer theme={theme} t={t} />
+        {createShipOpen && (
+          <ShipCreateModal
+            theme={theme}
+            t={t}
+            onClose={() => setCreateShipOpen(false)}
+            onCreate={(name: string, template: ShipTemplate | null) => {
+              createShip(name, template, t);
+              setCreateShipOpen(false);
+            }}
+          />
+        )}
+
       </main>
+      <Footer theme={theme} t={t} />
     </div>
   );
 };

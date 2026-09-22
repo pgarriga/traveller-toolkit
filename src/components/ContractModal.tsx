@@ -8,6 +8,7 @@ import { Button } from "./ui/Button";
 import { IconDownload, IconShare } from "./icons";
 import { COLORS } from "../constants/colors";
 import { renderContractImage } from "../utils/contractImage";
+import { saveFile } from "../utils/download";
 
 interface ContractModalProps {
   theme: Theme;
@@ -82,19 +83,6 @@ export const ContractModal: FC<ContractModalProps> = ({ theme, t, data, onClose 
       url: APP_URL,
       dash: t("freightDash"),
     }).then(blob => new File([blob], `${reference}.png`, { type: "image/png" }));
-
-  const saveFile = (file: File): void => {
-    const url = URL.createObjectURL(file);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = file.name;
-    // El ancla tiene que estar en el documento y la URL no se puede revocar en
-    // el mismo tick: algunos navegadores cancelan la descarga.
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.setTimeout(() => URL.revokeObjectURL(url), 10000);
-  };
 
   const runImageAction = (action: (file: File) => Promise<Status>): void => {
     if (rendering) return;

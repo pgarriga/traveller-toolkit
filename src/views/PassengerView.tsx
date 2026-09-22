@@ -18,6 +18,7 @@ import type { ContractData, ContractLine, ContractParty } from "../types/contrac
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { ContractModal } from "../components/ContractModal";
+import { ShipCreateModal } from "../components/ShipCreateModal";
 import { Section } from "../components/ui/Section";
 import { Button } from "../components/ui/Button";
 import { JumpCountField, distributeJumps } from "../components/ui/JumpsEditor";
@@ -25,7 +26,7 @@ import { WorldPicker } from "../components/ui/WorldPicker";
 import { Field } from "../components/ui/Field";
 import { PageHeader } from "../components/ui/PageHeader";
 import { PassengerBanner } from "../components/banners";
-import { IconUsers, IconFileText, IconRefresh } from "../components/icons";
+import { IconUsers, IconFileText, IconRefresh, IconShip } from "../components/icons";
 import { COLORS, SECTION_COLORS } from "../constants/colors";
 import {
   BROKER_EFFECT_MAX,
@@ -39,6 +40,7 @@ import {
   STEWARD_SKILL_MAX,
   STEWARD_SKILL_MIN,
 } from "../constants/passenger";
+import type { ShipTemplate } from "../constants/shipTemplates";
 import { STORAGE_KEYS, isFiniteNumber } from "../constants/storage";
 import { usePersistentState } from "../hooks/usePersistentState";
 import { useShip } from "../hooks/useShip";
@@ -197,7 +199,9 @@ export const PassengerView: FC<PassengerViewProps> = ({
   // Datos de nave/tripulación: persisten entre sesiones y sobreviven al reset.
   // El nombre y las plazas son de la nave, no de esta ruta, así que salen de la
   // ficha de "Mi nave": editarlos aquí es editarlos allí.
-  const { name: shipName, setName: setShipName, capacity, setBerths } = useShip();
+  const { ship, name: shipName, setName: setShipName, capacity, setBerths, createShip } = useShip();
+  // Sin nave activa no hay plazas que vender: la sección invita a crearla.
+  const [createShipOpen, setCreateShipOpen] = useState<boolean>(false);
   const berths = capacity.berths;
   const [brokerEffect, setBrokerEffect] = usePersistentState<number>(
     STORAGE_KEYS.passengerBrokerEffect, 0, isFiniteNumber,
@@ -554,7 +558,7 @@ export const PassengerView: FC<PassengerViewProps> = ({
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: theme.bg, color: theme.text, fontFamily: "inherit" }}>
+    <div className="page-shell" style={{ background: theme.bg, color: theme.text, fontFamily: "inherit" }}>
       <Navbar
         theme={theme}
         view={view}
@@ -571,46 +575,64 @@ export const PassengerView: FC<PassengerViewProps> = ({
         <div className="two-col-grid">
         <div>
         <Section title={t("shipSection")} color={SECTION_COLORS.techLevel} theme={theme}>
-          <Field label={t("shipNameLabel")} theme={theme}>
-            {id => (
-              <input
-                id={id}
-                type="text"
-                style={inputStyle}
-                placeholder={t("shipNamePlaceholder")}
-                value={shipName}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setShipName(e.target.value)}
-              />
-            )}
-          </Field>
-          {/* Dos por línea: minmax(0, 1fr) para que el texto largo de las
-              pistas no ensanche la columna en pantallas estrechas. */}
-          <div style={{ ...fieldGridStyle, gridTemplateColumns: "repeat(2, minmax(0, 1fr))", marginTop: 12 }}>
-            {PASSENGER_CLASS_OPTIONS.map(cls => (
-              <Field key={cls} label={t(classKey(cls))} theme={theme}>
+          {ship === null ? (
+            <>
+              <div style={{ fontSize: 13, color: theme.textDimmed, lineHeight: 1.6 }}>{t("shipNoneHint")}</div>
+              <Button
+                variant="primary"
+                size="md"
+                theme={theme}
+                onClick={() => setCreateShipOpen(true)}
+                style={{ marginTop: 12 }}
+              >
+                <IconShip />
+                {t("shipCreateAction")}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Field label={t("shipNameLabel")} theme={theme}>
                 {id => (
-                  <>
-                    <input
-                      id={id}
-                      type="number"
-                      min={0}
-                      style={{ ...inputStyle, borderLeft: `3px solid ${classColor(cls)}` }}
-                      value={berths[cls]}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                        setBerths({ ...berths, [cls]: Math.max(0, parseInt(e.target.value, 10) || 0) })
-                      }
-                    />
-                    <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 4 }}>
-                      {t(berthHintKey(cls))}
-                    </div>
-                  </>
+                  <input
+                    id={id}
+                    type="text"
+                    style={inputStyle}
+                    placeholder={t("shipNamePlaceholder")}
+                    value={shipName}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setShipName(e.target.value)}
+                  />
                 )}
               </Field>
-            ))}
-          </div>
-          <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 10 }}>
-            {t("shipBerthsNote")} {t("shipFromSheetHint")}
-          </div>
+              {/* Dos por línea: minmax(0, 1fr) para que el texto largo de las
+                  pistas no ensanche la columna en pantallas estrechas. */}
+              <div style={{ ...fieldGridStyle, gridTemplateColumns: "repeat(2, minmax(0, 1fr))", marginTop: 12 }}>
+                {PASSENGER_CLASS_OPTIONS.map(cls => (
+                  <Field key={cls} label={t(classKey(cls))} theme={theme}>
+                    {id => (
+                      <>
+                        <input
+                          id={id}
+                          type="number"
+                          min={0}
+                          style={{ ...inputStyle, borderLeft: `3px solid ${classColor(cls)}` }}
+                          value={berths[cls]}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                            setBerths({ ...berths, [cls]: Math.max(0, parseInt(e.target.value, 10) || 0) })
+                          }
+                        />
+                        <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 4 }}>
+                          {t(berthHintKey(cls))}
+                        </div>
+                      </>
+                    )}
+                  </Field>
+                ))}
+              </div>
+              <div style={{ fontSize: 11, color: theme.textDimmed, marginTop: 10 }}>
+                {t("shipBerthsNote")} {t("shipFromSheetHint")}
+              </div>
+            </>
+          )}
         </Section>
         <Section title={t("passengerSkillsSection")} color={SECTION_COLORS.atmosphere} theme={theme}>
           <div style={fieldGridStyle}>
@@ -1044,8 +1066,20 @@ export const PassengerView: FC<PassengerViewProps> = ({
           />
         )}
 
-        <Footer theme={theme} t={t} />
+        {createShipOpen && (
+          <ShipCreateModal
+            theme={theme}
+            t={t}
+            onClose={() => setCreateShipOpen(false)}
+            onCreate={(name: string, template: ShipTemplate | null) => {
+              createShip(name, template, t);
+              setCreateShipOpen(false);
+            }}
+          />
+        )}
+
       </main>
+      <Footer theme={theme} t={t} />
     </div>
   );
 };
