@@ -80,7 +80,7 @@ export const SearchView: FC<SearchViewProps> = ({
   const greenBorder = getZoneColor(ZONES.GREEN as ZoneCode);
 
   return (
-    <div style={{ minHeight: "100vh", background: theme.bg, color: theme.text, fontFamily: "inherit" }}>
+    <div className="page-shell" style={{ background: theme.bg, color: theme.text, fontFamily: "inherit" }}>
       <Navbar
         theme={theme}
         view={view}
@@ -237,8 +237,8 @@ export const SearchView: FC<SearchViewProps> = ({
           </div>
         )}
 
-        <Footer theme={theme} t={t} />
       </main>
+      <Footer theme={theme} t={t} />
     </div>
   );
 };

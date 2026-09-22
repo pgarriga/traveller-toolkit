@@ -36,7 +36,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
   setMenuOpen,
   t
 }) => (
-  <div style={{ minHeight: "100vh", background: theme.bg, color: theme.text, fontFamily: "inherit" }}>
+  <div className="page-shell" style={{ background: theme.bg, color: theme.text, fontFamily: "inherit" }}>
     <Navbar
       theme={theme}
       view={view}
@@ -100,7 +100,7 @@ export const SettingsView: FC<SettingsViewProps> = ({
       </div>
       </div>
 
-      <Footer theme={theme} t={t} showVersion />
     </main>
+    <Footer theme={theme} t={t} />
   </div>
 );

@@ -92,7 +92,7 @@ export const PlanetView: FC<PlanetViewProps> = ({
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: theme.bg, color: theme.text, fontFamily: "inherit" }}>
+    <div className="page-shell" style={{ background: theme.bg, color: theme.text, fontFamily: "inherit" }}>
       <Navbar
         theme={theme}
         view={view}
@@ -357,8 +357,8 @@ export const PlanetView: FC<PlanetViewProps> = ({
           </code>
         </div>
 
-        <Footer theme={theme} t={t} />
       </main>
+      <Footer theme={theme} t={t} />
     </div>
   );
 };

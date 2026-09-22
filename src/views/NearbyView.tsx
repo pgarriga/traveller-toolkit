@@ -208,7 +208,7 @@ export const NearbyView: FC<NearbyViewProps> = ({
   } as const;
 
   return (
-    <div style={{ minHeight: "100vh", background: theme.bg, color: theme.text }}>
+    <div className="page-shell" style={{ background: theme.bg, color: theme.text }}>
       <Navbar
         theme={theme}
         view={view}
@@ -521,8 +521,8 @@ export const NearbyView: FC<NearbyViewProps> = ({
           </Section>
         )}
 
-        <Footer theme={theme} t={t} />
       </main>
+      <Footer theme={theme} t={t} />
     </div>
   );
 };

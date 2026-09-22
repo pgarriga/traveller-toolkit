@@ -135,7 +135,7 @@ export const RecentWorldsView: FC<RecentWorldsViewProps> = ({
   }, [recentPlanets, sort, STARPORT]);
 
   return (
-    <div style={{ minHeight: "100vh", background: theme.bg, color: theme.text, fontFamily: "inherit" }}>
+    <div className="page-shell" style={{ background: theme.bg, color: theme.text, fontFamily: "inherit" }}>
       <Navbar
         theme={theme}
         view={view}
@@ -435,8 +435,8 @@ export const RecentWorldsView: FC<RecentWorldsViewProps> = ({
           )}
         </section>
 
-        <Footer theme={theme} t={t} />
       </main>
+      <Footer theme={theme} t={t} />
     </div>
   );
 };

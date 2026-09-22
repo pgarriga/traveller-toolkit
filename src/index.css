@@ -152,6 +152,34 @@ input::placeholder {
   }
 }
 
+/* Pie pegado abajo.
+   Cada vista es una columna —barra, contenido, pie— y es el contenido el que se
+   come el hueco que sobra, así que en una página corta el pie cae al final de la
+   ventana en vez de quedarse colgado a media altura. El resto de hijos (el hueco
+   que deja la barra fija, el propio pie) no encogen: `flex: none`.
+   dvh en vez de vh porque en el móvil vh cuenta la barra del navegador y la
+   página acaba con un dedo de scroll que no lleva a ninguna parte. */
+.page-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* `width: 100%` no sobra: .wide-main lleva `margin: 0 auto`, y un elemento
+   flexible con los dos márgenes del eje transversal en `auto` NO se estira para
+   llenar la columna —se encoge a su contenido y se centra—. Sin esto, cada
+   pestaña de la ficha de nave medía lo que midiera su contenido (Detalles salía
+   100 px más estrecha que Perfil) en vez de los 1080 px del contenedor. */
+.page-shell > main {
+  flex: 1 0 auto;
+  width: 100%;
+}
+
+.page-shell > :not(main) {
+  flex: none;
+}
+
 /* Container that widens on desktop but keeps mobile layout untouched */
 .wide-main {
   max-width: 720px;
