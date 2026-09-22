@@ -653,23 +653,34 @@ export const FreightBanner: FC<BannerProps> = ({ theme }) => (
 );
 
 // ---------- Ship Banner ----------
-// A shipyard elevation: the hull in outline with its systems called out, and the
-// one component under the cursor picked out in orange — which is what the sheet
-// is for. The tonnage bar on the right echoes the sheet's totals row.
+// Una LÁMINA DE PLANOS: planta, perfil y frontal, con su cota y sus ejes de
+// simetría, como la hoja de un diseñador naval. Una sola silueta —da igual desde
+// dónde— acaba pareciendo otra cosa (la de perfil salía submarino); tres vistas
+// ortográficas juntas no se leen como un dibujo de una nave, se leen como los
+// planos de una nave, que es exactamente lo que la pestaña es.
+//
+// El casco es el del CARGUERO LEJANO, el Tipo A2 del manual: las mismas 200 t
+// que dice el rótulo, con sus 63 de bodega. Un cajón con el morro achaflanado,
+// la rampa de carga en la popa y las góndolas del salto-2 a los costados — se le
+// ve que es una nave de carga, que es la que casi todo el mundo juega. Los
+// números son los de su plantilla (`farTrader` en constants/shipTemplates.ts),
+// así que si allí cambian, aquí también.
 
-const SHIP_CALLOUTS: readonly { x: number; label: string; accent?: boolean }[] = [
-  { x: 214, label: "M-DRV" },
-  { x: 286, label: "J-DRV" },
-  { x: 358, label: "PWR" },
-  { x: 430, label: "TURRET", accent: true },
-  { x: 502, label: "BRIDGE" },
+/** Las tres vistas: dónde va cada una y dónde su rótulo. */
+const SHIP_VIEWS: readonly { x: number; label: string }[] = [
+  { x: 162, label: "PLAN" },
+  { x: 422, label: "PROFILE" },
+  { x: 600, label: "FRONT" },
 ];
+
+/** El eje de simetría del dibujo técnico: raya y punto. */
+const AXIS_DASH = "10 3 2 3";
 
 export const ShipBanner: FC<BannerProps> = ({ theme }) => (
   <svg aria-hidden="true" viewBox="0 0 800 120" style={svgStyle} preserveAspectRatio="xMidYMid meet">
     <CornerFrame color={theme.textDimmed} />
     <text x="30" y="22" fill={theme.textDimmed} fontSize="10" fontFamily="monospace" letterSpacing="1.5">
-      {"> SHIP SHEET"}
+      {"> BLUEPRINT"}
     </text>
     <text
       x="770"
@@ -680,60 +691,103 @@ export const ShipBanner: FC<BannerProps> = ({ theme }) => (
       letterSpacing="1.5"
       textAnchor="end"
     >
-      TL 12 · 200 TONS
+      TYPE A2 · 200 TONS
     </text>
 
-    {/* Hull elevation: a blunt wedge with two drive nacelles. */}
+    {/* La lámina, dividida en sus vistas. */}
+    <g stroke={theme.border} strokeWidth={1} strokeDasharray="3 4">
+      <line x1={300} y1={32} x2={300} y2={96} />
+      <line x1={532} y1={32} x2={532} y2={96} />
+      <line x1={655} y1={32} x2={655} y2={96} />
+    </g>
+
+    {/* Ejes de simetría: uno por vista, que es lo que delata un plano. */}
+    <g stroke={theme.border} strokeWidth={1} strokeDasharray={AXIS_DASH}>
+      <line x1={42} y1={57} x2={282} y2={57} />
+      <line x1={326} y1={57} x2={518} y2={57} />
+      <line x1={600} y1={30} x2={600} y2={76} />
+    </g>
+
+    {/* PLANTA: el casco cajón del mercante libre —morro achaflanado, rampa de
+        carga en la popa y las góndolas de los motores a los costados—. */}
     <g stroke={theme.textMuted} strokeWidth={1.4} fill="none" strokeLinejoin="round">
-      <path d="M180 68 L196 50 L520 50 L556 62 L556 74 L520 86 L196 86 Z" />
-      <path d="M212 50 L212 86" />
-      <path d="M470 50 L470 86" />
-      <path d="M196 86 L188 96 L262 96 L268 86" />
-      <path d="M520 50 L534 42 L560 42 L556 50" />
+      <path d="M70 40 L206 40 L240 48 L252 57 L240 66 L206 74 L70 74 Z" />
+      <rect x={46} y={46} width={24} height={22} />
+      <rect x={96} y={34} width={54} height={6} />
+      <rect x={96} y={74} width={54} height={6} />
+      <rect x={206} y={48} width={26} height={18} />
     </g>
 
-    {/* Turret: the highlighted component. */}
-    <g stroke={COLORS.primary} strokeWidth={1.6} fill="none" strokeLinecap="round">
-      <path d="M424 50 L424 42 L436 42 L436 50" />
-      <line x1={430} y1={42} x2={430} y2={34} />
+    {/* La bodega, marcada sobre la planta: el único acento del dibujo, y las
+        mismas 81 t que la barra del margen. */}
+    <g stroke={COLORS.primary} strokeWidth={1.4} fill={`${COLORS.primary}22`}>
+      <rect x={118} y={44} width={60} height={26} />
+      <line x1={148} y1={44} x2={148} y2={70} />
     </g>
 
-    {/* Callout ticks and labels under the hull. */}
-    {SHIP_CALLOUTS.map(callout => (
-      <g key={callout.label}>
-        <line
-          x1={callout.x}
-          y1={86}
-          x2={callout.x}
-          y2={101}
-          stroke={callout.accent ? COLORS.primary : theme.border}
-          strokeWidth={1}
-          strokeDasharray={callout.accent ? undefined : "2 3"}
-        />
-        <text
-          x={callout.x}
-          y={113}
-          fill={callout.accent ? COLORS.primary : theme.textDimmed}
-          fontSize="9"
-          fontFamily="monospace"
-          textAnchor="middle"
-          letterSpacing="1.5"
-          fontWeight={callout.accent ? 500 : undefined}
-        >
-          {callout.label}
-        </text>
-      </g>
+    {/* PERFIL: un cajón bajo, con la cubierta marcada y el tren de aterrizaje
+        fuera — que es lo que ningún submarino tiene. */}
+    <g stroke={theme.textMuted} strokeWidth={1.4} fill="none" strokeLinejoin="round">
+      <path d="M334 44 L462 44 L498 56 L498 64 L334 64 Z" />
+      <line x1={334} y1={50} x2={462} y2={50} />
+      <path d="M370 64 L370 76 M362 76 L378 76" />
+      <path d="M452 64 L452 76 M444 76 L460 76" />
+    </g>
+
+    {/* FRONTAL: ancho y de fondo plano, con una góndola a cada costado. */}
+    <g stroke={theme.textMuted} strokeWidth={1.4} fill="none" strokeLinejoin="round">
+      <path d="M562 68 L562 52 L576 44 L624 44 L638 52 L638 68 Z" />
+      <rect x={550} y={50} width={12} height={10} />
+      <rect x={638} y={50} width={12} height={10} />
+      <path d="M576 68 L576 74 M624 68 L624 74" />
+    </g>
+
+    {/* La cota de la planta, con su hueco para el número. */}
+    <g stroke={theme.textDimmed} strokeWidth={1}>
+      <line x1={52} y1={86} x2={52} y2={94} />
+      <line x1={272} y1={86} x2={272} y2={94} />
+      <line x1={52} y1={90} x2={140} y2={90} />
+      <line x1={184} y1={90} x2={272} y2={90} />
+    </g>
+    <text
+      x={162}
+      y={93}
+      fill={theme.textDimmed}
+      fontSize="9"
+      fontFamily="monospace"
+      textAnchor="middle"
+      letterSpacing="1.5"
+    >
+      37 m
+    </text>
+
+    {/* El rótulo de cada vista. */}
+    {SHIP_VIEWS.map(view => (
+      <text
+        key={view.label}
+        x={view.x}
+        y={107}
+        fill={theme.textDimmed}
+        fontSize="9"
+        fontFamily="monospace"
+        textAnchor="middle"
+        letterSpacing="1.5"
+      >
+        {view.label}
+      </text>
     ))}
 
-    {/* Tonnage used against the hull, the sheet's totals row in miniature. */}
-    <g transform="translate(600, 52)">
+    {/* Y en el margen, la nave entera y qué parte de ella es bodega: las 200 t
+        del rótulo de arriba, con las 63 de carga marcadas — las mismas que van
+        en naranja sobre la planta. El Tipo A2 del manual, de cabo a rabo. */}
+    <g transform="translate(665, 46)">
       <text x={0} y={0} fill={theme.textDimmed} fontSize="10" fontFamily="monospace" letterSpacing="1.5">
         HULL 200t
       </text>
-      <rect x={0} y={9} width={170} height={12} stroke={theme.textDimmed} strokeWidth={1} fill="none" />
-      <rect x={0} y={9} width={119} height={12} fill={`${COLORS.primary}55`} stroke={COLORS.primary} strokeWidth={1} />
-      <text x={0} y={38} fill={COLORS.primary} fontSize="10" fontFamily="monospace" letterSpacing="1.5" fontWeight={500}>
-        FITTED 140t
+      <rect x={0} y={8} width={105} height={11} stroke={theme.textDimmed} strokeWidth={1} fill="none" />
+      <rect x={0} y={8} width={33} height={11} fill={`${COLORS.primary}55`} stroke={COLORS.primary} strokeWidth={1} />
+      <text x={0} y={34} fill={COLORS.primary} fontSize="10" fontFamily="monospace" letterSpacing="1.5" fontWeight={500}>
+        CARGO 63t
       </text>
     </g>
   </svg>
