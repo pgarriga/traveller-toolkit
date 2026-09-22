@@ -111,6 +111,39 @@ input::placeholder {
   grid-template-columns: 1fr;
 }
 
+/* El índice: todas las tarjetas miden lo mismo, midan lo que midan sus textos.
+   Tres reglas, porque hacen falta las tres:
+   - `grid-auto-rows: 1fr` iguala las filas DENTRO de un bloque, a cualquier
+     ancho: todas crecen hasta la más alta.
+   - el `min-height` es el suelo que comparten los tres bloques, que son rejillas
+     distintas y no se ven entre ellas.
+   - y el recorte a dos líneas es el techo: sin él, un texto que en móvil envuelve
+     a cuatro líneas levantaría su bloque por encima de los otros dos. */
+.tool-grid {
+  grid-auto-rows: 1fr;
+}
+
+.tool-card {
+  min-height: 124px;
+}
+
+/* `min-width: 0` no sobra: un hijo flexible no encoge por debajo de su contenido
+   sin esto, y entonces el recorte no llega a aplicarse nunca. */
+.tool-card__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tool-card__desc {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
 /* Two-column form layout used by Freight / Passenger / Settings on desktop.
    Below 900px it collapses to a single column (default form flow).
    Row-gap is 0 because inner <Section> already carries marginBottom: 12. */

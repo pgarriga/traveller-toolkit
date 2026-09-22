@@ -210,11 +210,12 @@ export const HomeView: FC<HomeViewProps> = ({
               <span aria-hidden="true" style={{ flex: 1, height: 1, background: theme.border }} />
             </div>
 
-            <div className="card-grid card-grid--two">
+            <div className="card-grid card-grid--two tool-grid">
               {group.tools.map(tool => (
                 <button
                   key={tool.key}
                   type="button"
+                  className="tool-card"
                   onClick={tool.comingSoon ? undefined : tool.onClick}
                   disabled={tool.comingSoon}
                   aria-disabled={tool.comingSoon || undefined}
@@ -247,11 +248,14 @@ export const HomeView: FC<HomeViewProps> = ({
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 8, color: tool.accent, fontSize: 18, fontWeight: 500 }}>
                     {tool.icon}
-                    <span>{tool.title}</span>
+                    <span className="tool-card__title">{tool.title}</span>
                     {(tool.comingSoon || tool.badge !== undefined) && (
                       <span
                         style={{
                           marginLeft: "auto",
+                          // No encoge: quien cede sitio cuando el nombre de la
+                          // nave es largo es el nombre, que se recorta.
+                          flexShrink: 0,
                           fontSize: 11,
                           fontWeight: 500,
                           letterSpacing: 0.3,
@@ -267,7 +271,7 @@ export const HomeView: FC<HomeViewProps> = ({
                       </span>
                     )}
                   </div>
-                  <div style={{ fontSize: 13, color: theme.textDimmed, lineHeight: 1.4 }}>
+                  <div className="tool-card__desc" style={{ fontSize: 13, color: theme.textDimmed, lineHeight: 1.4 }}>
                     {tool.description}
                   </div>
                 </button>
