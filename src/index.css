@@ -123,8 +123,12 @@ input::placeholder {
   grid-auto-rows: 1fr;
 }
 
+/* Justo lo que pide su contenido —el título, el hueco y las dos líneas de
+   descripción— y ni un píxel de aire muerto: 16 de padding arriba y abajo, 22
+   del título, 8 del hueco y 36 de las dos líneas. Subirlo solo añade vacío,
+   porque las filas ya se igualan solas dentro de cada bloque. */
 .tool-card {
-  min-height: 124px;
+  min-height: 100px;
 }
 
 /* `min-width: 0` no sobra: un hijo flexible no encoge por debajo de su contenido

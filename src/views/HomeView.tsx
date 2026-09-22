@@ -225,7 +225,10 @@ export const HomeView: FC<HomeViewProps> = ({
                     border: `1px solid ${theme.border}`,
                     borderLeft: `4px solid ${tool.accent}`,
                     borderRadius: 12,
-                    padding: 20,
+                    // Vertical más corto que horizontal, como las tarjetas de
+                    // Section: el aire de los lados se lee, el de arriba y abajo
+                    // solo estiraba la tarjeta.
+                    padding: "16px 20px",
                     color: theme.text,
                     fontFamily: "inherit",
                     cursor: tool.comingSoon ? "not-allowed" : "pointer",
