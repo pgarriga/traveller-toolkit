@@ -530,12 +530,106 @@ a, button {
    que no hace falta partirla; el móvil se limita a estrechar la columna
    numérica. (Nada que ver con .ship-grid, que son los controles de nave de
    Mundos Cercanos.) */
+/* Cuadro de cifras: se reparten solas y bajan a dos por fila en móvil. Las dos
+   que encabezan piden más sitio porque llevan el número en cuerpo grande. */
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+  gap: 8px;
+}
+
+.metric-grid--lead {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+/* El desglose son cinco cifras que se leen juntas o no se leen: con `auto-fit`
+   el ancho de la tarjeta decidía cuántas caben y los sensores se caían solos a
+   una segunda fila. Aquí las columnas se piden por número, no por ancho mínimo,
+   y son los saltos de abajo los que deciden cuándo bajar a dos filas. */
+.metric-grid--breakdown {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+/* Cifras que se leen comparándolas, no en lista: las dos configuraciones de
+   potencia ("en combate me llega, para saltar no") y las de la bodega. Por eso
+   se piden por número de columnas y no por ancho mínimo — una debajo de la otra
+   ya no es una comparación. */
+.metric-grid--pair {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.metric-grid--trio {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* En una tarjeta a toda la página, tres métricas estiradas a 400 px cada una
+     no se leen juntas: se quedan en un bloque del ancho de una columna. */
+  max-width: 620px;
+}
+
+@media (max-width: 520px) {
+  .metric-grid--trio {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .metric-grid--breakdown {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 380px) {
+  .metric-grid--breakdown {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Nombre y toneladas. La papelera no está: solo aparece —y solo entonces se
+   lleva su columna— cuando el jugador enciende el modo de eliminar filas, para
+   que el resto del tiempo el nombre ocupe la fila entera. */
 .ship-sheet-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 110px 40px;
+  grid-template-columns: minmax(0, 1fr) 72px;
   gap: 8px;
   align-items: center;
   margin-bottom: 6px;
+}
+
+/* Las flechitas del campo numérico se comen quince píxeles de una columna que
+   solo tiene que aceptar cinco cifras, y en una ficha que se rellena tecleando
+   no las usa nadie. */
+.ship-sheet-row input[type="number"]::-webkit-outer-spin-button,
+.ship-sheet-row input[type="number"]::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+.ship-sheet-row input[type="number"] {
+  appearance: textfield;
+}
+
+.ship-sheet-row--removable {
+  grid-template-columns: minmax(0, 1fr) 72px 40px;
+}
+
+/* Armamento: cada arma declara sus propios puntos de Potencia. */
+.ship-sheet-row--power {
+  grid-template-columns: minmax(0, 1fr) 72px 72px;
+}
+
+.ship-sheet-row--power.ship-sheet-row--removable {
+  grid-template-columns: minmax(0, 1fr) 72px 72px 40px;
+}
+
+/* Alojamiento: cuántas piezas iguales lleva la línea. Más estrecha que las
+   toneladas —son unidades enteras, no 22,85— y delante de ellas, porque es la
+   cantidad la que multiplica el total y no al revés. */
+.ship-sheet-row--qty {
+  grid-template-columns: minmax(0, 1fr) 56px 72px;
+}
+
+.ship-sheet-row--qty.ship-sheet-row--removable {
+  grid-template-columns: minmax(0, 1fr) 56px 72px 40px;
 }
 
 .ship-sheet-row--header {
@@ -544,42 +638,120 @@ a, button {
 
 @media (max-width: 420px) {
   .ship-sheet-row {
-    grid-template-columns: minmax(0, 1fr) 88px 40px;
+    grid-template-columns: minmax(0, 1fr) 64px;
+  }
+
+  .ship-sheet-row--removable {
+    grid-template-columns: minmax(0, 1fr) 64px 40px;
+  }
+
+  .ship-sheet-row--power {
+    grid-template-columns: minmax(0, 1fr) 64px 64px;
+  }
+
+  .ship-sheet-row--power.ship-sheet-row--removable {
+    grid-template-columns: minmax(0, 1fr) 64px 64px 40px;
+  }
+
+  .ship-sheet-row--qty {
+    grid-template-columns: minmax(0, 1fr) 48px 64px;
+  }
+
+  .ship-sheet-row--qty.ship-sheet-row--removable {
+    grid-template-columns: minmax(0, 1fr) 48px 64px 40px;
   }
 }
 
-/* Mi nave, pestaña de tripulación: nombre, puesto, notas y el botón de quitar.
-   Por debajo de 640 px el botón se queda a la derecha del nombre y los otros
-   dos campos bajan a su propia línea: tres campos de texto en una fila de
-   móvil no dejan leer ninguno. */
-.crew-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.2fr) 40px;
-  gap: 8px;
-  align-items: center;
-  margin-bottom: 6px;
+/* Las tablas editables de la ficha: el rol de la tripulación y el manifiesto de
+   la bodega. Son las dos únicas tarjetas que ocupan el ancho entero de la página
+   en vez de media columna, porque son listas de cosas y cuanta más pantalla
+   haya, más filas caben sin apretarse.
+
+   La cabecera naranja y las filas cebradas las pone .traveller-table; esto es lo
+   que hay que añadirle a una tabla que en vez de datos lleva campos. */
+.sheet-table td {
+  vertical-align: middle;
 }
 
-.crew-row--header {
-  margin-bottom: 2px;
+.sheet-table td input {
+  width: 100%;
 }
 
+/* Las flechitas del campo numérico sobran también aquí: las cifras se teclean. */
+.sheet-table input[type="number"]::-webkit-outer-spin-button,
+.sheet-table input[type="number"]::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+.sheet-table input[type="number"] {
+  appearance: textfield;
+}
+
+/* Lo que mide cada columna. Lo demás —nombre, puesto, concepto— se reparte lo
+   que sobre, que es lo que de verdad se lee. */
+.crew-table th:nth-child(3),
+.crew-table td:nth-child(3) {
+  width: 200px;
+}
+
+.cargo-table th:nth-child(2),
+.cargo-table td:nth-child(2) {
+  width: 160px;
+}
+
+.crew-table th:last-child,
+.crew-table td:last-child,
+.cargo-table th:last-child,
+.cargo-table td:last-child {
+  width: 56px;
+}
+
+/* En móvil la tabla deja de ser una tabla: cada fila se apila —lo primero con su
+   papelera al lado, y debajo el resto, uno por línea— porque tres campos en una
+   línea de móvil no dejan leer ninguno. La cabecera desaparece y quien dice qué
+   es cada casilla es su placeholder. */
 @media (max-width: 640px) {
-  .crew-row {
-    grid-template-columns: minmax(0, 1fr) 40px;
-  }
-
-  .crew-row > *:nth-child(2),
-  .crew-row > *:nth-child(3) {
-    grid-column: 1 / -1;
-  }
-
-  .crew-row {
-    margin-bottom: 14px;
-  }
-
-  .crew-row--header {
+  .sheet-table thead {
     display: none;
+  }
+
+  .sheet-table tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 44px;
+    gap: 8px;
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(212, 82, 28, 0.15);
+  }
+
+  .sheet-table tbody tr:nth-child(odd) {
+    background: rgba(212, 82, 28, 0.06);
+  }
+
+  .sheet-table tbody td,
+  .sheet-table tbody tr:nth-child(odd) td {
+    display: block;
+    width: auto;
+    padding: 0;
+    border-bottom: none;
+    background: transparent;
+  }
+
+  /* Colocadas a mano: con el flujo automático la papelera caería debajo del
+     primer campo en vez de a su lado. Las de en medio, las que quedan, se
+     reparten solas por las filas siguientes. */
+  .sheet-table tbody td:first-child {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .sheet-table tbody td:last-child {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .sheet-table tbody td:not(:first-child):not(:last-child) {
+    grid-column: 1 / -1;
   }
 }
 
