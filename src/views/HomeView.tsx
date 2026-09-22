@@ -55,9 +55,6 @@ const TOOL_CARDS: Record<ToolViewId, { descKey: string; accent: string }> = {
   recent: { descKey: "homeRecentDesc", accent: COLORS.info },
   passenger: { descKey: "homePassengerDesc", accent: COLORS.success },
   freight: { descKey: "homeFreightDesc", accent: COLORS.secondary },
-  // El bloque de naves no pinta esta tarjeta: lista la flota. La entrada está
-  // para que añadir una herramienta obligue a decir qué cuenta de sí misma.
-  ship: { descKey: "homeShipCreateDesc", accent: COLORS.warning },
 };
 
 /**

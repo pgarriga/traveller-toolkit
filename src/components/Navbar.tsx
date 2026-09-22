@@ -4,6 +4,7 @@ import type { Theme } from "../types/theme";
 import type { TranslationFunction } from "../types/i18n";
 import { IconSettings, IconMenu, IconClose, toolIcon } from "./icons";
 import { TOOL_GROUPS } from "../constants/tools";
+import { useShip } from "../hooks/useShip";
 import { Button } from "./ui/Button";
 import { COLORS } from "../constants/colors";
 
@@ -20,6 +21,9 @@ interface NavbarProps {
 }
 
 export const Navbar: FC<NavbarProps> = ({ theme, view, goHome, navigateTo, menuOpen, setMenuOpen, t }) => {
+  // La flota, para listarla en el bloque de naves: el menú enseña las mismas
+  // naves que el índice, no una entrada genérica que no dice cuál es la tuya.
+  const { ships, activeId, selectShip } = useShip();
   const menuRef = useRef<HTMLDivElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
 
@@ -177,21 +181,60 @@ export const Navbar: FC<NavbarProps> = ({ theme, view, goHome, navigateTo, menuO
               >
                 {t(group.titleKey)}
               </div>
-              {group.tools.map(tool => (
-                <Button
-                  key={tool.view}
-                  variant="nav-mobile"
-                  size="lg"
-                  active={view === tool.view}
-                  theme={theme}
-                  onClick={() => navigateTo(tool.view)}
-                  fullWidth
-                  style={{ justifyContent: "flex-start" }}
-                  role="menuitem"
-                >
-                  {toolIcon(tool.icon)}{t(tool.titleKey)}
-                </Button>
-              ))}
+              {group.key === "ships"
+                ? // La flota entera, una nave por entrada, como en el índice.
+                  // Elegir una la deja activa —es la que leen Carga y
+                  // Pasajeros— y abre su ficha. Con la flota vacía queda la
+                  // invitación a crear la primera, que es lo que enseña /ship.
+                  ships.length === 0
+                  ? [
+                      <Button
+                        key="ship-none"
+                        variant="nav-mobile"
+                        size="lg"
+                        active={view === "ship"}
+                        theme={theme}
+                        onClick={() => navigateTo("ship")}
+                        fullWidth
+                        style={{ justifyContent: "flex-start" }}
+                        role="menuitem"
+                      >
+                        {toolIcon("ship")}{t("shipCreateAction")}
+                      </Button>,
+                    ]
+                  : ships.map(ship => (
+                      <Button
+                        key={ship.id}
+                        variant="nav-mobile"
+                        size="lg"
+                        active={view === "ship" && ship.id === activeId}
+                        theme={theme}
+                        onClick={() => {
+                          selectShip(ship.id);
+                          navigateTo("ship");
+                        }}
+                        fullWidth
+                        style={{ justifyContent: "flex-start" }}
+                        role="menuitem"
+                      >
+                        {toolIcon("ship")}{ship.name || t("shipNamePlaceholder")}
+                      </Button>
+                    ))
+                : group.tools.map(tool => (
+                    <Button
+                      key={tool.view}
+                      variant="nav-mobile"
+                      size="lg"
+                      active={view === tool.view}
+                      theme={theme}
+                      onClick={() => navigateTo(tool.view)}
+                      fullWidth
+                      style={{ justifyContent: "flex-start" }}
+                      role="menuitem"
+                    >
+                      {toolIcon(tool.icon)}{t(tool.titleKey)}
+                    </Button>
+                  ))}
             </div>
           ))}
 

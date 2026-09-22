@@ -10,6 +10,22 @@ const write = (key: string, value: unknown): void => {
 };
 
 /**
+ * Los demás componentes que leen la MISMA clave, para que no se queden atrás.
+ *
+ * Cada uso del hook guarda su propia copia en un `useState`, así que sin esto
+ * dos componentes vivos a la vez sobre la misma clave se desincronizan: la barra
+ * de navegación lista la flota y la ficha le cambia el nombre a una nave, y la
+ * barra seguía enseñando el viejo hasta que algo la desmontara.
+ */
+const listeners = new Map<string, Set<(value: unknown) => void>>();
+
+const notify = (key: string, value: unknown): void => {
+  const subscribers = listeners.get(key);
+  if (subscribers === undefined) return;
+  for (const notifyOne of subscribers) notifyOne(value);
+};
+
+/**
  * Estado que sobrevive a recargas del navegador y al botón de "nueva búsqueda".
  * Pensado para datos de nave/tripulación (habilidades, bodega, rango) que el
  * jugador cambia muy de vez en cuando, no para datos de ruta.
@@ -65,7 +81,29 @@ export const usePersistentState = <T>(
 
   useEffect(() => {
     write(key, value);
+    // Avisar va AQUÍ y no dentro de `persist`: en la versión funcional, `write`
+    // corre dentro del updater —en plena fase de render— y actualizar desde ahí
+    // otro componente es justo lo que React prohíbe. Un efecto ya es después.
+    notify(key, value);
   }, [key, value]);
+
+  /**
+   * Y al revés: escuchar lo que escriba otro. El type guard vuelve a pasar
+   * porque quien avisa puede ser un hook con otro tipo sobre la misma clave.
+   * Quien acaba de escribir se avisa a sí mismo, pero le llega el mismo objeto
+   * que ya tiene y React no vuelve a renderizar.
+   */
+  useEffect(() => {
+    const subscribers = listeners.get(key) ?? new Set<(next: unknown) => void>();
+    listeners.set(key, subscribers);
+    const receive = (next: unknown): void => {
+      if (isValid(next)) setValue(next);
+    };
+    subscribers.add(receive);
+    return () => {
+      subscribers.delete(receive);
+    };
+  }, [key, isValid]);
 
   return [value, persist];
 };

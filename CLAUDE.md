@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Traveller Toolkit - A multi-tool web app for the Mongoose Traveller 2nd Edition tabletop RPG. The home page lists the available tools in three blocks — **Navegación** (Search World, Worlds Near Me, Visited Worlds), **Tránsito** (Passenger Traffic, Freight Calculator) and **Naves** — and the user navigates between them. **Naves** is the odd one out: it does not list a tool, it lists the player's fleet — one card per ship, with its name and its type, the active one badged — plus two last cards: one creates a new ship and one **imports** a `.json` exported from a sheet (`shipFromJson` validates it; anything else leaves a message under the block and nothing enters the fleet). The fleet is governed from there and **only** from there: `/ship` is the sheet of one ship, not a ship manager, so it carries no list of the others. A block with a single tool is fine; the grouping says what each tool is for, not how many there are. Current tools:
+Traveller Toolkit - A multi-tool web app for the Mongoose Traveller 2nd Edition tabletop RPG. The home page lists the available tools in three blocks — **Navegación** (Search World, Worlds Near Me, Visited Worlds), **Tránsito** (Passenger Traffic, Freight Calculator) and **Naves** — and the user navigates between them. **Naves** is the odd one out: it does not list a tool, it lists the player's fleet — one card per ship, with its name and its type, the active one badged — plus two last cards: one creates a new ship and one **imports** a `.json` exported from a sheet (`shipFromJson` validates it; anything else leaves a message under the block and nothing enters the fleet). The fleet is **created** from there and only from there — `/ship` is the sheet of one ship, not a ship manager, so it carries no list of the others and no way to add or import one. Switching between ships can also be done from the navbar's dropdown, which lists the same fleet. A block with a single tool is fine; the grouping says what each tool is for, not how many there are. Current tools:
 - **Search World** — searches official Traveller worlds by name via the [Traveller Map](https://travellermap.com) API (`/api/search`). Selecting a result jumps to World Detail and auto-saves the world to Visited Worlds.
 - **Visited Worlds** — standalone tool at `/recent` listing the worlds you've visited (persisted in `localStorage`). Sortable dropdown, Edit/Done toggle for per-card deletion, colored tags per UWP attribute.
 - **Worlds Near Me** — standalone tool at `/nearby`. Pick the world you are on, describe your ship (jump rating, fuel range, fuel it accepts), set UWP filters (max distance, minimum starport, TL, population, travel zones) and get the matching worlds, sorted by number of jumps (parsec distance and name break ties, unreachable worlds last). Each result also shows the minimum number of jumps to reach it along a route where the ship never runs out of fuel. `jumpsFromOrigin` searches over `(world, fuel left)` states, not just worlds, so a ship with tankage for several jumps can cross a system with no fuel in it. The `FuelPolicy` (`refined` = starports A/B, `unrefined` = also C/D, `wilderness` = also gas giants and oceans) decides where the ship will refuel; a world it cannot refuel at is still crossed when the fuel range allows. Data comes from the Traveller Map `/api/jumpworlds` endpoint. Below the results table sits a **jump map**: the official `/api/jumpmap` PNG with an SVG ring overlaid on each world that passed the filters (see `utils/jumpMapImage.ts`).
@@ -162,7 +162,7 @@ A UWP code is 8 characters: `A123456-7`
 - `/settings` — Settings (`SettingsView`)
 - `/planet/{UWP}` — World detail (`PlanetView`, e.g. `/planet/A123456-7`)
 
-The router is hand-rolled (no library) in `utils/routing.ts` and `App.tsx` manages the `ViewType` state plus `popstate` for browser back/forward. The `ViewType` union is duplicated in every view file for locality — when you add a new route/view, update every union (App, Navbar, all view files) plus `parseUrl`/`buildUrl` in `utils/routing.ts`. A new **tool** goes in `constants/tools.ts` (`TOOL_GROUPS`), which is the one list behind both places navigation is shown: the home index and the navbar's dropdown. They had a copy each and drifted — the menu listed Visited Worlds last, beside Settings, while the index had it with the navigation tools. The index adds what only it needs (a description and an accent per card, in `TOOL_CARDS`), and overrides the **ships** group, where it lists the fleet instead of a tool; the menu keeps one entry there, the active ship's sheet, because the fleet is governed from the home page alone. Settings is in neither list: it is not a tool, so the menu puts it after a rule and the index does not show it at all. The Navbar logo calls `goHome` (clears the working UWP/name/zone state and navigates to `/`).
+The router is hand-rolled (no library) in `utils/routing.ts` and `App.tsx` manages the `ViewType` state plus `popstate` for browser back/forward. The `ViewType` union is duplicated in every view file for locality — when you add a new route/view, update every union (App, Navbar, all view files) plus `parseUrl`/`buildUrl` in `utils/routing.ts`. A new **tool** goes in `constants/tools.ts` (`TOOL_GROUPS`), which is the one list behind both places navigation is shown: the home index and the navbar's dropdown. They had a copy each and drifted — the menu listed Visited Worlds last, beside Settings, while the index had it with the navigation tools. The index adds what only it needs (a description and an accent per card, in `TOOL_CARDS`). The **ships** group carries no tools at all (`tools: []`): it lists the **fleet**, which is not known ahead of time, so whoever draws it puts the ships in — the index as a card per ship plus create and import, the menu as an entry per ship that selects it and opens its sheet. There is no generic "Mi nave" entry, because it does not say which of yours it is. Settings is in neither list: it is not a tool, so the menu puts it after a rule and the index does not show it at all. The Navbar logo calls `goHome` (clears the working UWP/name/zone state and navigates to `/`).
 
 ### Freight Calculator (Mongoose 2e rules)
 
@@ -205,11 +205,18 @@ one, and the two calculators replace their **Nave** fields with the same button.
 There is one active ship rather than a per-calculator choice because Freight and
 Passenger ask "how big is my hold?", and that question has to have one answer.
 
-The fleet is listed, switched and created **from the home page**. `ShipView` is
-the sheet of the active ship and nothing else: it never lists the other ships,
-and its only call to `createShip` is the empty-fleet invitation, because until a
-ship exists there is no sheet to draw. Do not put a ship switcher or a "new
-ship" button back into the sheet.
+The fleet is created and imported **from the home page**, and listed —for
+switching— there and in the navbar's dropdown, which shows one entry per ship
+instead of a generic "Mi nave". `ShipView` is the sheet of the active ship and
+nothing else: it never lists the other ships, and its only call to `createShip`
+is the empty-fleet invitation, because until a ship exists there is no sheet to
+draw. Do not put a ship switcher or a "new ship" button back into the sheet.
+
+`Navbar` therefore calls `useShip()` itself. Two live components on the same
+`usePersistentState` key used to drift apart —each keeps its own copy— so the
+hook now notifies the others from its write effect, and they take the new value
+if their own type guard accepts it. Without that, renaming a ship in the sheet
+left the navbar showing the old name until something unmounted it.
 
 The two actions that belong to **this** ship rather than to the fleet live in
 **Perfil only**, right-aligned just above the Notas card, as small `ghost`

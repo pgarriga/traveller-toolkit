@@ -9,8 +9,9 @@
 // Ajustes NO está aquí: no es una herramienta, es la página de la aplicación.
 // Por eso el menú la pone aparte, detrás de un filete, y el índice no la pone.
 
-/** Las vistas a las que lleva una herramienta. */
-export type ToolViewId = "search" | "nearby" | "recent" | "passenger" | "freight" | "ship";
+/** Las vistas a las que lleva una herramienta. "ship" no está: el bloque de
+ * naves no lleva herramientas, lleva la flota. */
+export type ToolViewId = "search" | "nearby" | "recent" | "passenger" | "freight";
 
 /** El icono de cada una, por nombre: los constantes no pintan JSX. */
 export type ToolIconId = "search" | "radar" | "pin" | "users" | "box" | "ship";
@@ -51,12 +52,13 @@ export const TOOL_GROUPS: readonly ToolGroupDef[] = [
     ],
   },
   {
-    // En el índice este bloque no lista una herramienta, lista la FLOTA: una
-    // tarjeta por nave más las de crear e importar. El menú, que navega entre
-    // herramientas, lleva una sola entrada — la ficha de la nave activa —,
-    // porque la flota se gobierna desde la portada y solo desde ahí.
+    // Este bloque no lista herramientas: lista la FLOTA, y las naves las pone
+    // quien lo dibuja, porque no se saben de antemano. El índice pinta una
+    // tarjeta por nave más las de crear e importar; el menú, una entrada por
+    // nave, que la elige y abre su ficha. Por eso `tools` va vacío y no con una
+    // entrada genérica: "Mi nave" no dice cuál de las tuyas es.
     key: "ships",
     titleKey: "homeGroupShips",
-    tools: [{ view: "ship", icon: "ship", titleKey: "shipTitle" }],
+    tools: [],
   },
 ];
