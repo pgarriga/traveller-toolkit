@@ -12,7 +12,7 @@
 // la fila existe. null es el "—" del manual. No hay precios: la ficha no lleva
 // dinero (ver types/ship.ts).
 
-import type { ShipSectionKey } from "../types/ship";
+import type { ShipSectionKey, TurretMountId, TurretWeaponId } from "../types/ship";
 
 export interface ShipPart {
   id: string;
@@ -20,6 +20,30 @@ export interface ShipPart {
   /** Clave de i18n; se traduce al insertar y a partir de ahí es texto de la ficha. */
   labelKey: string;
   tons: number | null;
+  /**
+   * Puntos de Potencia POR UNIDAD, para las líneas que piden energía propia.
+   * Sale de sumar la montura y sus armas: tabla de monturas (fija 0, torreta 1
+   * sea simple, doble o triple) más tabla de armas de torreta (láser de pulsos,
+   * rayo láser y taladro láser 4 cada uno; lanzamisiles y proyector de arena 0).
+   * Así, una torreta triple de láseres de pulsos son 1 + 3×4 = 13.
+   *
+   * Ausente significa que el manual no da el dato en esas dos tablas, no que sea
+   * cero. En las líneas que se montan de verdad (las que llevan `turret`) esta
+   * cifra ya no decide nada: la potencia sale de las tablas al montarlas, y por
+   * eso la barbeta de partículas —que tiene tabla propia— vale 15 y no 0.
+   */
+  power?: number;
+  /**
+   * Cómo se monta, para las líneas de armamento. Es lo que convierte la línea
+   * que trae una plantilla en una torreta de verdad —la que se edita en el
+   * diálogo— en vez de en un texto con el arma escrita dentro.
+   *
+   * `weapon: null` es la montura sin armar, que el manual también vende: la
+   * ficha la deja así y el jugador decide qué le pone. Cuando sí hay arma, se
+   * repite en todos los huecos de la montura: una torreta triple de láseres de
+   * pulsos son tres láseres de pulsos, que es como el manual la imprime.
+   */
+  turret?: { mount: TurretMountId; weapon: TurretWeaponId | null };
 }
 
 export const SHIP_PARTS = [
@@ -55,15 +79,24 @@ export const SHIP_PARTS = [
   { id: "sensorsCountermeasures", section: "sensors", labelKey: "shipPartSensorsCountermeasures", tons: 5 },
 
   // --- Armas -------------------------------------------------------------
-  { id: "turretSingleEmpty", section: "weapons", labelKey: "shipPartTurretSingleEmpty", tons: 1 },
-  { id: "turretDouble", section: "weapons", labelKey: "shipPartTurretDouble", tons: 1 },
-  { id: "turretTriple", section: "weapons", labelKey: "shipPartTurretTriple", tons: 1 },
-  { id: "turretTripleBeamLaser", section: "weapons", labelKey: "shipPartTurretTripleBeamLaser", tons: 1 },
-  { id: "turretTriplePulseLaser", section: "weapons", labelKey: "shipPartTurretTriplePulseLaser", tons: 1 },
-  { id: "turretTripleMissile", section: "weapons", labelKey: "shipPartTurretTripleMissile", tons: 1 },
-  { id: "barbetteParticle", section: "weapons", labelKey: "shipPartBarbetteParticle", tons: 5 },
-  { id: "fixedMount", section: "weapons", labelKey: "shipPartFixedMount", tons: null },
-  { id: "fixedMountPulseLaser", section: "weapons", labelKey: "shipPartFixedMountPulseLaser", tons: null },
+  { id: "turretSingleEmpty", section: "weapons", labelKey: "shipPartTurretSingleEmpty", tons: 1, power: 1,
+    turret: { mount: "single", weapon: null } },
+  { id: "turretDouble", section: "weapons", labelKey: "shipPartTurretDouble", tons: 1, power: 1,
+    turret: { mount: "double", weapon: null } },
+  { id: "turretTriple", section: "weapons", labelKey: "shipPartTurretTriple", tons: 1, power: 1,
+    turret: { mount: "triple", weapon: null } },
+  { id: "turretTripleBeamLaser", section: "weapons", labelKey: "shipPartTurretTripleBeamLaser", tons: 1, power: 13,
+    turret: { mount: "triple", weapon: "beamLaser" } },
+  { id: "turretTriplePulseLaser", section: "weapons", labelKey: "shipPartTurretTriplePulseLaser", tons: 1, power: 13,
+    turret: { mount: "triple", weapon: "pulseLaser" } },
+  { id: "turretTripleMissile", section: "weapons", labelKey: "shipPartTurretTripleMissile", tons: 1, power: 1,
+    turret: { mount: "triple", weapon: "missileRack" } },
+  { id: "barbetteParticle", section: "weapons", labelKey: "shipPartBarbetteParticle", tons: 5, power: 15,
+    turret: { mount: "barbette", weapon: "particleBarbette" } },
+  { id: "fixedMount", section: "weapons", labelKey: "shipPartFixedMount", tons: null, power: 0,
+    turret: { mount: "fixed", weapon: null } },
+  { id: "fixedMountPulseLaser", section: "weapons", labelKey: "shipPartFixedMountPulseLaser", tons: null, power: 4,
+    turret: { mount: "fixed", weapon: "pulseLaser" } },
 
   // --- Munición ----------------------------------------------------------
   { id: "missileMagazine", section: "ammo", labelKey: "shipPartMissileMagazine", tons: 12 },

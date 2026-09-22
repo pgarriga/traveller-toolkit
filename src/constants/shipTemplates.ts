@@ -19,6 +19,7 @@
 // enmiendas son las de los datos que la extracción del PDF perdió o invirtió, y
 // van comentadas una a una allí donde están.
 
+import type { PowerPlantType, SensorGrade } from "../types/ship";
 import type { ShipPartId } from "./shipParts";
 import type { CrewRole } from "./ship";
 
@@ -56,9 +57,16 @@ export interface ShipTemplate {
   hullTons: number;
   hullPoints: number;
   crew: CrewEntry[];
-  power: { basic: number | null; mDrive: number | null; jDrive: number | null; sensors: number | null; weapons: number | null };
-  /** Toneladas de la fila "Carga": lo único de la plantilla que leen las calculadoras. */
-  cargoTons: number;
+  /**
+   * Lo que el diseño es capaz de hacer. Sustituye al recuadro de potencia que
+   * antes se transcribía: la ficha lo calcula con las reglas del manual, así que
+   * transcribir también el resultado sería tener el mismo número dos veces.
+   */
+  thrust: number | null;
+  jump: number | null;
+  sensors: SensorGrade | null;
+  /** Tipo de planta. Se deduce de la salida impresa: 4 t que dan 60 son de 15. */
+  plant: PowerPlantType | null;
   components: Partial<Record<string, TemplateComponent[]>>;
 }
 
@@ -78,14 +86,44 @@ const fuel = (weeks: number, jump: number | null, tons: number): TemplateCompone
     ? { specKey: "shipSpecWeeks", specVars: { n: weeks }, tons }
     : { specKey: "shipSpecWeeksJump", specVars: { n: weeks, j: jump }, tons };
 
+/**
+ * Las necesidades de energía ya no se transcriben: la ficha las calcula con
+ * `shipPowerRequirements` a partir del casco, de `thrust`, `jump` y `sensors`, y
+ * de la potencia por unidad que cada arma trae de shipParts.ts.
+ *
+ * La energía que produce la planta sale clavada en los 24: `plant` se dedujo de
+ * la propia salida impresa (4 t que dan 60 son de 15 por tonelada), y todas son
+ * de fusión NT12 o NT8. Que a varias les pida más de lo que producen es normal y
+ * por eso la ficha no compara los dos números: el manual dice que desviar energía
+ * del resto para saltar es lo corriente, y poder no hacerlo es una ventaja.
+ *
+ * Los tres únicos diseños cuyo recuadro impreso trae potencia de armamento salen
+ * clavados —corbeta de patrulla 28, crucero mercenario 8, lancha 1—, que es lo
+ * que confirma que la cuenta es montura + armas: las 28 de la corbeta son sus
+ * cuatro torretas (1 cada una) más seis láseres de pulsos (4 cada uno).
+ *
+ * Lo que no cuadra, y se queda como está:
+ *
+ *  - Varias naves armadas imprimen "—" en armamento aunque las tablas les den
+ *    potencia: scout, seeker y safari (1, su torreta doble), sdb (14) y gazelle
+ *    (56: 26 de sus torretas más 30 de sus dos barbetas de partículas, 15 cada
+ *    una). La ficha aplica la regla; el libro se la salta.
+ *  - donosev: su motor de maniobra dice Propulsión 2 y su recuadro impreso pide
+ *    40 puntos, que son los de Propulsión 1. Uno de los dos números del libro
+ *    está mal y no se puede saber cuál sin el libro delante.
+ *  - lightFighter: el manual no imprime ni sistemas básicos ni sensores, aunque
+ *    el caza tenga casco y sensores militares. La regla los pide igualmente.
+ *  - passengerShuttle: lleva sensores básicos (0 puntos) y su recuadro pide 1,
+ *    que es lo que gastan los de grado civil.
+ */
 export const SHIP_TEMPLATES: ShipTemplate[] = [
   {
     id: "scout",
     nameKey: "shipTplScout",
     designationKey: "shipTplTypeS",
-    tl: 12, hullTons: 100, hullPoints: 40, cargoTons: 12,
+    tl: 12, hullTons: 100, hullPoints: 40,
     crew: [{ role: "pilot" }, { role: "astrogator" }, { role: "engineer" }],
-    power: { basic: 20, mDrive: 20, jDrive: 20, sensors: 2, weapons: null },
+    thrust: 2, jump: 2, sensors: "military", plant: "fusion12",
     components: {
       hull: [{ part: "hullStreamlined" }],
       armour: [{ part: "armourCrystaliron", spec: "4", tons: 5 }],
@@ -114,9 +152,9 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     id: "seeker",
     nameKey: "shipTplSeeker",
     designationKey: "shipTplTypeJ",
-    tl: 12, hullTons: 100, hullPoints: 40, cargoTons: 26,
+    tl: 12, hullTons: 100, hullPoints: 40,
     crew: [{ role: "pilot" }, { role: "astrogator" }, { role: "engineer" }],
-    power: { basic: 20, mDrive: 20, jDrive: 20, sensors: 2, weapons: null },
+    thrust: 2, jump: 2, sensors: "military", plant: "fusion12",
     components: {
       hull: [{ part: "hullStreamlined" }],
       armour: [{ part: "armourCrystaliron", spec: "4", tons: 5 }],
@@ -142,9 +180,9 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     id: "freeTrader",
     nameKey: "shipTplFreeTrader",
     designationKey: "shipTplTypeA",
-    tl: 12, hullTons: 200, hullPoints: 80, cargoTons: 81,
+    tl: 12, hullTons: 200, hullPoints: 80,
     crew: [{ role: "pilot" }, { role: "astrogator" }, { role: "engineer" }, { role: "medic" }, { role: "steward" }],
-    power: { basic: 40, mDrive: 20, jDrive: 20, sensors: 1, weapons: null },
+    thrust: 1, jump: 1, sensors: "civilian", plant: "fusion12",
     components: {
       hull: [{ part: "hullStreamlined" }],
       armour: [{ part: "armourCrystaliron", spec: "2", tons: 5 }],
@@ -169,9 +207,9 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     id: "farTrader",
     nameKey: "shipTplFarTrader",
     designationKey: "shipTplTypeA2",
-    tl: 12, hullTons: 200, hullPoints: 80, cargoTons: 63,
+    tl: 12, hullTons: 200, hullPoints: 80,
     crew: [{ role: "pilot" }, { role: "astrogator" }, { role: "engineer" }, { role: "medic" }, { role: "steward" }],
-    power: { basic: 40, mDrive: 20, jDrive: 40, sensors: 1, weapons: null },
+    thrust: 1, jump: 2, sensors: "civilian", plant: "fusion12",
     components: {
       hull: [{ part: "hullStreamlined" }],
       armour: [{ part: "armourCrystaliron", spec: "2", tons: 5 }],
@@ -196,9 +234,9 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     id: "safari",
     nameKey: "shipTplSafari",
     designationKey: "shipTplTypeK",
-    tl: 12, hullTons: 200, hullPoints: 80, cargoTons: 14,
+    tl: 12, hullTons: 200, hullPoints: 80,
     crew: [{ role: "pilot" }, { role: "astrogator" }, { role: "engineer" }, { role: "medic" }, { role: "steward" }],
-    power: { basic: 40, mDrive: 20, jDrive: 40, sensors: 1, weapons: null },
+    thrust: 1, jump: 2, sensors: "civilian", plant: "fusion12",
     components: {
       hull: [{ part: "hullStreamlined" }],
       mDrive: [{ part: "mDrive", spec: "1", tons: 2 }],
@@ -235,12 +273,12 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     id: "sdb",
     nameKey: "shipTplSdb",
     designationKey: "shipTplSmallCraftNA",
-    tl: 15, hullTons: 200, hullPoints: 88, cargoTons: 22.85,
+    tl: 15, hullTons: 200, hullPoints: 88,
     crew: [
       { role: "captain" }, { role: "pilot", count: 3 }, { role: "engineer" }, { role: "mechanic" },
       { role: "medic" }, { role: "gunner", count: 4 }, { role: "administrator" }, { role: "officer" },
     ],
-    power: { basic: 40, mDrive: 180, jDrive: null, sensors: 5, weapons: null },
+    thrust: 9, jump: null, sensors: "countermeasures", plant: "fusion12",
     components: {
       hull: [{ part: "hullStandard" }, { part: "hullReinforced" }],
       armour: [{ part: "armourCrystaliron", spec: "13", tons: 33 }],
@@ -273,9 +311,9 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     id: "yacht",
     nameKey: "shipTplYacht",
     designationKey: "shipTplTypeY",
-    tl: 12, hullTons: 200, hullPoints: 80, cargoTons: 21,
+    tl: 12, hullTons: 200, hullPoints: 80,
     crew: [{ role: "pilot" }, { role: "astrogator" }, { role: "engineer" }, { role: "medic" }, { role: "steward" }],
-    power: { basic: 40, mDrive: 20, jDrive: 20, sensors: 1, weapons: null },
+    thrust: 1, jump: 1, sensors: "civilian", plant: "fusion12",
     components: {
       hull: [{ part: "hullStandard" }],
       mDrive: [{ part: "mDrive", spec: "1", tons: 2 }],
@@ -305,12 +343,12 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     id: "gazelle",
     nameKey: "shipTplGazelle",
     designationKey: "shipTplClassGazelle",
-    tl: 15, hullTons: 400, hullPoints: 176, cargoTons: 33.68,
+    tl: 15, hullTons: 400, hullPoints: 176,
     crew: [
       { role: "captain" }, { role: "pilot", count: 3 }, { role: "astrogator" }, { role: "engineer", count: 4 },
       { role: "medic" }, { role: "gunner", count: 8 }, { role: "administrator" }, { role: "mechanic" }, { role: "officer" },
     ],
-    power: { basic: 80, mDrive: 240, jDrive: 200, sensors: 2, weapons: null },
+    thrust: 6, jump: 5, sensors: "military", plant: "fusion12",
     components: {
       hull: [{ part: "hullStandard" }, { part: "hullReinforced" }],
       armour: [{ part: "armourCrystaliron", spec: "3", tons: 15 }],
@@ -344,9 +382,9 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     id: "labShip",
     nameKey: "shipTplLabShip",
     designationKey: "shipTplTypeL",
-    tl: 12, hullTons: 400, hullPoints: 160, cargoTons: 3,
+    tl: 12, hullTons: 400, hullPoints: 160,
     crew: [{ role: "pilot" }, { role: "astrogator" }, { role: "engineer" }, { role: "medic" }],
-    power: { basic: 80, mDrive: 80, jDrive: 80, sensors: 4, weapons: null },
+    thrust: 2, jump: 2, sensors: "improved", plant: "fusion12",
     components: {
       hull: [{ part: "hullStandard" }],
       mDrive: [{ part: "mDrive", spec: "2", tons: 8 }],
@@ -377,12 +415,12 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     id: "patrolCorvette",
     nameKey: "shipTplPatrolCorvette",
     designationKey: "shipTplTypeT",
-    tl: 12, hullTons: 400, hullPoints: 160, cargoTons: 38,
+    tl: 12, hullTons: 400, hullPoints: 160,
     crew: [
       { role: "pilot" }, { role: "astrogator" }, { role: "engineer", count: 2 }, { role: "medic" },
       { role: "gunner", count: 4 }, { role: "marine", count: 8 },
     ],
-    power: { basic: 80, mDrive: 160, jDrive: 120, sensors: 2, weapons: 28 },
+    thrust: 4, jump: 3, sensors: "military", plant: "fusion12",
     components: {
       hull: [{ part: "hullStreamlined" }],
       armour: [{ part: "armourCrystaliron", spec: "4", tons: 20 }],
@@ -419,9 +457,9 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     id: "subsidisedMerchant",
     nameKey: "shipTplSubsidisedMerchant",
     designationKey: "shipTplTypeR",
-    tl: 12, hullTons: 400, hullPoints: 160, cargoTons: 201,
+    tl: 12, hullTons: 400, hullPoints: 160,
     crew: [{ role: "pilot" }, { role: "astrogator" }, { role: "engineer" }, { role: "medic" }, { role: "steward" }],
-    power: { basic: 80, mDrive: 40, jDrive: 40, sensors: 1, weapons: null },
+    thrust: 1, jump: 1, sensors: "civilian", plant: "fusion12",
     components: {
       hull: [{ part: "hullStreamlined" }],
       mDrive: [{ part: "mDrive", spec: "1", tons: 4 }],
@@ -446,9 +484,9 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     id: "donosev",
     nameKey: "shipTplDonosev",
     designationKey: "shipTplClassDonosev",
-    tl: 14, hullTons: 400, hullPoints: 160, cargoTons: 21,
+    tl: 14, hullTons: 400, hullPoints: 160,
     crew: [{ role: "pilot" }, { role: "astrogator" }, { role: "engineer", count: 2 }, { role: "mechanic" }],
-    power: { basic: 80, mDrive: 40, jDrive: 120, sensors: 4, weapons: null },
+    thrust: 2, jump: 3, sensors: "improved", plant: "fusion12",
     components: {
       hull: [{ part: "hullStandard" }],
       mDrive: [{ part: "mDrive", spec: "2", tons: 12 }],
@@ -482,9 +520,9 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     id: "subsidisedLiner",
     nameKey: "shipTplSubsidisedLiner",
     designationKey: "shipTplTypeM",
-    tl: 14, hullTons: 600, hullPoints: 240, cargoTons: 119,
+    tl: 14, hullTons: 600, hullPoints: 240,
     crew: [{ role: "pilot" }, { role: "astrogator" }, { role: "engineer", count: 2 }, { role: "medic" }, { role: "steward" }],
-    power: { basic: 120, mDrive: 60, jDrive: 180, sensors: 1, weapons: null },
+    thrust: 1, jump: 3, sensors: "civilian", plant: "fusion12",
     components: {
       hull: [{ part: "hullStandard" }],
       mDrive: [{ part: "mDrive", spec: "1", tons: 6 }],
@@ -508,9 +546,9 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     id: "mercenaryCruiser",
     nameKey: "shipTplMercenaryCruiser",
     designationKey: "shipTplTypeC",
-    tl: 12, hullTons: 800, hullPoints: 320, cargoTons: 72,
+    tl: 12, hullTons: 800, hullPoints: 320,
     crew: [{ role: "pilot" }, { role: "astrogator" }, { role: "engineer", count: 3 }, { role: "medic" }],
-    power: { basic: 160, mDrive: 240, jDrive: 240, sensors: 2, weapons: 8 },
+    thrust: 3, jump: 3, sensors: "military", plant: "fusion12",
     components: {
       hull: [{ part: "hullSphere" }],
       armour: [{ part: "armourCrystaliron", spec: "4", tons: 40 }],
@@ -547,9 +585,9 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     id: "lightFighter",
     nameKey: "shipTplLightFighter",
     designationKey: "shipTplSmallCraft",
-    tl: 12, hullTons: 10, hullPoints: 4, cargoTons: 3.65,
+    tl: 12, hullTons: 10, hullPoints: 4,
     crew: [{ role: "pilot" }],
-    power: { basic: null, mDrive: 6, jDrive: null, sensors: null, weapons: null },
+    thrust: 6, jump: null, sensors: "military", plant: "fusion12",
     components: {
       hull: [{ part: "hullStreamlined" }],
       armour: [{ part: "armourCrystaliron", spec: "2", tons: 0.25 }],
@@ -568,9 +606,9 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     id: "launch",
     nameKey: "shipTplLaunch",
     designationKey: "shipTplSmallCraft",
-    tl: 12, hullTons: 20, hullPoints: 8, cargoTons: 8.6,
+    tl: 12, hullTons: 20, hullPoints: 8,
     crew: [{ role: "pilot" }],
-    power: { basic: 4, mDrive: 14, jDrive: null, sensors: null, weapons: 1 },
+    thrust: 7, jump: null, sensors: "basic", plant: "fusion12",
     components: {
       hull: [{ part: "hullStreamlined" }],
       mDrive: [{ part: "mDrive", spec: "7", tons: 1.4 }],
@@ -589,9 +627,9 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     id: "shuttle",
     nameKey: "shipTplShuttle",
     designationKey: "shipTplSmallCraft",
-    tl: 12, hullTons: 20, hullPoints: 8, cargoTons: 14.8,
+    tl: 12, hullTons: 20, hullPoints: 8,
     crew: [{ role: "pilot" }],
-    power: { basic: 4, mDrive: 2, jDrive: null, sensors: null, weapons: null },
+    thrust: 1, jump: null, sensors: "basic", plant: "fusion8",
     components: {
       hull: [{ part: "hullStreamlined" }],
       mDrive: [{ part: "mDrive", spec: "1", tons: 0.2 }],
@@ -608,9 +646,9 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     id: "shipsBoat",
     nameKey: "shipTplShipsBoat",
     designationKey: "shipTplSmallCraft",
-    tl: 12, hullTons: 30, hullPoints: 12, cargoTons: 13.5,
+    tl: 12, hullTons: 30, hullPoints: 12,
     crew: [{ role: "pilot" }],
-    power: { basic: 6, mDrive: 15, jDrive: null, sensors: null, weapons: null },
+    thrust: 5, jump: null, sensors: "basic", plant: "fusion12",
     components: {
       hull: [{ part: "hullStreamlined" }],
       mDrive: [{ part: "mDrive", spec: "5", tons: 1.5 }],
@@ -629,9 +667,9 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     id: "slowBoat",
     nameKey: "shipTplSlowBoat",
     designationKey: "shipTplSmallCraft",
-    tl: 12, hullTons: 30, hullPoints: 12, cargoTons: 21.1,
+    tl: 12, hullTons: 30, hullPoints: 12,
     crew: [{ role: "pilot" }],
-    power: { basic: 6, mDrive: 9, jDrive: null, sensors: null, weapons: null },
+    thrust: 3, jump: null, sensors: "basic", plant: "fusion12",
     components: {
       hull: [{ part: "hullStreamlined" }],
       mDrive: [{ part: "mDrive", spec: "3", tons: 0.9 }],
@@ -650,9 +688,9 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     id: "pinnace",
     nameKey: "shipTplPinnace",
     designationKey: "shipTplSmallCraft",
-    tl: 12, hullTons: 40, hullPoints: 16, cargoTons: 23,
+    tl: 12, hullTons: 40, hullPoints: 16,
     crew: [{ role: "pilot" }],
-    power: { basic: 8, mDrive: 20, jDrive: null, sensors: null, weapons: null },
+    thrust: 5, jump: null, sensors: "basic", plant: "fusion12",
     components: {
       hull: [{ part: "hullStreamlined" }],
       mDrive: [{ part: "mDrive", spec: "5", tons: 2 }],
@@ -671,9 +709,9 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     id: "slowPinnace",
     nameKey: "shipTplSlowPinnace",
     designationKey: "shipTplSmallCraft",
-    tl: 12, hullTons: 40, hullPoints: 16, cargoTons: 32.8,
+    tl: 12, hullTons: 40, hullPoints: 16,
     crew: [{ role: "pilot" }],
-    power: { basic: 8, mDrive: 12, jDrive: null, sensors: null, weapons: null },
+    thrust: 3, jump: null, sensors: "basic", plant: "fusion8",
     components: {
       hull: [{ part: "hullStreamlined" }],
       // El libro imprime esta fila como "2,4 / 1,2". Están al revés: propulsión 3
@@ -694,9 +732,9 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     id: "modularCutter",
     nameKey: "shipTplModularCutter",
     designationKey: "shipTplSmallCraft",
-    tl: 12, hullTons: 50, hullPoints: 20, cargoTons: 3,
+    tl: 12, hullTons: 50, hullPoints: 20,
     crew: [{ role: "pilot" }],
-    power: { basic: 10, mDrive: 20, jDrive: null, sensors: null, weapons: null },
+    thrust: 4, jump: null, sensors: "basic", plant: "fusion8",
     components: {
       hull: [{ part: "hullStreamlined" }],
       mDrive: [{ part: "mDrive", spec: "4", tons: 2 }],
@@ -718,9 +756,9 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     id: "ferry",
     nameKey: "shipTplFerry",
     designationKey: "shipTplSmallCraft",
-    tl: 12, hullTons: 95, hullPoints: 38, cargoTons: 0,
+    tl: 12, hullTons: 95, hullPoints: 38,
     crew: [{ role: "pilot" }],
-    power: { basic: 19, mDrive: 29, jDrive: null, sensors: null, weapons: null },
+    thrust: 3, jump: null, sensors: "basic", plant: "fusion12",
     components: {
       hull: [{ part: "hullStreamlined" }],
       mDrive: [{ part: "mDrive", spec: "3", tons: 2.85 }],
@@ -742,9 +780,9 @@ export const SHIP_TEMPLATES: ShipTemplate[] = [
     id: "passengerShuttle",
     nameKey: "shipTplPassengerShuttle",
     designationKey: "shipTplSmallCraft",
-    tl: 12, hullTons: 95, hullPoints: 38, cargoTons: 16.05,
+    tl: 12, hullTons: 95, hullPoints: 38,
     crew: [{ role: "pilot" }, { role: "coPilot" }],
-    power: { basic: 19, mDrive: 10, jDrive: null, sensors: 1, weapons: null },
+    thrust: 1, jump: null, sensors: "basic", plant: "fusion8",
     components: {
       hull: [{ part: "hullStreamlined" }],
       mDrive: [{ part: "mDrive", spec: "1", tons: 0.95 }],
